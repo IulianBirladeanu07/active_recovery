@@ -1,0 +1,80 @@
+const quadsExercises = [
+    {
+      name: 'Barbell Back Squats',
+      muscleGroup: 'Quads',
+      category: 'Compound',
+      description: 'Stand with your feet shoulder-width apart and place a barbell across your upper back. Bend your knees and lower your body until your thighs are parallel to the ground, then push through your heels to return to the starting position.',
+      image: require('../exercises/images/s.png'),
+    },
+    {
+      name: 'Dumbbell Lunges',
+      muscleGroup: 'Quads',
+      category: 'Compound',
+      description: 'Hold a dumbbell in each hand and step forward with one leg, lowering your body until your front knee is bent at a 90-degree angle. Push off with your front foot to return to the starting position and repeat on the other leg.',
+      image: require('../exercises/images/s.png'),
+    },
+    {
+      name: 'Leg Press',
+      muscleGroup: 'Quads',
+      category: 'Machine',
+      description: 'Sit in a leg press machine with your feet on the platform. Push the platform away from your body by extending your legs, then slowly lower it back down and repeat.',
+      image: require('../exercises/images/s.png'),
+    },
+    {
+      name: 'Hack Squats',
+      muscleGroup: 'Quads',
+      category: 'Machine',
+      description: 'Position yourself in a hack squat machine with your shoulders against the pads. Place your feet shoulder-width apart on the platform. Lower your body by bending your knees, then push through your heels to return to the starting position.',
+      image: require('../exercises/images/s.png'),
+    },
+    {
+      name: 'Bulgarian Split Squats',
+      muscleGroup: 'Quads',
+      category: 'Compound',
+      description: 'Stand with one foot forward and place the top of your rear foot on a bench. Lower your body by bending your front knee, then push through your front heel to return to the starting position. Repeat on the other leg.',
+      image: require('../exercises/images/s.png'),
+    },
+    {
+      name: 'Leg Extensions',
+      muscleGroup: 'Quads',
+      category: 'Isolation',
+      description: 'Sit in a leg extension machine with your knees bent at a 90-degree angle. Extend your legs until they are straight and parallel to the ground, then slowly lower them back down and repeat.',
+      image: require('../exercises/images/s.png'),
+    },
+    {
+      name: 'Front Squats',
+      muscleGroup: 'Quads',
+      category: 'Compound',
+      description: 'Hold a barbell across the front of your shoulders with your elbows up and palms facing up. Bend your knees and lower your body until your thighs are parallel to the ground, then push through your heels to return to the starting position.',
+      image: require('../exercises/images/s.png'),
+    },
+    {
+      name: 'Goblet Squats',
+      muscleGroup: 'Quads',
+      category: 'Compound',
+      description: 'Hold a dumbbell or kettlebell in front of your chest with both hands. Bend your knees and lower your body until your thighs are parallel to the ground, then push through your heels to return to the starting position.',
+      image: require('../exercises/images/s.png'),
+    },
+    {
+      name: 'Sissy Squats',
+      muscleGroup: 'Quads',
+      category: 'Compound',
+      description: 'Stand with your feet shoulder-width apart and hold onto a stable object for support. Lean back and bend your knees, allowing your body to move backward. Push through your toes to return to the starting position.',
+      image: require('../exercises/images/s.png'),
+    },
+    {
+      name: 'Walking Lunges',
+      muscleGroup: 'Quads',
+      category: 'Compound',
+      description: 'Take a step forward with one leg and lower your body until your front knee is bent at a 90-degree angle. Push off with your front foot to bring your back foot forward into the next lunge and repeat the movement.',
+      image: require('../exercises/images/s.png'),
+    },
+    {
+      name: 'Smith Machine Squats',
+      muscleGroup: 'Quads',
+      category: 'Compound',
+      description: 'Stand in a Smith machine with the barbell across your upper back. Bend your knees and lower your body until your thighs are parallel to the ground, then push through your heels to return to the starting position.',
+      image: require('../exercises/images/s.png'),
+    }];
+
+export default quadsExercises
