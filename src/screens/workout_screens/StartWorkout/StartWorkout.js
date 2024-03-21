@@ -51,7 +51,7 @@ const StartWorkout = ({ route, navigation }) => {
       setSelectedExercise(newExercise.exerciseName);
     }
   }, [route.params?.selectedExercise]);
-
+  
   useEffect(() => {
     if (route.params?.selectedWorkout) {
       const { note, exercises } = route.params.selectedWorkout;
