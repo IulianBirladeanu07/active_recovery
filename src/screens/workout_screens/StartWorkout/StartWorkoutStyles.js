@@ -7,7 +7,7 @@ export const startWorkoutStyles = StyleSheet.create({
     backgroundColor: '#02111B',
   },
   deleteContainer: {
-    backgroundColor: 'red',
+    backgroundColor: 'red', 
     justifyContent: 'center',
     alignItems: 'flex-end',
     height: '100%',
