@@ -1,42 +1,41 @@
-// ModalStyles.js
 import { StyleSheet } from 'react-native';
 
-export const modalStyles = StyleSheet.create({
+export const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#02111B',
-    padding: 20,
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
+    padding: 20,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   modalMessage: {
     fontSize: 18,
     marginBottom: 20,
-    textAlign: 'center',
-    color: '#ffffff'
   },
   modalButtonClose: {
     backgroundColor: '#e71d27',
-    right: 90,
-    top: 40,
     borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 36,
+    padding: 10,
+    marginTop: 10,
   },
   modalButtonFinish: {
-    left: 90,
     backgroundColor: '#008080',
     borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 45,
+    padding: 10,
+    marginTop: 10,
   },
   modalButtonText: {
-    color: '#ffffff',
+    color: '#fdf5ec',
+    fontWeight: 'bold',
+    textAlign: 'center',
     fontSize: 16,
   },
 });
+
+export default styles;

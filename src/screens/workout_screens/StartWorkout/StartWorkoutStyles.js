@@ -1,16 +1,9 @@
-// StartWorkoutStyles.js
 import { StyleSheet } from 'react-native';
 
-export const startWorkoutStyles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#02111B',
-  },
-  deleteContainer: {
-    backgroundColor: 'red', 
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    height: '100%',
   },
   scrollViewContent: {
     flexGrow: 1,
@@ -19,7 +12,7 @@ export const startWorkoutStyles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingTop: 40, // Changed 'top' to 'paddingTop'
+    paddingTop: 40,
     paddingHorizontal: 20,
   },
   timerText: {
@@ -28,9 +21,6 @@ export const startWorkoutStyles = StyleSheet.create({
     color: '#FFFFFF',
   },
   addSetButton: {
-    top: 10,
-    left: 0,
-    right: 0,
     backgroundColor: '#e71d27',
     borderRadius: 10,
     padding: 8,
@@ -45,9 +35,6 @@ export const startWorkoutStyles = StyleSheet.create({
     fontSize: 18,
   },
   addExercisesButton: {
-    top: 10,
-    left: 0,
-    right: 0,
     backgroundColor: '#e71d27',
     borderRadius: 10,
     padding: 8,
@@ -91,7 +78,8 @@ export const startWorkoutStyles = StyleSheet.create({
     width: 320,
     height: 45,
     paddingHorizontal: 10,
-    marginTop: 20, // Adjusted 'marginTop'
+    marginTop: 20,
+    marginBottom: 10,
     backgroundColor: 'white',
     borderRadius: 10,
     alignSelf: 'center',
@@ -102,4 +90,94 @@ export const startWorkoutStyles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 24,
   },
+  selectedExerciseName: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    marginLeft: 18,
+    marginTop: 20,
+  },
+  exerciseContainer: {
+    marginBottom: 10,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  inputField: {
+    flex: 1,
+    height: 35,
+    paddingHorizontal: 10,
+    backgroundColor: 'white',
+    borderRadius: 7,
+    marginRight: 5,
+  },
+  validationButton: {
+    backgroundColor: '#808080',
+    borderRadius: 7,
+    width: 50,
+    height: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  validationButtonText: {
+    fontSize: 24,
+    color: 'white',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#02111B',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalMessage: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#ffffff'
+  },
+  modalButtonClose: {
+    backgroundColor: '#e71d27',
+    right: 90,
+    top: 40,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 36,
+  },
+  modalButtonFinish: {
+    left: 90,
+    backgroundColor: '#008080',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 45,
+  },
+  modalButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+  },
+  feedbackContainer: {
+    position: 'absolute',
+    bottom: 100, // Adjust as needed
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  feedbackText: {
+    color: 'white', // Choose a color that stands out
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    padding: 10,
+    borderRadius: 5,
+  },
 });
+
+export default styles;

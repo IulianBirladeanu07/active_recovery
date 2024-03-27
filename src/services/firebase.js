@@ -1,21 +1,22 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
+import { getFirestore, collection, addDoc,doc,setDoc, getDocs } from 'firebase/firestore';
 
 // Your Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyCATfdd7eYlQhTyx2GAFX5OvHS3qKBnVuc",
-    authDomain: "activerecovery-3a400.firebaseapp.com",
-    projectId: "activerecovery-3a400",
-    storageBucket: "activerecovery-3a400.appspot.com",
-    messagingSenderId: "208634985017",
-    appId: "1:208634985017:web:ff62b269645670672fabe8",
-    measurementId: "G-G9EHVBG5ZG"
-  };
+  apiKey: "AIzaSyCATfdd7eYlQhTyx2GAFX5OvHS3qKBnVuc",
+  authDomain: "activerecovery-3a400.firebaseapp.com",
+  projectId: "activerecovery-3a400",
+  storageBucket: "activerecovery-3a400.appspot.com",
+  messagingSenderId: "208634985017",
+  appId: "1:208634985017:web:ff62b269645670672fabe8",
+  measurementId: "G-G9EHVBG5ZG"
+};
   
 // Initialize Firebase
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+const app = firebase.initializeApp(firebaseConfig);
+// Create Firestore database reference
+const db = getFirestore(app);
 
 const signUpWithEmailAndPassword = async (email, password) => {
   const response = await firebase.auth().createUserWithEmailAndPassword(email, password);
@@ -33,4 +34,4 @@ const signInWithEmailAndPassword = async (email, password, navigation) => {
   }
 };
 
-export { signUpWithEmailAndPassword, signInWithEmailAndPassword };
+export { signUpWithEmailAndPassword, signInWithEmailAndPassword, db, collection, addDoc, setDoc, doc,getDocs }; // Export db reference

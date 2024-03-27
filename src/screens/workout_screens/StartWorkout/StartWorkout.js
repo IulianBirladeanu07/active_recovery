@@ -1,43 +1,37 @@
-// StartWorkout.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Modal, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+  Animated,
+} from 'react-native';
 import { format } from 'date-fns';
-import { db, doc, setDoc, collection } from '../../../services/firebase';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ExerciseItem from '../ExerciseItem/ExerciseItem';
-import ModalComponent from './Modal';
-import { startWorkoutStyles } from './StartWorkoutStyles';
+import { sendWorkoutDataToFirestore, handleAddExercises, handleValidation, handleInputChange, handleAddSet, handleWeightChange, handleRepsChange } from './WorkoutHandler';
+import styles from './StartWorkoutStyles';
+import AnimatedMessage from '../../../helpers/AnimatedtMessage'
 
 const StartWorkout = ({ route, navigation }) => {
   const [seconds, setSeconds] = useState(0);
-  const [intervalId, setIntervalId] = useState(null);
   const [showFinishButton, setShowFinishButton] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [exerciseData, setExerciseData] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isValidationPressed, setIsValidationPressed] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
-
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-
   const [isEmptyFlagEnabled, setIsFlagEnabled] = useState(false);
 
-  const closeModal = () => {
-    setIsModalVisible(false);
-  };
-
-  const openModal = (message) => {
-    setModalMessage(message);
-    setIsModalVisible(true);
-  };
+  const [animatedMessage, setAnimatedMessage] = useState('');
+  const [modalCallback, setModalCallback] = useState(() => {});
 
   useEffect(() => {
     const id = setInterval(() => {
       setSeconds((prevSeconds) => prevSeconds + 1);
     }, 1000);
-    setIntervalId(id);
-
     return () => clearInterval(id);
   }, []);
 
@@ -51,7 +45,7 @@ const StartWorkout = ({ route, navigation }) => {
       setSelectedExercise(newExercise.exerciseName);
     }
   }, [route.params?.selectedExercise]);
-  
+
   useEffect(() => {
     if (route.params?.selectedWorkout) {
       const { note, exercises } = route.params.selectedWorkout;
@@ -62,17 +56,17 @@ const StartWorkout = ({ route, navigation }) => {
   }, [route.params?.selectedWorkout]);
 
   const handleExit = () => {
-    clearInterval(intervalId);
+    clearInterval(seconds);
     navigation.goBack();
   };
 
-  const formatTime = (timeInSeconds) => {
+  const formatTime = timeInSeconds => {
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = timeInSeconds % 60;
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  const handleScroll = (event) => {
+  const handleScroll = event => {
     const offsetY = event.nativeEvent.contentOffset.y;
     const contentHeight = event.nativeEvent.contentSize.height;
     const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
@@ -84,122 +78,57 @@ const StartWorkout = ({ route, navigation }) => {
     }
   };
 
-  const sendWorkoutDataToFirestore = async () => {
+  const openAnimatedMessage = (message) => {
+    setAnimatedMessage(message);
+    setTimeout(() => setAnimatedMessage(''), 3000);
+  };
+
+  const openModal = (message, callback) => {
+    setModalMessage(message);
+    setIsModalVisible(true);
+    setModalCallback(() => callback);
+  };
+
+  const handleModalConfirm = () => {
+    modalCallback();
+    closeModal();
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+    setModalCallback(() => {}); // Reset the callback
+  };
+
+  const handleFinishWorkout = async () => {
     try {
-      const hasEmptyOrInvalidInputs = exerciseData.some((exercise) => {
-        return exercise.sets.some((set) => {
-          return (
-            set.weight.trim() === '' ||
-            set.reps.trim() === '' ||
-            set.weight.toLowerCase() === 'weights' ||
-            set.reps.toLowerCase() === 'reps' ||
-            !/^\d+$/.test(set.weight) ||
-            !/^\d+$/.test(set.reps)
-          );
-        });
-      });
-
-      if (hasEmptyOrInvalidInputs && !isEmptyFlagEnabled) {
-        openModal(
-          'Some sets or reps are not filled, are you sure you want to finish the workout?'
-        );
-        setIsFlagEnabled(true);
-      } else if (!isValidationPressed) {
-        openModal(
-          'Some sets are not validated, please validate them before you decide to finish the workout'
-        );
-      } else {
-        const workoutDataToSend = {
-          timestamp: new Date(),
-          note: inputText,
-          exercises: exerciseData,
-        };
-
-        const formattedTimestamp = format(
-          workoutDataToSend.timestamp,
-          'EEEE, MMMM d, yyyy h:mm a'
-        );
-
-        const workoutDocRef = doc(collection(db, 'Workouts'), formattedTimestamp);
-
-        await setDoc(workoutDocRef, workoutDataToSend);
-        console.log(isValidationPressed);
-        console.log('Workout data added to Firestore!');
-        navigation.goBack();
-      }
-    } catch (error) {
-      console.error('Error adding workout data:', error.message);
-      openModal(error.message);
-    }
-  };
-
-  const handleAddExercises = () => {
-    navigation.navigate('ExerciseList');
-  };
-
-  const handleValidation = (exerciseIndex, setIndex) => {
-    const updatedData = [...exerciseData];
-    updatedData[exerciseIndex].sets[setIndex].isValidated = !updatedData[exerciseIndex].sets[setIndex].isValidated;
-    setExerciseData(updatedData);
-
-    const allSetsValidated = updatedData[exerciseIndex].sets.every(
-      (set) => set.isValidated
-    );
-
-    setIsValidationPressed(allSetsValidated);
-  };
-
-  const handleInputChange = (text) => {
-    setInputText(text);
-  };
-
-  const handleAddSet = (exerciseIndex) => {
-    const updatedData = [...exerciseData];
-    const newSet = { weight: '', reps: '', isValidated: false };
-    updatedData[exerciseIndex].sets.push(newSet);
-    setExerciseData(updatedData);
-  };
-
-  const handleWeightChange = (text, exerciseIndex, setIndex) => {
-    if (/^\d+$/.test(text)) {
-      const updatedData = [...exerciseData];
-      updatedData[exerciseIndex].sets[setIndex].weight = text;
-      setExerciseData(updatedData);
-    } else {
-      Alert.alert(
-        'Error',
-        'Please enter a valid positive integer for weight.'
+      await sendWorkoutDataToFirestore(
+        exerciseData,
+        inputText,
+        isValidationPressed,
+        navigation,
+        openAnimatedMessage,
+        openModal,
       );
+    } catch (error) {
+      console.error('Error finishing workout:', error.message);
+      openModal('Error', () => console.log(error.message)); // Adjust to handle error
     }
-  };
-
-  const handleRepsChange = (text, exerciseIndex, setIndex) => {
-    if (/^\d+$/.test(text)) {
-      const updatedData = [...exerciseData];
-      updatedData[exerciseIndex].sets[setIndex].reps = text;
-      setExerciseData(updatedData);
-    } else {
-      Alert.alert('Error', 'Please enter a valid positive integer for reps.');
-    }
-  };
-
-  const handleDeleteExercise = (exerciseIndex) => {
-    const updatedData = [...exerciseData];
-    updatedData.splice(exerciseIndex, 1);
-    setExerciseData(updatedData);
   };
 
   const renderSetInputs = () => {
     if (selectedExercise) {
       return exerciseData.map((exercise, exerciseIndex) => (
-        <ExerciseItem
+        <ExerciseInput
           key={exerciseIndex}
           exercise={exercise}
-          handleDeleteExercise={handleDeleteExercise}
-          handleValidation={handleValidation}
+          exerciseIndex={exerciseIndex}
           handleWeightChange={handleWeightChange}
           handleRepsChange={handleRepsChange}
-          handleAddSet={handleAddSet}
+          handleValidation={handleValidation}
+          setIsValidationPressed={setIsValidationPressed}
+          setExerciseData={setExerciseData}
+          exerciseData={exerciseData}
+          openModal={openModal} // Pass openModal as a prop
         />
       ));
     }
@@ -207,51 +136,109 @@ const StartWorkout = ({ route, navigation }) => {
   };
 
   return (
-    <GestureHandlerRootView style={startWorkoutStyles.container}>
-    <ModalComponent
-      isModalVisible={isModalVisible}
-      closeModal={closeModal}
-      modalMessage={modalMessage}
-      sendWorkoutDataToFirestore={sendWorkoutDataToFirestore}
-    />
-    <View style={startWorkoutStyles.headerContainer}>
-      <Text style={startWorkoutStyles.timerText}>{formatTime(seconds)}</Text>
-      <TouchableOpacity style={startWorkoutStyles.exitButton} onPress={handleExit}>
-        <Text style={startWorkoutStyles.exitButtonText}>Cancel</Text>
+    <View style={styles.container}>
+      <Modal transparent visible={isModalVisible} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalMessage}>{modalMessage}</Text>
+            <TouchableOpacity onPress={closeModal} style={styles.modalButtonClose}>
+              <Text style={styles.modalButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleModalConfirm} style={styles.modalButtonFinish}>
+              <Text style={styles.modalButtonText}>Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <View style={styles.headerContainer}>
+        <Text style={styles.timerText}>{formatTime(seconds)}</Text>
+        <TouchableOpacity style={styles.exitButton} onPress={handleExit}>
+          <Text style={styles.exitButtonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        onScroll={handleScroll}
+        onContentSizeChange={(contentWidth, contentHeight) => {
+          setIsAtBottom(false);
+        }}
+      >
+        <TextInput
+          style={styles.input}
+          placeholder="Note"
+          value={inputText}
+          onChangeText={text => handleInputChange(text, setInputText)}
+        />
+        {renderSetInputs()}
+        <TouchableOpacity
+          style={styles.addExercisesButton}
+          onPress={() => handleAddExercises(navigation)}
+        >
+          <Text style={styles.addExercisesButtonText}>Add Exercises</Text>
+        </TouchableOpacity>
+      </ScrollView>
+      {showFinishButton && (
+        <TouchableOpacity
+          style={styles.finishButton}
+          onPress={handleFinishWorkout}
+        >
+          <Text style={styles.finishButtonText}>Finish</Text>
+        </TouchableOpacity>
+      )}
+      {/* Conditional rendering of the AnimatedMessage */}
+      {animatedMessage ? <AnimatedMessage message={animatedMessage} /> : null}
+    </View>
+  );
+  };
+
+const ExerciseInput = ({
+  exercise,
+  exerciseIndex,
+  handleWeightChange,
+  handleRepsChange,
+  handleValidation,
+  setIsValidationPressed,
+  setExerciseData,
+  exerciseData,
+  openModal
+}) => (
+  <View style={styles.exerciseContainer}>
+    <Text  style={styles.selectedExerciseName}>{exercise.exerciseName}</Text>
+    {exercise.sets.map((data, setIndex) => (
+      <View style={styles.inputContainer} key={setIndex}>
+        <TextInput
+          style={styles.inputField}
+          placeholder="Weight"
+          value={data.weight}
+          onChangeText={text => handleWeightChange(text, exerciseIndex, setIndex, exerciseData, setExerciseData, openModal)}
+          keyboardType="numeric"
+        />
+        <TextInput
+          style={styles.inputField}
+          placeholder="Reps"
+          value={data.reps}
+          onChangeText={text => handleRepsChange(text, exerciseIndex, setIndex, exerciseData, setExerciseData, openModal)}
+          keyboardType="numeric"
+        />
+        <TouchableOpacity
+          style={[
+            styles.validationButton,
+            { backgroundColor: data.isValidated ? '#008080' : '#808080' },
+          ]}
+          onPress={() => handleValidation(exerciseIndex, setIndex, exerciseData, setExerciseData, setIsValidationPressed)}
+        >
+          <Text style={styles.validationButtonText}>✓</Text>
+        </TouchableOpacity>
+      </View>
+    ))}
+    <TouchableOpacity
+      style={styles.addSetButton}
+      onPress={() => handleAddSet(exerciseIndex, exerciseData, setExerciseData)}
+      >
+        <Text style={styles.addSetButtonText}>Add Set</Text>
       </TouchableOpacity>
     </View>
-    <ScrollView
-      contentContainerStyle={startWorkoutStyles.scrollViewContent}
-      onScroll={handleScroll}
-      onContentSizeChange={(contentWidth, contentHeight) => {
-        setIsAtBottom(false);
-      }}
-    >
-      <TextInput
-        style={startWorkoutStyles.input}
-        placeholder="Note"
-        value={inputText}
-        onChangeText={handleInputChange}
-      />
-      {renderSetInputs()}
-      <TouchableOpacity
-        style={startWorkoutStyles.addExercisesButton}
-        onPress={handleAddExercises}
-      >
-        <Text style={startWorkoutStyles.addExercisesButtonText}>Add Exercises</Text>
-      </TouchableOpacity>
-    </ScrollView>
-    {showFinishButton && (
-      <TouchableOpacity
-        style={startWorkoutStyles.finishButton}
-        onPress={sendWorkoutDataToFirestore}
-      >
-        <Text style={startWorkoutStyles.finishButtonText}>Finish</Text>
-      </TouchableOpacity>
-    )}
-  </GestureHandlerRootView>
 );
-};
 
 export default StartWorkout;
 
