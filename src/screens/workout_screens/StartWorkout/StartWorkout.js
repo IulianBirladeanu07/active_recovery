@@ -32,6 +32,10 @@ const StartWorkout = ({ route, navigation }) => {
   const [modalCallback, setModalCallback] = useState(() => {});
 
   useEffect(() => {
+    navigation.setParams({ selectedExercise: selectedExercise });
+  }, [selectedExercise]);
+
+  useEffect(() => {
     const id = setInterval(() => {
       setSeconds((prevSeconds) => prevSeconds + 1);
     }, 1000);
@@ -46,6 +50,7 @@ const StartWorkout = ({ route, navigation }) => {
       };
       setExerciseData((prevData) => [...prevData, newExercise]);
       setSelectedExercise(newExercise.exerciseName);
+      console.log('Selected exercise from route parameters:', newExercise.exerciseName);
     }
   }, [route.params?.selectedExercise]);
 
@@ -54,7 +59,9 @@ const StartWorkout = ({ route, navigation }) => {
       const { note, exercises } = route.params.selectedWorkout;
       setInputText(note);
       setExerciseData(exercises);
-      setSelectedExercise(exercises[0]?.exerciseName || null);
+      const firstExerciseName = exercises[0]?.exerciseName || null;
+      setSelectedExercise(firstExerciseName);
+      console.log('Selected exercise from loaded workout data:', firstExerciseName);
     }
   }, [route.params?.selectedWorkout]);
 
@@ -119,6 +126,7 @@ const StartWorkout = ({ route, navigation }) => {
   };
 
   const renderSetInputs = () => {
+    // console.log(selectedExercise);
     if (selectedExercise) {
       return exerciseData.map((exercise, exerciseIndex) => (
         <ExerciseInput
@@ -147,15 +155,18 @@ const StartWorkout = ({ route, navigation }) => {
       const updatedExerciseData = [...exerciseData];
       updatedExerciseData[exerciseIndex].sets = updatedSets;
       setExerciseData(updatedExerciseData);
+      console.log('Updated exercise data after deleting a set:', updatedExerciseData);
     } else {
-      // If only one set, delete the entire exercise
+      // If only one set, show the modal for confirmation
       openModal('Are you sure you want to delete this exercise?', () => {
+        // Delete the entire exercise only after confirming in the modal
         const updatedExerciseData = [...exerciseData];
         updatedExerciseData.splice(exerciseIndex, 1);
+        const remainingExercises = updatedExerciseData.map(exercise => exercise.exerciseName);
+        const newSelectedExercise = remainingExercises.length > 0 ? remainingExercises[0] : null;
+        console.log('New selected exercise:', newSelectedExercise); // Log the new selected exercise
+        setSelectedExercise(newSelectedExercise);
         setExerciseData(updatedExerciseData);
-        
-        // Update selectedExercise state
-        setSelectedExercise(updatedExerciseData.length > 0 ? updatedExerciseData[0].exerciseName : null);
       });
     }
   };

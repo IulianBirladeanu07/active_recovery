@@ -89,14 +89,6 @@ export const handleAddSet = (exerciseIndex, exerciseData, setExerciseData) => {
   setExerciseData(updatedData);
 };
 
-// Define the function to handle deleting a set
-export const handleDeleteSet = (exerciseIndex, setIndex) => {
-    const newData = [...exerciseData];
-    newData[exerciseIndex].sets.splice(setIndex, 1);
-    setExerciseData(newData);
-  };
-
-
 // Handler for changing the weight of a set
 export const handleWeightChange = (text, exerciseIndex, setIndex, exerciseData, setExerciseData, openModal) => {
   if (/^\d+$/.test(text)) {
