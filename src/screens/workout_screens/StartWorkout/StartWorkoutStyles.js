@@ -178,6 +178,20 @@ export const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
   },
+  swipeableContainer: {
+  },
+
+  deleteButton: {
+    backgroundColor: 'red', // Background color of the delete button
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 20, // Example width of the delete button
+  },
+
+  deleteButtonText: {
+    color: '#fff', // Text color of the delete button
+    fontWeight: 'bold',
+  },  
 });
 
 export default styles;

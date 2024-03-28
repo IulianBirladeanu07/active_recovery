@@ -24,7 +24,7 @@ export const sendWorkoutDataToFirestore = async (
         // This callback is now correctly set up to be called after user confirmation.
         await finishWorkout(exerciseData, inputText, navigation, true, openAnimatedMessage);
       });
-      
+
     } else {
       // All sets are validated and have valid inputs, proceed directly to finish the workout
       await finishWorkout(exerciseData, inputText, navigation, false, openAnimatedMessage);
@@ -88,6 +88,14 @@ export const handleAddSet = (exerciseIndex, exerciseData, setExerciseData) => {
   updatedData[exerciseIndex].sets.push(newSet);
   setExerciseData(updatedData);
 };
+
+// Define the function to handle deleting a set
+export const handleDeleteSet = (exerciseIndex, setIndex) => {
+    const newData = [...exerciseData];
+    newData[exerciseIndex].sets.splice(setIndex, 1);
+    setExerciseData(newData);
+  };
+
 
 // Handler for changing the weight of a set
 export const handleWeightChange = (text, exerciseIndex, setIndex, exerciseData, setExerciseData, openModal) => {

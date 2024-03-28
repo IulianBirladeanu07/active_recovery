@@ -29,6 +29,17 @@ export const styles = StyleSheet.create({
     fontSize: 24,
     color: 'white',
   },
+rightAction: {
+  backgroundColor: 'red',
+  justifyContent: 'center',
+  // Adjust padding, margin, or position as needed
+  padding: 20,
+},
+actionText: {
+  color: 'white',
+  fontWeight: '600',
+  // Adjust text alignment or padding as needed
+}
 });
 
 export default styles;

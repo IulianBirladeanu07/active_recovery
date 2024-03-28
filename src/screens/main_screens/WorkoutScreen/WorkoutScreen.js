@@ -12,9 +12,6 @@ const WorkoutScreen = () => {
   const route = useRoute();
 
   const handleStartWorkout = () => {
-    // Handle the logic for starting the workout here.
-    // For example, you can navigate to a specific screen to begin the workout.
-    // Replace 'StartWorkoutScreen' with the actual screen where the workout starts.
     navigation.navigate('StartWorkout');
   };
 

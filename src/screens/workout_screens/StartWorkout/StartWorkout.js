@@ -7,11 +7,14 @@ import {
   ScrollView,
   Modal,
   Animated,
+  PanResponder,
+  Dimensions,
 } from 'react-native';
 import { format } from 'date-fns';
 import { sendWorkoutDataToFirestore, handleAddExercises, handleValidation, handleInputChange, handleAddSet, handleWeightChange, handleRepsChange } from './WorkoutHandler';
 import styles from './StartWorkoutStyles';
-import AnimatedMessage from '../../../helpers/AnimatedtMessage'
+import AnimatedMessage from '../../../helpers/AnimatedMessage';
+import { Swipeable } from 'react-native-gesture-handler';
 
 const StartWorkout = ({ route, navigation }) => {
   const [seconds, setSeconds] = useState(0);
@@ -129,12 +132,34 @@ const StartWorkout = ({ route, navigation }) => {
           setExerciseData={setExerciseData}
           exerciseData={exerciseData}
           openModal={openModal} // Pass openModal as a prop
+          handleSwipeDelete={handleSwipeDelete} // Pass handleSwipeDelete as a prop
         />
       ));
     }
     return null;
   };
 
+  const handleSwipeDelete = (exerciseIndex, setIndex) => {
+    if (exerciseData[exerciseIndex].sets.length > 1) {
+      // If more than one set, delete the specific set
+      const updatedSets = [...exerciseData[exerciseIndex].sets];
+      updatedSets.splice(setIndex, 1);
+      const updatedExerciseData = [...exerciseData];
+      updatedExerciseData[exerciseIndex].sets = updatedSets;
+      setExerciseData(updatedExerciseData);
+    } else {
+      // If only one set, delete the entire exercise
+      openModal('Are you sure you want to delete this exercise?', () => {
+        const updatedExerciseData = [...exerciseData];
+        updatedExerciseData.splice(exerciseIndex, 1);
+        setExerciseData(updatedExerciseData);
+        
+        // Update selectedExercise state
+        setSelectedExercise(updatedExerciseData.length > 0 ? updatedExerciseData[0].exerciseName : null);
+      });
+    }
+  };
+  
   return (
     <View style={styles.container}>
       <Modal transparent visible={isModalVisible} animationType="slide">
@@ -189,7 +214,7 @@ const StartWorkout = ({ route, navigation }) => {
       {animatedMessage ? <AnimatedMessage message={animatedMessage} /> : null}
     </View>
   );
-  };
+};
 
 const ExerciseInput = ({
   exercise,
@@ -200,45 +225,71 @@ const ExerciseInput = ({
   setIsValidationPressed,
   setExerciseData,
   exerciseData,
-  openModal
+  openModal,
+  handleSwipeDelete, // Receive handleSwipeDelete as a prop
 }) => (
   <View style={styles.exerciseContainer}>
-    <Text  style={styles.selectedExerciseName}>{exercise.exerciseName}</Text>
+    <Text style={styles.selectedExerciseName}>{exercise.exerciseName}</Text>
     {exercise.sets.map((data, setIndex) => (
-      <View style={styles.inputContainer} key={setIndex}>
-        <TextInput
-          style={styles.inputField}
-          placeholder="Weight"
-          value={data.weight}
-          onChangeText={text => handleWeightChange(text, exerciseIndex, setIndex, exerciseData, setExerciseData, openModal)}
-          keyboardType="numeric"
-        />
-        <TextInput
-          style={styles.inputField}
-          placeholder="Reps"
-          value={data.reps}
-          onChangeText={text => handleRepsChange(text, exerciseIndex, setIndex, exerciseData, setExerciseData, openModal)}
-          keyboardType="numeric"
-        />
-        <TouchableOpacity
-          style={[
-            styles.validationButton,
-            { backgroundColor: data.isValidated ? '#008080' : '#808080' },
-          ]}
-          onPress={() => handleValidation(exerciseIndex, setIndex, exerciseData, setExerciseData, setIsValidationPressed)}
-        >
-          <Text style={styles.validationButtonText}>✓</Text>
-        </TouchableOpacity>
-      </View>
+      // Wrap each set with Swipeable component
+      <Swipeable
+        key={setIndex}
+        containerStyle={styles.swipeableContainer}
+        renderRightActions={(_, dragX) => (
+          <Animated.View
+            style={[
+              styles.deleteButton,
+              {
+                transform: [
+                  {
+                    translateX: dragX.interpolate({
+                      inputRange: [-100, 0],
+                      outputRange: [0, 100],
+                      extrapolate: 'clamp',
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+          </Animated.View>
+        )}
+        onSwipeableWillOpen={() => handleSwipeDelete(exerciseIndex, setIndex)}
+      >
+        <View style={styles.inputContainer} key={setIndex}>
+          <TextInput
+            style={styles.inputField}
+            placeholder="Weight"
+            value={data.weight}
+            onChangeText={text => handleWeightChange(text, exerciseIndex, setIndex, exerciseData, setExerciseData, openModal)}
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={styles.inputField}
+            placeholder="Reps"
+            value={data.reps}
+            onChangeText={text => handleRepsChange(text, exerciseIndex, setIndex, exerciseData, setExerciseData, openModal)}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity
+            style={[
+              styles.validationButton,
+              { backgroundColor: data.isValidated ? '#008080' : '#808080' },
+            ]}
+            onPress={() => handleValidation(exerciseIndex, setIndex, exerciseData, setExerciseData, setIsValidationPressed)}
+          >
+            <Text style={styles.validationButtonText}>✓</Text>
+          </TouchableOpacity>
+        </View>
+      </Swipeable>
     ))}
     <TouchableOpacity
       style={styles.addSetButton}
       onPress={() => handleAddSet(exerciseIndex, exerciseData, setExerciseData)}
-      >
-        <Text style={styles.addSetButtonText}>Add Set</Text>
-      </TouchableOpacity>
-    </View>
+    >
+      <Text style={styles.addSetButtonText}>Add Set</Text>
+    </TouchableOpacity>
+  </View>
 );
 
 export default StartWorkout;
-
