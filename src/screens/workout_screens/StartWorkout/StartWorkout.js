@@ -9,15 +9,16 @@ import {
   Animated,
   PanResponder,
   Dimensions,
+  AppState,
 } from 'react-native';
 import { format } from 'date-fns';
 import { sendWorkoutDataToFirestore, handleAddExercises, handleValidation, handleInputChange, handleAddSet, handleWeightChange, handleRepsChange } from './WorkoutHandler';
 import styles from './StartWorkoutStyles';
 import AnimatedMessage from '../../../helpers/AnimatedMessage';
 import { Swipeable } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const StartWorkout = ({ route, navigation }) => {
-  const [seconds, setSeconds] = useState(0);
   const [showFinishButton, setShowFinishButton] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [exerciseData, setExerciseData] = useState([]);
@@ -26,21 +27,45 @@ const StartWorkout = ({ route, navigation }) => {
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [isEmptyFlagEnabled, setIsFlagEnabled] = useState(false);
+
+  const [startTime, setStartTime] = useState(Date.now());
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [appState, setAppState] = useState(AppState.currentState);
 
   const [animatedMessage, setAnimatedMessage] = useState('');
   const [modalCallback, setModalCallback] = useState(() => {});
 
+  // Effect for handling AppState changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (appState === 'active' && (nextAppState.match(/inactive|background/))) {
+        // When app goes to the background, save the current timestamp and elapsed time
+        setStartTime(Date.now() - elapsedTime * 1000); // Adjust startTime based on elapsed time
+      } else if (appState.match(/inactive|background/) && nextAppState === 'active') {
+        // When app comes to the foreground, update elapsed time
+        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      }
+      setAppState(nextAppState);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [appState, elapsedTime, startTime]);
+
+  // Effect for updating the timer every second
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setElapsedTime((prevElapsedTime) => prevElapsedTime + 1);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   useEffect(() => {
     navigation.setParams({ selectedExercise: selectedExercise });
   }, [selectedExercise]);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setSeconds((prevSeconds) => prevSeconds + 1);
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
+  
 
   useEffect(() => {
     if (route.params?.selectedExercise) {
@@ -66,7 +91,7 @@ const StartWorkout = ({ route, navigation }) => {
   }, [route.params?.selectedWorkout]);
 
   const handleExit = () => {
-    clearInterval(seconds);
+    clearInterval(elapsedTime);
     navigation.goBack();
   };
 
@@ -187,7 +212,7 @@ const StartWorkout = ({ route, navigation }) => {
         </View>
       </Modal>
       <View style={styles.headerContainer}>
-        <Text style={styles.timerText}>{formatTime(seconds)}</Text>
+        <Text style={styles.timerText}>{formatTime(elapsedTime)}</Text>
         <TouchableOpacity style={styles.exitButton} onPress={handleExit}>
           <Text style={styles.exitButtonText}>Cancel</Text>
         </TouchableOpacity>
