@@ -1,6 +1,6 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-import { getFirestore, collection, addDoc,doc,setDoc, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, doc, setDoc, getDocs, query, where } from 'firebase/firestore';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -34,4 +34,4 @@ const signInWithEmailAndPassword = async (email, password, navigation) => {
   }
 };
 
-export { signUpWithEmailAndPassword, signInWithEmailAndPassword, db, collection, addDoc, setDoc, doc,getDocs }; // Export db reference
+export { signUpWithEmailAndPassword, signInWithEmailAndPassword, db, collection, addDoc, setDoc, doc, getDocs, query, where }; // Export db reference

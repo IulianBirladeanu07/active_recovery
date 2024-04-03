@@ -15,6 +15,7 @@ import WorkoutMeasurements from './src/screens/workout_screens/WorkoutMeasuremen
 import StartWorkout from './src/screens/workout_screens/StartWorkout/StartWorkout';
 
 import ExerciseList from './src/screens/workout_screens/ExerciseList/ExerciseList';
+import WorkoutDetails from './src/screens/workout_screens/WorkoutDetails/WorkoutDetails';
 
 const Stack = createNativeStackNavigator();
 
@@ -30,6 +31,7 @@ export default function App() {
           <Stack.Screen options={{ headerShown: false }} name="Progress" component={ProgressScreen} />
           <Stack.Screen options={{ headerShown: false }} name="WorkoutExercises" component={WorkoutExercises} />
           <Stack.Screen options={{ headerShown: false }} name="WorkoutHistory" component={WorkoutHistory} />
+          <Stack.Screen options={{ headerShown: false }} name="WorkoutDetails" component={WorkoutDetails} />
           <Stack.Screen options={{ headerShown: false }} name="WorkoutMeasurements" component={WorkoutMeasurements} />
           <Stack.Screen options={{ headerShown: false }} name="StartWorkout" component={StartWorkout} />
           <Stack.Screen options={{ headerShown: false }} name="ExerciseList" component={ExerciseList} />
