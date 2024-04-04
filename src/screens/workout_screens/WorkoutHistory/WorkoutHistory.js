@@ -19,11 +19,16 @@ const HistoryScreen = ({ navigation }) => {
         setWorkouts(workoutList);
       } catch (error) {
         console.error('Error fetching workouts:', error);
+        // Add error handling here
       }
     };
 
     fetchWorkouts();
   }, []);
+
+  const formatTimestamp = (timestamp) => {
+    return format(timestamp.toDate(), "d 'of' MMMM, yyyy ',' HH:mm ");
+  };
 
   const handleWorkoutPress = useCallback((workout) => {
     if (workout) {
@@ -44,6 +49,19 @@ const HistoryScreen = ({ navigation }) => {
       console.error('Invalid workout data:', workout);
     }
   }, [navigation]);
+  
+  const renderExercise = useCallback((exercise, exerciseIndex) => (
+    <View style={styles.exerciseContainer} key={`${exercise.exerciseName}-${exerciseIndex}`}>
+      <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
+      {exercise.sets.map((set, setIndex) => (
+        <View style={styles.setContainer} key={setIndex}>
+          <Text style={styles.setDetails}>
+            Weight: {set.weight} Reps: {set.reps}
+          </Text>
+        </View>
+      ))}
+    </View>
+  ), []);
 
   const renderItem = useCallback(({ item }) => (
     <TouchableOpacity
@@ -51,23 +69,12 @@ const HistoryScreen = ({ navigation }) => {
       onPress={() => handleWorkoutPress(item)}
     >
       <Text style={styles.timestamp}>
-        {format(item.timestamp.toDate(), "d 'of' MMMM, yyyy ',' HH:mm ")}
+        {formatTimestamp(item.timestamp)}
       </Text>
       <Text style={styles.note}>{item.note}</Text>
-      {item.exercises.map((exercise, exerciseIndex) => (
-        <View style={styles.exerciseContainer} key={exerciseIndex}>
-          <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
-          {exercise.sets.map((set, setIndex) => (
-            <View style={styles.setContainer} key={setIndex}>
-              <Text style={styles.setDetails}>
-                Weight: {set.weight} Reps: {set.reps}
-              </Text>
-            </View>
-          ))}
-        </View>
-      ))}
+      {item.exercises.map(renderExercise)}
     </TouchableOpacity>
-  ), [handleWorkoutPress]);
+  ), [handleWorkoutPress, renderExercise]);
 
   return (
     <View style={styles.container}>
@@ -82,6 +89,7 @@ const HistoryScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
+    padding:5,
     flex: 1,
     backgroundColor: '#02111B',
   },
@@ -90,6 +98,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
+    marginTop: 10,
     borderWidth: 0.5,
     borderColor: '#000000',
   },

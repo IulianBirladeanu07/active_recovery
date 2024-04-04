@@ -70,16 +70,20 @@
 
     useEffect(() => {
       if (route.params?.selectedExercise) {
-        const newExercise = {
-          exerciseName: route.params.selectedExercise,
-          sets: [{ weight: '', reps: '', isValidated: false }],
-        };
-        setExerciseData((prevData) => [...prevData, newExercise]);
-        setSelectedExercise(newExercise.exerciseName);
-        console.log('Selected exercise from route parameters:', newExercise.exerciseName);
+        const newExerciseName = route.params.selectedExercise;
+        // Check if the exercise is already present in exerciseData
+        const isExerciseAlreadyAdded = exerciseData.some(exercise => exercise.exerciseName === newExerciseName);
+        if (!isExerciseAlreadyAdded) {
+          const newExercise = {
+            exerciseName: newExerciseName,
+            sets: [{ weight: '', reps: '', isValidated: false }],
+          };
+          setExerciseData((prevData) => [...prevData, newExercise]);
+          setSelectedExercise(newExerciseName);
+          console.log('Selected exercise from route parameters:', newExerciseName);
+        }
       }
-    }, [route.params?.selectedExercise]);
-
+    }, [route.params?.selectedExercise, exerciseData]);
     useEffect(() => {
       if (route.params?.selectedWorkout) {
         const { note, exercises } = route.params.selectedWorkout;

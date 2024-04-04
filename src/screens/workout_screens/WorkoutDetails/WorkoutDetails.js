@@ -11,36 +11,55 @@ const WorkoutDetails = ({ route }) => {
   useEffect(() => {
     const countTotalPRs = async () => {
       let total = 0;
-      const exerciseNames = exercises.map(exercise => exercise.exerciseName);
-      
-      // Batch query to retrieve all relevant 1RM documents for the exercises
-      const querySnapshot = await getDocs(query(collection(db, 'Workouts'), where('exerciseName', 'in', exerciseNames)));
-      console.log('Query Snapshot:', querySnapshot); // Log the query snapshot
-      
-      // Map each exercise to its latest 1RM value
-      const exercise1RMs = {};
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        const exerciseName = data.exerciseName;
-        const value = parseFloat(data.estimated1RM); // Parse the estimated1RM value as float
-        exercise1RMs[exerciseName] = Math.max(exercise1RMs[exerciseName] || 0, value);
-      });
-      console.log('Exercise 1RMs:', exercise1RMs, exerciseNames); // Log the exercise 1RM values
-      
-      // Check if exercise1RMs is not empty before counting PRs
-      if (Object.keys(exercise1RMs).length > 0) {
-        // Calculate PRs based on the retrieved 1RM values
-        exercises.forEach(exercise => {
-          const exerciseName = exercise.exerciseName;
-          const current1RM = calculate1RM(parseFloat(exercise.sets[0].weight), parseInt(exercise.sets[0].reps, 10));
-          const prev1RM = exercise1RMs[exerciseName] || 0;
-          if (current1RM > prev1RM) {
+  
+      // Batch query to retrieve all relevant documents for the exercises
+      const querySnapshot = await getDocs(collection(db, 'Workouts'));
+  
+      // Log the fetched documents for debugging
+      console.log('Fetched documents:', querySnapshot.docs);
+  
+      // Iterate through the exercises of the current workout
+      exercises.forEach(exercise => {
+        const exerciseName = exercise.exerciseName;
+        const currentExerciseSets = exercise.sets;
+  
+        // Log the current exercise for debugging
+        console.log('Current Exercise:', exercise);
+  
+        // Find the exercise in Firestore with the matching name
+        const matchingExerciseDoc = querySnapshot.docs.find(doc => {
+          const data = doc.data();
+          return data.exercises.some(ex => ex.exerciseName === exerciseName);
+        });
+  
+        // Log the matching document for debugging
+        console.log('Matching Document:', matchingExerciseDoc);
+  
+        if (matchingExerciseDoc) {
+          // Get the latest 1RM for the matching exercise from Firestore
+          const matchingExercise = matchingExerciseDoc.data().exercises.find(ex => ex.exerciseName === exerciseName);
+          const sets = matchingExercise.sets;
+          const bestSet = findBestSet(sets);
+          const prev1RM = parseFloat(bestSet.estimated1RM).toFixed(2) || 0;
+  
+          // Log the previous 1RM for debugging
+          console.log('Previous 1RM:', prev1RM);
+  
+          // Calculate the current 1RM for the current exercise
+          const bestCurrentSet = findBestSet(currentExerciseSets);
+          const current1RM = calculate1RM(parseFloat(bestCurrentSet.weight), parseInt(bestCurrentSet.reps, 10)).toFixed(2);
+  
+          // Log the current 1RM for debugging
+          console.log('Current 1RM:', current1RM);
+  
+          // Compare the current 1RM with the previous 1RM and count it as a PR if higher
+          if (parseFloat(current1RM) > prev1RM) {
             total++;
           }
-        });
-      }
+        }
+      });
+  
       console.log('Total PRs:', total); // Log the total PRs
-    
       setTotalPRs(total);
     };
   
@@ -83,7 +102,7 @@ const WorkoutDetails = ({ route }) => {
                 <View style={styles.bestSetContainer}>
                   <Text style={styles.bestSetText}>
                     {bestSet.weight && bestSet.reps
-                      ? `${bestSet.weight} kg x ${bestSet.reps} reps (1RM: ${bestSet.estimated1RM.toFixed(1)} kg)`
+                      ? `${bestSet.weight} kg x ${bestSet.reps} reps`
                       : 'N/A'}
                   </Text>
                 </View>

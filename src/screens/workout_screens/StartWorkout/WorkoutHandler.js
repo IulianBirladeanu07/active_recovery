@@ -55,7 +55,7 @@ async function finishWorkout(exerciseData, inputText, navigation, includeInvalid
   };
 
   console.log('Input:', inputText);
-  const formattedTimestamp = format(workoutDataToSend.timestamp, 'EEEE, MMMM d, yyyy h:mm a');
+  const formattedTimestamp = format(workoutDataToSend.timestamp, 'EEEE, MMMM d, yyyy H:mm');
   console.log(formattedTimestamp);
   const workoutDocRef = doc(collection(db, 'Workouts'), formattedTimestamp); // Use formattedTimestamp instead of timestamp
   await setDoc(workoutDocRef, workoutDataToSend);
@@ -108,23 +108,23 @@ export const handleAddSet = (exerciseIndex, exerciseData, setExerciseData) => {
 };
 
 // Handler for changing the weight of a set
-export const handleWeightChange = (text, exerciseIndex, setIndex, exerciseData, setExerciseData, openModal) => {
+export const handleWeightChange = (text, exerciseIndex, setIndex, exerciseData, setExerciseData, openAnimatedMessage) => {
   if (/^\d+$/.test(text)) {
     const updatedData = [...exerciseData];
     updatedData[exerciseIndex].sets[setIndex].weight = text;
     setExerciseData(updatedData);
   } else {
-    openModal('Error', 'Please enter a valid positive integer for weight.');
+    openAnimatedMessage('Error', 'Please enter a valid positive integer for weight.');
   }
 };
 
 // Handler for changing the reps of a set
-export const handleRepsChange = (text, exerciseIndex, setIndex, exerciseData, setExerciseData, openModal) => {
+export const handleRepsChange = (text, exerciseIndex, setIndex, exerciseData, setExerciseData, openAnimatedMessage) => {
   if (/^\d+$/.test(text)) {
     const updatedData = [...exerciseData];
     updatedData[exerciseIndex].sets[setIndex].reps = text;
     setExerciseData(updatedData);
   } else {
-    openModal('Error', 'Please enter a valid positive integer for reps.');
+    openAnimatedMessage('Error', 'Please enter a valid positive integer for reps.');
   }
 };
