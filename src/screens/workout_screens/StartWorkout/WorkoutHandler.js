@@ -11,6 +11,7 @@ export const sendWorkoutDataToFirestore = async (
   formatTime,
   elapsedTime, // Accept formatTime as a parameter
 ) => {
+  console.log('what ',isValidationPressed);
   try {
     const hasEmptyOrInvalidInputs = exerciseData.some(exercise =>
       exercise.sets.some(set =>
@@ -54,14 +55,10 @@ async function finishWorkout(exerciseData, inputText, navigation, includeInvalid
     })),
   };
 
-  console.log('Input:', inputText);
   const formattedTimestamp = format(workoutDataToSend.timestamp, 'EEEE, MMMM d, yyyy H:mm');
   console.log(formattedTimestamp);
   const workoutDocRef = doc(collection(db, 'Workouts'), formattedTimestamp); // Use formattedTimestamp instead of timestamp
   await setDoc(workoutDocRef, workoutDataToSend);
-
-  console.log('Workout data added to Firestore, including estimated 1RM for each set!');
-  console.log(formattedTimestamp);
 
   navigation.navigate('WorkoutDetails', { 
     duration: formatTime(elapsedTime), 
@@ -81,18 +78,17 @@ export const handleAddExercises = (navigation) => {
   navigation.navigate('ExerciseList');
 };
 
-// Handler for toggling the validation state of a set
-export const handleValidation = (exerciseIndex, setIndex, exerciseData, setExerciseData, setIsValidationPressed) => {
-  const updatedData = [...exerciseData];
-  updatedData[exerciseIndex].sets[setIndex].isValidated = !updatedData[exerciseIndex].sets[setIndex].isValidated;
-  setExerciseData(updatedData);
+  // Handler for toggling the validation state of a set
+  export const handleValidation = (exerciseIndex, setIndex, exerciseData, setExerciseData, setIsValidationPressed) => {
+    const updatedData = [...exerciseData];
+    updatedData[exerciseIndex].sets[setIndex].isValidated = !updatedData[exerciseIndex].sets[setIndex].isValidated;
+    setExerciseData(updatedData);
 
-  const allSetsValidated = updatedData.every(exercise =>
-    exercise.sets.every(set => set.isValidated)
-  );
-
-  setIsValidationPressed(allSetsValidated);
-};
+    const allSetsValidated = updatedData.every(exercise =>
+      exercise.sets.every(set => set.isValidated)
+    );
+    setIsValidationPressed(allSetsValidated);
+  };
 
 // Handler for changing the input text note
 export const handleInputChange = (text, setInputText) => {

@@ -16,7 +16,7 @@ const WorkoutDetails = ({ route }) => {
       const querySnapshot = await getDocs(collection(db, 'Workouts'));
   
       // Log the fetched documents for debugging
-      console.log('Fetched documents:', querySnapshot.docs);
+    //   console.log('Fetched documents:', querySnapshot.docs);
   
       // Iterate through the exercises of the current workout
       exercises.forEach(exercise => {
@@ -24,7 +24,7 @@ const WorkoutDetails = ({ route }) => {
         const currentExerciseSets = exercise.sets;
   
         // Log the current exercise for debugging
-        console.log('Current Exercise:', exercise);
+        // console.log('Current Exercise:', exercise);
   
         // Find the exercise in Firestore with the matching name
         const matchingExerciseDoc = querySnapshot.docs.find(doc => {
@@ -33,7 +33,7 @@ const WorkoutDetails = ({ route }) => {
         });
   
         // Log the matching document for debugging
-        console.log('Matching Document:', matchingExerciseDoc);
+        // console.log('Matching Document:', matchingExerciseDoc);
   
         if (matchingExerciseDoc) {
           // Get the latest 1RM for the matching exercise from Firestore
@@ -43,14 +43,14 @@ const WorkoutDetails = ({ route }) => {
           const prev1RM = parseFloat(bestSet.estimated1RM).toFixed(2) || 0;
   
           // Log the previous 1RM for debugging
-          console.log('Previous 1RM:', prev1RM);
+        //   console.log('Previous 1RM:', prev1RM);
   
           // Calculate the current 1RM for the current exercise
           const bestCurrentSet = findBestSet(currentExerciseSets);
           const current1RM = calculate1RM(parseFloat(bestCurrentSet.weight), parseInt(bestCurrentSet.reps, 10)).toFixed(2);
   
           // Log the current 1RM for debugging
-          console.log('Current 1RM:', current1RM);
+        //   console.log('Current 1RM:', current1RM);
   
           // Compare the current 1RM with the previous 1RM and count it as a PR if higher
           if (parseFloat(current1RM) > prev1RM) {
@@ -59,7 +59,7 @@ const WorkoutDetails = ({ route }) => {
         }
       });
   
-      console.log('Total PRs:', total); // Log the total PRs
+    //   console.log('Total PRs:', total); // Log the total PRs
       setTotalPRs(total);
     };
   

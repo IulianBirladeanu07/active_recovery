@@ -80,10 +80,10 @@
           };
           setExerciseData((prevData) => [...prevData, newExercise]);
           setSelectedExercise(newExerciseName);
-          console.log('Selected exercise from route parameters:', newExerciseName);
         }
       }
     }, [route.params?.selectedExercise, exerciseData]);
+
     useEffect(() => {
       if (route.params?.selectedWorkout) {
         const { note, exercises } = route.params.selectedWorkout;
@@ -91,9 +91,30 @@
         setExerciseData(exercises);
         const firstExerciseName = exercises[0]?.exerciseName || null;
         setSelectedExercise(firstExerciseName);
-        console.log('Selected exercise from loaded workout data:', firstExerciseName);
+    
+        // Check if any set is not validated for any exercise
+        let anySetNotValidated = false;
+        exercises.forEach(exercise => {
+          exercise.sets.forEach(set => {
+            if (!set.isValidated) {
+              anySetNotValidated = true;
+              return;
+            }
+          });
+        });
+        console.log('105');
+        setIsValidationPressed(!anySetNotValidated); // Update isValidationPressed state based on the flag
+      } else {
+        // If no selected workout, reset isValidationPressed
+        console.log('108');
+
+        setIsValidationPressed(false);
+        console.log('110');
+
       }
     }, [route.params?.selectedWorkout]);
+
+    
 
     const handleExit = () => {
       clearInterval(elapsedTime);
@@ -142,7 +163,6 @@
 
     const handleFinishWorkout = async () => {
       try {
-        console.log('exerciseData before sending to Firestore:', JSON.stringify(exerciseData, null, 2));
         await sendWorkoutDataToFirestore(
           exerciseData,
           inputText,
@@ -154,7 +174,6 @@
           elapsedTime,
         );
       } catch (error) {
-        console.error('Error finishing workout:', error.message);
         openModal('Error', () => console.log(error.message)); // Adjust to handle error
       }
     };
@@ -189,7 +208,6 @@
         const updatedExerciseData = [...exerciseData];
         updatedExerciseData[exerciseIndex].sets = updatedSets;
         setExerciseData(updatedExerciseData);
-        console.log('Updated exercise data after deleting a set:', updatedExerciseData);
       } else {
         // If only one set, show the modal for confirmation
         openModal('Are you sure you want to delete this exercise?', () => {
