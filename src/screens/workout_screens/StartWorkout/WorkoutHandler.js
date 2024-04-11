@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { db, collection, setDoc, doc } from '../../../services/firebase';
+import { db, collection, setDoc, getDocs, doc, query, where, orderBy, limit } from '../../../services/firebase';
 
 export const sendWorkoutDataToFirestore = async (
   exerciseData,
@@ -11,17 +11,17 @@ export const sendWorkoutDataToFirestore = async (
   formatTime,
   elapsedTime, // Accept formatTime as a parameter
 ) => {
-  console.log('what ',isValidationPressed);
   try {
     const hasEmptyOrInvalidInputs = exerciseData.some(exercise =>
       exercise.sets.some(set =>
         set.weight.trim() === '' || set.reps.trim() === '' ||
         !/^\d+$/.test(set.weight) || !/^\d+$/.test(set.reps)
+        
       )
     );
 
     if (hasEmptyOrInvalidInputs) {
-      openAnimatedMessage('Note: Some sets have empty or invalid weight/reps. These sets will be saved as is.');
+      openAnimatedMessage('Note: Some sets have empty or invalid weight/reps.');
     } else if (!isValidationPressed) {
       openModal('Some sets are not validated. Do you wish to proceed anyway?', async () => {
         await finishWorkout(exerciseData, inputText, navigation, true, openAnimatedMessage, openModal, formatTime, elapsedTime); // Pass formatTime here
@@ -86,7 +86,7 @@ export const handleAddExercises = (navigation) => {
 
     const allSetsValidated = updatedData.every(exercise =>
       exercise.sets.every(set => set.isValidated)
-    );
+    );  
     setIsValidationPressed(allSetsValidated);
   };
 
@@ -105,7 +105,7 @@ export const handleAddSet = (exerciseIndex, exerciseData, setExerciseData) => {
 
 // Handler for changing the weight of a set
 export const handleWeightChange = (text, exerciseIndex, setIndex, exerciseData, setExerciseData, openAnimatedMessage) => {
-  if (/^\d+$/.test(text)) {
+  if (text === '' || /^\d+$/.test(text)) {
     const updatedData = [...exerciseData];
     updatedData[exerciseIndex].sets[setIndex].weight = text;
     setExerciseData(updatedData);
@@ -116,7 +116,7 @@ export const handleWeightChange = (text, exerciseIndex, setIndex, exerciseData, 
 
 // Handler for changing the reps of a set
 export const handleRepsChange = (text, exerciseIndex, setIndex, exerciseData, setExerciseData, openAnimatedMessage) => {
-  if (/^\d+$/.test(text)) {
+  if (text === '' || /^\d+$/.test(text)) {
     const updatedData = [...exerciseData];
     updatedData[exerciseIndex].sets[setIndex].reps = text;
     setExerciseData(updatedData);
@@ -124,3 +124,33 @@ export const handleRepsChange = (text, exerciseIndex, setIndex, exerciseData, se
     openAnimatedMessage('Error', 'Please enter a valid positive integer for reps.');
   }
 };
+
+export const getSetsFromLastWorkout = async (exerciseName) => {
+  try {
+    const workoutsRef = collection(db, 'Workouts');
+    const querySnapshot = await getDocs(query(workoutsRef, orderBy('timestamp', 'desc')));
+
+    console.log('Starting search for exercise:', exerciseName);
+
+    for (const doc of querySnapshot.docs) {
+      console.log('Checking workout with timestamp:', doc.data().timestamp);
+      const workoutData = doc.data();
+      const exercises = workoutData.exercises || [];
+      const exercise = exercises.find(ex => ex.exerciseName === exerciseName);
+
+      if (exercise) {
+        console.log('Found exercise in workout with timestamp:', workoutData.timestamp);
+        const lastWorkoutSets = exercise.sets.map(set => `${set.weight} kg x ${set.reps}`);
+        console.log('Last workout sets:', lastWorkoutSets);
+        return lastWorkoutSets; // Directly return the sets array
+      }
+    }
+
+    console.log('Exercise not found in any workouts.');
+    return [];
+  } catch (error) {
+    console.error('Error retrieving sets from last workout:', error.message);
+    throw error;
+  }
+}
+

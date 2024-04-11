@@ -27,6 +27,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 20,
+    marginTop: 10,
   },
   addSetButtonText: {
     color: '#fdf5ec',
@@ -95,6 +96,7 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginLeft: 18,
     marginTop: 20,
+    marginBottom: 8,
   },
   exerciseContainer: {
     marginBottom: 10,
@@ -192,6 +194,12 @@ export const styles = StyleSheet.create({
     color: '#fff', // Text color of the delete button
     fontWeight: 'bold',
   },  
+  label: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginRight: 10,
+    color: '#FFFFFF', // Adjust color as needed
+  },
 });
 
 export default styles;

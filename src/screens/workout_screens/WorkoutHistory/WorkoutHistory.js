@@ -19,7 +19,6 @@
           setWorkouts(workoutList);
         } catch (error) {
           console.error('Error fetching workouts:', error);
-          // Add error handling here
         }
       };
 
@@ -37,8 +36,6 @@
           exercises: workout.exercises.map((exercise) => ({
             exerciseName: exercise.exerciseName,
             sets: exercise.sets.map((set) => {
-              // Log the isValidated property
-              console.log('isValidated:', set.isValidated);
               return {
                 weight: set.weight.toString(),
                 reps: set.reps.toString(),
