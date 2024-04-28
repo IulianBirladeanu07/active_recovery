@@ -1,4 +1,4 @@
-// LoginScreenStyles.js
+// RegistrationScreenStyles.js
 
 import { StyleSheet, Dimensions } from 'react-native';
 
@@ -43,22 +43,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 16,
-  },
-  registerButton: {
-    backgroundColor: '#02111B',
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 20,
-    width: windowWidth - 40,
-    maxWidth: 400,
-    borderWidth: 1,
-    borderColor: '#e71d27',
-  },
-  registerButtonText: {
-    color: '#e71d27',
     fontWeight: 'bold',
     textAlign: 'center',
     fontSize: 16,

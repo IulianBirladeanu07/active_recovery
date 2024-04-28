@@ -41,15 +41,33 @@ const StartWorkout = ({ route, navigation }) => {
   useEffect(() => {
     const fetchLastWorkoutSets = async () => {
       try {
-        if (selectedExercise) {
+        // Check if route.params.selectedExercise is defined
+        if (route.params?.selectedExercise) {
+          // Starting a new workout
+          const { selectedExercise } = route.params;
+          // Fetch last workout sets only for the selected exercise
           const sets = await getSetsFromLastWorkout(selectedExercise);
-          // Update lastWorkoutSets for the selected exercise only
+          
+          // Update lastWorkoutSets for the selected exercise
           setExerciseData(prevData => {
-            return prevData.map(exercise => {
+            const updatedData = prevData.map(exercise => {
               if (exercise.exerciseName === selectedExercise) {
                 return { ...exercise, lastWorkoutSets: sets };
               }
               return exercise;
+            });
+            return updatedData;
+          });
+        } else if (route.params?.selectedWorkout) {
+          // Starting a workout from an existing one
+          const { exercises } = route.params.selectedWorkout;
+          const setsPromises = exercises.map(exercise => getSetsFromLastWorkout(exercise.exerciseName));
+          const setsResults = await Promise.all(setsPromises);
+          
+          // Update lastWorkoutSets for all exercises
+          setExerciseData(prevData => {
+            return prevData.map((exercise, index) => {
+              return { ...exercise, lastWorkoutSets: setsResults[index] };
             });
           });
         }
@@ -59,15 +77,14 @@ const StartWorkout = ({ route, navigation }) => {
     };
   
     fetchLastWorkoutSets();
-  }, [selectedExercise]);
-  
+  }, [route.params?.selectedExercise, route.params?.selectedWorkout]);
   
   // Effect for handling AppState changes
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (appState === 'active' && (nextAppState.match(/inactive|background/))) {
         // When app goes to the background, save the current timestamp and elapsed time
-        setStartTime(Date.now() - elapsedTime * 1000); // Adjust startTime based on elapsed time
+      +  setStartTime(Date.now() - elapsedTime * 1000); // Adjust startTime based on elapsed time
       } else if (appState.match(/inactive|background/) && nextAppState === 'active') {
         // When app comes to the foreground, update elapsed time
         setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
@@ -76,7 +93,7 @@ const StartWorkout = ({ route, navigation }) => {
     });
 
     return () => {
-      subscription.remove();
+      subscription.remove();  
     };
   }, [appState, elapsedTime, startTime]);
 
@@ -118,7 +135,7 @@ const StartWorkout = ({ route, navigation }) => {
       setInputText(note);
       setExerciseData(exercises.map(exercise => ({
         ...exercise,
-        lastWorkoutSets: [], // Initialize last workout sets array for each exercise
+        lastWorkoutSets: Array(exercise.sets.length).fill(''), // Initialize with empty strings
       })));
       const firstExerciseName = exercises[0]?.exerciseName || null;
       setSelectedExercise(firstExerciseName);
@@ -352,7 +369,7 @@ const ExerciseInput = ({
           </Text>
           <TextInput
             style={styles.inputField}
-            placeholder="Weight"
+            placeholder="Weight" 
             value={data.weight}
             onChangeText={(text) =>
               handleWeightChange(

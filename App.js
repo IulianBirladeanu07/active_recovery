@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from './src/screens/main_screens/LoginScreen/LoginScreen';
+import RegistrationScreen from './src/screens/main_screens/LoginScreen/RegistrationScreen'
 import HomeScreen from './src/screens/main_screens/HomeScreen/HomeScreen';
 import WorkoutScreen from './src/screens/main_screens/WorkoutScreen/WorkoutScreen';
 import NutritionScreen from './src/screens/main_screens/NutritionScreen/NutritionScreen';
@@ -11,11 +12,12 @@ import ProgressScreen from './src/screens/main_screens/ProgressScreen/ProgressSc
 
 import WorkoutExercises from './src/screens/workout_screens/WorkoutExercises/WorkoutExercises';
 import WorkoutHistory from './src/screens/workout_screens/WorkoutHistory/WorkoutHistory';
+import WorkoutDetails from './src/screens/workout_screens/WorkoutDetails/WorkoutDetails';
 import WorkoutMeasurements from './src/screens/workout_screens/WorkoutMeasurements/WorkoutMeasurements';
 import StartWorkout from './src/screens/workout_screens/StartWorkout/StartWorkout';
 
 import ExerciseList from './src/screens/workout_screens/ExerciseList/ExerciseList';
-import WorkoutDetails from './src/screens/workout_screens/WorkoutDetails/WorkoutDetails';
+import WorkoutTemplate from './src/screens/workout_screens/WorkoutTemplate/WorkoutTemplate';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +27,7 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen options={{ headerShown: false }} name="Login" component={LoginScreen} />
+          <Stack.Screen options={{ headerShown: false }} name="RegistrationScreen" component={RegistrationScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Workout" component={WorkoutScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Nutrition" component={NutritionScreen} />
@@ -35,6 +38,7 @@ export default function App() {
           <Stack.Screen options={{ headerShown: false }} name="WorkoutMeasurements" component={WorkoutMeasurements} />
           <Stack.Screen options={{ headerShown: false }} name="StartWorkout" component={StartWorkout} />
           <Stack.Screen options={{ headerShown: false }} name="ExerciseList" component={ExerciseList} />
+          <Stack.Screen options={{ headerShown: false }} name="WorkoutTemplate" component={WorkoutTemplate} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

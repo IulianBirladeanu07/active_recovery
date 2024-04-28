@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { signUpWithEmailAndPassword, signInWithEmailAndPassword } from '../../../services/firebase';
+import { signInWithEmailAndPassword } from '../../../services/firebase';
 import styles from './LoginScreenStyles'; // Import styles
 
 const LoginScreen = () => {
@@ -11,24 +11,10 @@ const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
-  const handleSignUp = async () => {
-    try {
-      setLoading(true);
-      await signUpWithEmailAndPassword(email, password);
-      setError(null);
-      navigation.navigate('Home');
-    } catch (error) {
-      console.error(error);
-      setError('A intervenit o eroare la înregistrare. Vă rugăm să încercați din nou.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSignIn = async () => {
     try {
       setLoading(true);
-      await signInWithEmailAndPassword(email, password, navigation);
+      await signInWithEmailAndPassword(email, password);
     } catch (error) {
       console.error(error);
       setError(handleSignInError(error));
@@ -41,15 +27,15 @@ const LoginScreen = () => {
     switch (error.code) {
       case 'auth/user-not-found':
       case 'auth/wrong-password':
-        return 'Emailul sau parola sunt incorecte. Vă rugăm să încercați din nou.';
+        return 'Incorrect email or password. Please try again.';
       default:
-        return 'A intervenit o eroare. Vă rugăm să încercați din nou mai târziu.';
+        return 'An error occurred. Please try again later.';
     }
   };
   
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Autentificare</Text>
+      <Text style={styles.title}>Login</Text>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -64,24 +50,20 @@ const LoginScreen = () => {
           style={styles.input}
           value={password}
           onChangeText={setPassword}
-          placeholder="Parolă"
+          placeholder="Password"
           secureTextEntry={true}
         />
       </View>
       {error && <Text style={styles.error}>{error}</Text>}
-      <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled={loading}>
-        {loading ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <Text style={styles.buttonText}>Înregistrare</Text>
-        )}
-      </TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={handleSignIn} disabled={loading}>
         {loading ? (
           <ActivityIndicator color="#FFFFFF" />
         ) : (
-          <Text style={styles.buttonText}>Autentificare</Text>
+          <Text style={styles.buttonText}>Sign In</Text>
         )}
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('RegistrationScreen')}>
+        <Text style={styles.registerButtonText}>Register</Text>
       </TouchableOpacity>
     </View>
   );

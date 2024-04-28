@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { calculate1RM } from '../../workout_screens/StartWorkout/WorkoutHandler';
-import { db, collection, getDocs, query, where } from '../../../services/firebase'; // Import Firestore functions
+import { db, collection, getDocs} from '../../../services/firebase'; // Import Firestore functions
 
 const WorkoutDetails = ({ route }) => {
   const { duration, notes, exercises, formattedTimestamp, sessionTitle, date } = route.params;

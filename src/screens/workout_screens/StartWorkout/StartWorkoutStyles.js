@@ -198,6 +198,7 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginRight: 10,
+    width: 73,
     color: '#FFFFFF', // Adjust color as needed
   },
 });

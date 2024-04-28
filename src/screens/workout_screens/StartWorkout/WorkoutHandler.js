@@ -73,6 +73,27 @@ export const calculate1RM = (weight, reps) => {
   return weight / (1.0278 - 0.0278 * reps);
 };
 
+
+  // Function to count total PRs
+export const countTotalPRs = (lastWorkoutData) => {
+    let total = 0;
+    lastWorkoutData.exercises.forEach(exercise => {
+      const bestSet = findBestSet(exercise.sets);
+      if (bestSet) {
+        total++;
+      }
+    });
+    setTotalPRs(total);
+  };
+
+  // Helper function to find the best set based on the highest 1RM
+ export const findBestSet = (sets) => {
+    return sets.reduce((best, set) => {
+      const current1RM = calculate1RM(parseFloat(set.weight), parseInt(set.reps, 10));
+      return current1RM > best.estimated1RM ? { ...set, estimated1RM: current1RM } : best;
+    }, { estimated1RM: 0 });
+  };
+
 // Navigation handler to add exercises
 export const handleAddExercises = (navigation) => {
   navigation.navigate('ExerciseList');
@@ -128,25 +149,18 @@ export const handleRepsChange = (text, exerciseIndex, setIndex, exerciseData, se
 export const getSetsFromLastWorkout = async (exerciseName) => {
   try {
     const workoutsRef = collection(db, 'Workouts');
-    const querySnapshot = await getDocs(query(workoutsRef, orderBy('timestamp', 'desc')));
-
-    console.log('Starting search for exercise:', exerciseName);
+    const querySnapshot = await getDocs(query(workoutsRef, orderBy('timestamp', 'desc'), limit(5)));
 
     for (const doc of querySnapshot.docs) {
-      console.log('Checking workout with timestamp:', doc.data().timestamp);
       const workoutData = doc.data();
       const exercises = workoutData.exercises || [];
       const exercise = exercises.find(ex => ex.exerciseName === exerciseName);
 
       if (exercise) {
-        console.log('Found exercise in workout with timestamp:', workoutData.timestamp);
         const lastWorkoutSets = exercise.sets.map(set => `${set.weight} kg x ${set.reps}`);
-        console.log('Last workout sets:', lastWorkoutSets);
         return lastWorkoutSets; // Directly return the sets array
       }
     }
-
-    console.log('Exercise not found in any workouts.');
     return [];
   } catch (error) {
     console.error('Error retrieving sets from last workout:', error.message);
@@ -154,3 +168,49 @@ export const getSetsFromLastWorkout = async (exerciseName) => {
   }
 }
 
+import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+export const countWorkoutsThisWeek = async () => {
+  try {
+    const workoutsRef = collection(db, 'Workouts');
+    const today = new Date();
+    const startOfWeekDate = startOfWeek(today, { weekStartsOn: 1 }); // Explicitly setting week to start on Monday
+    const endOfWeekDate = endOfWeek(today, { weekStartsOn: 1 });
+    const querySnapshot = await getDocs(query(workoutsRef, orderBy('timestamp')));
+
+    let workoutCount = 0;
+
+    querySnapshot.forEach(doc => {
+      const workoutData = doc.data();
+      const workoutTimestamp = new Date(workoutData.timestamp.seconds * 1000); // Convert Firestore Timestamp to JavaScript Date
+      console.log(workoutData.timestamp.seconds * 1000); // Log the timestamp in milliseconds
+      if (isWithinInterval(workoutTimestamp, { start: startOfWeekDate, end: endOfWeekDate })) {
+        workoutCount++;
+      }
+    });
+    console.log(workoutCount)
+    return workoutCount;
+  } catch (error) {
+    console.error('Error counting workouts for this week:', error.message);
+    throw error;
+  }
+};
+
+export const getLastWorkout = async () => {
+  try {
+    const workoutsRef = collection(db, 'Workouts');
+    const querySnapshot = await getDocs(query(workoutsRef, orderBy('timestamp', 'desc'), limit(1)));
+
+    if (!querySnapshot.empty) {
+      const lastWorkoutData = querySnapshot.docs[0].data();
+      // You can format and process the data as needed before returning it
+      console.log('last: ',lastWorkoutData);
+      return lastWorkoutData;
+    } else {
+      // Return null or handle the case when there are no workouts available
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching last workout:', error.message);
+    throw error;
+  }
+};
