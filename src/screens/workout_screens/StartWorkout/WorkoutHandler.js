@@ -14,12 +14,32 @@ export const sendWorkoutDataToFirestore = async (
   elapsedTime, // Accept formatTime as a parameter
 ) => {
   try {
+    console.log(' dd',exerciseData);
+
+
     const hasEmptyOrInvalidInputs = exerciseData.some(exercise =>
-      exercise.sets.some(set =>
-        set.weight.trim() === '' || set.reps.trim() === '' ||
-        !/^\d+$/.test(set.weight) || !/^\d+$/.test(set.reps)
+      exercise.sets.some(set => {
+        console.log('Type of weight:', typeof set.weight);
+        console.log('Type of reps:', typeof set.reps);
         
-      )
+        // Check if weight is undefined, null, or not a string
+        const weightIsValid = set.weight !== undefined && set.weight !== null && (typeof set.weight === 'string' || typeof set.weight === 'number');
+        
+        // Check if reps is undefined, null, or not a string
+        const repsIsValid = set.reps !== undefined && set.reps !== null && (typeof set.reps === 'string' || typeof set.reps === 'number');
+    
+        // Convert weight and reps to strings if they are numbers
+        const weightString = typeof set.weight === 'number' ? String(set.weight) : set.weight;
+        const repsString = typeof set.reps === 'number' ? String(set.reps) : set.reps;
+    
+        return (
+          !weightIsValid || !repsIsValid || // Ensure weight and reps are defined and strings or numbers
+          (weightIsValid && typeof weightString === 'string' && weightString.trim() === '') || // Ensure weight is not an empty string
+          (repsIsValid && typeof repsString === 'string' && repsString.trim() === '') || // Ensure reps is not an empty string
+          (weightIsValid && typeof weightString === 'string' && !/^\d+$/.test(weightString)) || // Ensure weight is a valid number
+          (repsIsValid && typeof repsString === 'string' && !/^\d+$/.test(repsString)) // Ensure reps is a valid number
+        );
+      })
     );
 
     if (hasEmptyOrInvalidInputs) {
@@ -48,7 +68,6 @@ async function finishWorkout(exerciseData, inputText, navigation, includeInvalid
     const uid = user.uid; // Get UID of the authenticated user
     const timestamp = new Date();
     const formattedTimestamp = `${timestamp.getFullYear()}_${(timestamp.getMonth() + 1)}_${timestamp.getDate()}_${timestamp.getHours()}_${timestamp.getMinutes()}_${uid}`;
-
     const workoutDataToSend = {
       uid: uid, // Store the user's ID in the workout document
       timestamp: timestamp,
@@ -56,10 +75,12 @@ async function finishWorkout(exerciseData, inputText, navigation, includeInvalid
       exercises: exerciseData.map(exercise => ({
         ...exercise,
         sets: exercise.sets.map(set => ({
-          weight: parseFloat(set.weight.trim() !== '' ? set.weight : 0),
-          reps: parseInt(set.reps.trim() !== '' ? set.reps : 0),
+          weight: typeof set.weight === 'string' ? parseFloat(set.weight.trim() !== '' ? set.weight : 0) : set.weight,
+          reps: typeof set.reps === 'string' ? parseInt(set.reps.trim() !== '' ? set.reps : 0) : set.reps,
           isValidated: set.isValidated,
-          estimated1RM: set.reps > 0 ? calculate1RM(parseFloat(set.weight), parseInt(set.reps, 10)).toFixed(2) : 'N/A'
+          estimated1RM: typeof set.reps === 'number' && set.reps > 0 ? 
+            calculate1RM(typeof set.weight === 'number' ? set.weight : parseFloat(set.weight), 
+            typeof set.reps === 'number' ? set.reps : parseInt(set.reps, 10)).toFixed(2) : 'N/A'
         }))
       })),
     };
@@ -235,7 +256,6 @@ export const countWorkoutsThisWeek = async () => {
   }
 };
 
-// Function to retrieve the last workout for the current user
 export const getLastWorkout = async () => {
   try {
     const user = firebase.auth().currentUser;
@@ -267,3 +287,4 @@ export const getLastWorkout = async () => {
     throw error;
   }
 };
+

@@ -204,6 +204,7 @@ const StartWorkout = ({ route, navigation }) => {
   };
 
   const handleFinishWorkout = async () => {
+    console.log(exerciseData)
     try {
       await sendWorkoutDataToFirestore(
         exerciseData,

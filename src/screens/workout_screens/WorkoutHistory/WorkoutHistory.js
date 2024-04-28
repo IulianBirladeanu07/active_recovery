@@ -56,6 +56,8 @@ const HistoryScreen = ({ navigation }) => {
           }),
         })),
       };
+
+      console.log('f', formattedWorkoutData);
       navigation.navigate('StartWorkout', { selectedWorkout: formattedWorkoutData });
     } else {
       console.error('Invalid workout data:', workout);

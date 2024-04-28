@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import ApplicationCustomScreen from '../../../components/ApplicationCustomScreen/ApplicationCustomScreen';
 import { styles } from './WorkoutScreenStyles';
 import { countWorkoutsThisWeek, getLastWorkout } from '../../workout_screens/StartWorkout/WorkoutHandler';
+
 
 // Custom progress bar component
 const ProgressBar = ({ progress }) => (
@@ -19,7 +23,6 @@ const WorkoutScreen = () => {
   const [workoutsThisWeek, setWorkoutsThisWeek] = useState(0);
   const goalWorkoutsPerWeek = 7;
   const [lastWorkout, setLastWorkout] = useState(null);
-  const [totalPRs, setTotalPRs] = useState(0);
 
   useEffect(() => {
     const fetchWorkoutsThisWeek = async () => {
@@ -33,6 +36,11 @@ const WorkoutScreen = () => {
 
     const fetchLastWorkoutDetails = async () => {
       try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          throw new Error('User not authenticated.');
+        }
+        
         const lastWorkoutData = await getLastWorkout();
         setLastWorkout(lastWorkoutData);
       } catch (error) {
@@ -40,37 +48,31 @@ const WorkoutScreen = () => {
       }
     };
 
-    const calculateTotalPRs = () => {
-      // Your logic to calculate total PRs here
-      let total = 0;
-      if (lastWorkout) {
-        lastWorkout.exercises.forEach(exercise => {
-          // Your PR calculation logic for each exercise
-          // Add to total if PR is achieved
-        });
-      }
-      setTotalPRs(total);
-    };
-
     fetchWorkoutsThisWeek();
     fetchLastWorkoutDetails();
-    calculateTotalPRs();
   }, []);
 
   const handleStartWorkout = () => {
     navigation.navigate('StartWorkout');
   };
 
-  const handleLastWorkout = () => {
-    if (lastWorkout && lastWorkout.exercises && lastWorkout.exercises.length > 0) {
-      navigation.navigate('StartWorkout', { selectedWorkout: lastWorkout });
-    } else {
-      // If last workout data is not available or there are no exercises
-      // Display a message or perform any other action as needed
-      console.log('No workout data available for the last workout');
-      // You can also show an alert or a toast message to notify the user
-    }
+const handleLastWorkout = () => {
+  console.log('Last Workout:', lastWorkout);
+  
+  // Format the last workout data
+  const formattedWorkoutData = {
+    note: lastWorkout?.note || '', // Set the note as an empty string if it doesn't exist
+    exercises: lastWorkout?.exercises?.map(exercise => ({
+      exerciseName: exercise.exerciseName,
+      sets: exercise.sets
+    })) || [], // Map exercises to the required structure
   };
+
+  console.log('Formatted Workout Data:', formattedWorkoutData);
+  
+  navigation.navigate('StartWorkout', { selectedWorkout: formattedWorkoutData });
+};
+  
   
 
   const progress = workoutsThisWeek / goalWorkoutsPerWeek;
