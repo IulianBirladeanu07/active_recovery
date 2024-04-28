@@ -10,6 +10,7 @@ import {
   PanResponder,
   Dimensions,
   AppState,
+  BackHandler
 } from 'react-native';
 import { format } from 'date-fns';
 import { sendWorkoutDataToFirestore, handleAddExercises, handleValidation, handleInputChange, handleAddSet, handleWeightChange, handleRepsChange, getSetsFromLastWorkout } from './WorkoutHandler';
@@ -36,6 +37,16 @@ const StartWorkout = ({ route, navigation }) => {
   const [animatedMessage, setAnimatedMessage] = useState('');
   const [modalCallback, setModalCallback] = useState(() => {});
   const [lastWorkoutSets, setLastWorkoutSets] = useState([]); // State to store the sets from the last workout
+
+ useEffect(() => {
+    const backAction = () => {
+      return true; // Returning true prevents the default back action
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+    return () => backHandler.remove();
+  }, []);
 
 
   useEffect(() => {
@@ -157,10 +168,16 @@ const StartWorkout = ({ route, navigation }) => {
   }, [route.params?.selectedWorkout]);
 
   const handleExit = () => {
-    clearInterval(elapsedTime);
-    navigation.goBack();
+    // Open a modal to confirm exit
+    openModal('Are you sure you want to exit the workout?', confirmExit);
   };
 
+  const confirmExit = () => {
+    // Perform the actual exit logic here
+    clearInterval(elapsedTime); // Assuming 'elapsedTime' is controlled by a setInterval
+    navigation.goBack(); // This will navigate the user back to the previous screen
+  };
+  
   const formatTime = timeInSeconds => {
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = timeInSeconds % 60;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, FlatList, TouchableOpacity } from 'react-native';
-import allExercises from '../../../exercises/exercises'
+import allExercises from '../../../exercises/exercises';
 import exerciseListStyles from './ExerciseListStyles';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
 
 // ExerciseItem component
 const ExerciseItem = ({ exercise, onSelect }) => {
@@ -16,8 +17,11 @@ const ExerciseItem = ({ exercise, onSelect }) => {
 };
 
 // ExerciseList component
-const ExerciseList = ({ navigation }) => {
+const ExerciseList = ({ route }) => {
+  const navigation = useNavigation(); // Initialize navigation hook
   const [exerciseData, setExerciseData] = useState([]);
+
+  const { onSelectExercise } = route.params;
 
   useEffect(() => {
     const sortedExerciseData = Object.entries(allExercises)
@@ -38,8 +42,15 @@ const ExerciseList = ({ navigation }) => {
 
   const handleSelectedExercise = (exerciseName) => {
     console.log('Selected exercise:', exerciseName);
+    const previousScreen = route.params ? route.params.previousScreen : null; // Get previous screen name
     navigation.goBack();
-    navigation.navigate('StartWorkout', { selectedExercise: exerciseName });
+    if (previousScreen === 'StartWorkout') {
+      navigation.navigate('StartWorkout', { selectedExercise: exerciseName });
+    } else {
+      // Navigate to another screen if required
+      navigation.navigate('CreateTemplate', { selectedExercise: exerciseName });
+
+    }
   };
 
   return (

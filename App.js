@@ -18,6 +18,7 @@ import StartWorkout from './src/screens/workout_screens/StartWorkout/StartWorkou
 
 import ExerciseList from './src/screens/workout_screens/ExerciseList/ExerciseList';
 import WorkoutTemplate from './src/screens/workout_screens/WorkoutTemplate/WorkoutTemplate';
+import CreateTemplate from './src/screens/workout_screens/WorkoutTemplate/CreateTemplate';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +40,7 @@ export default function App() {
           <Stack.Screen options={{ headerShown: false }} name="StartWorkout" component={StartWorkout} />
           <Stack.Screen options={{ headerShown: false }} name="ExerciseList" component={ExerciseList} />
           <Stack.Screen options={{ headerShown: false }} name="WorkoutTemplate" component={WorkoutTemplate} />
+          <Stack.Screen options={{ headerShown: false }} name="CreateTemplate" component={CreateTemplate} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

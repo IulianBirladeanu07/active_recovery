@@ -12,8 +12,8 @@ import { countWorkoutsThisWeek, getLastWorkout } from '../../workout_screens/Sta
 
 // Custom progress bar component
 const ProgressBar = ({ progress }) => (
-  <View style={{ flexDirection: 'row', height: 27, backgroundColor: '#E0E0E0', borderRadius: 5 }}>
-    <View style={{ flex: progress, backgroundColor: '#e71d27', borderTopLeftRadius: 5, borderBottomLeftRadius: 5 }} />
+  <View style={{ flexDirection: 'row', height: 27, backgroundColor: '#E0E0E0', borderRadius: 6 }}>
+    <View style={{ flex: progress, backgroundColor: '#e71d27', borderRadius: 6, }} />
     <View style={{ flex: 1 - progress }} />
   </View>
 );
@@ -110,7 +110,7 @@ const handleLastWorkout = () => {
         <View style={styles.summaryCardsContainer}>
           <TouchableOpacity
             style={styles.summaryCard}
-            onPress={() => navigation.navigate('WorkoutHistory')}
+            onPress={() => navigation.navigate('WorkoutTemplate')}
           >
             <Image source={require('../../../assets/history_list.png')} style={styles.summaryCardIcon} />
             <Text style={styles.summaryCardText}>History</Text>
