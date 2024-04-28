@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { signUpWithEmailAndPassword } from '../../../services/firebase';
@@ -61,6 +62,7 @@ const RegistrationScreen = ({ navigation }) => {
       // ...
       await signUpWithEmailAndPassword(email, password, fullName, dateOfBirth);
       setError(null);
+      console.log('ddss')
       navigation.navigate('Login');
     } catch (error) {
       console.error(error);

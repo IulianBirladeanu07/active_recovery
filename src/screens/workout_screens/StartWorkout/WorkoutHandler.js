@@ -1,4 +1,6 @@
-import { format } from 'date-fns';
+import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
 import { db, collection, setDoc, getDocs, doc, query, where, orderBy, limit } from '../../../services/firebase';
 
 export const sendWorkoutDataToFirestore = async (
@@ -37,36 +39,51 @@ export const sendWorkoutDataToFirestore = async (
 };
 
 async function finishWorkout(exerciseData, inputText, navigation, includeInvalidInputs, openAnimatedMessage, openModal, formatTime, elapsedTime) {
-  const workoutDataToSend = {
-    timestamp: new Date(),
-    note: inputText,
-    exercises: exerciseData.map(exercise => ({
-      ...exercise,
-      sets: exercise.sets.map(set => {
-        const weight = set.weight.trim() !== '' && /^\d+$/.test(set.weight) ? parseFloat(set.weight) : 0;
-        const reps = set.reps.trim() !== '' && /^\d+$/.test(set.reps) ? parseInt(set.reps, 10) : 0;
-        return {
-          weight: weight.toString(),
-          reps: reps.toString(),
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+
+    const uid = user.uid; // Get UID of the authenticated user
+    const timestamp = new Date();
+    const formattedTimestamp = `${timestamp.getFullYear()}_${(timestamp.getMonth() + 1)}_${timestamp.getDate()}_${timestamp.getHours()}_${timestamp.getMinutes()}_${uid}`;
+
+    const workoutDataToSend = {
+      uid: uid, // Store the user's ID in the workout document
+      timestamp: timestamp,
+      note: inputText,
+      exercises: exerciseData.map(exercise => ({
+        ...exercise,
+        sets: exercise.sets.map(set => ({
+          weight: parseFloat(set.weight.trim() !== '' ? set.weight : 0),
+          reps: parseInt(set.reps.trim() !== '' ? set.reps : 0),
           isValidated: set.isValidated,
-          estimated1RM: reps > 0 ? calculate1RM(weight, reps).toFixed(2) : 'N/A'
-        };
-      })
-    })),
-  };
+          estimated1RM: set.reps > 0 ? calculate1RM(parseFloat(set.weight), parseInt(set.reps, 10)).toFixed(2) : 'N/A'
+        }))
+      })),
+    };
 
-  const formattedTimestamp = format(workoutDataToSend.timestamp, 'EEEE, MMMM d, yyyy H:mm');
-  console.log(formattedTimestamp);
-  const workoutDocRef = doc(collection(db, 'Workouts'), formattedTimestamp); // Use formattedTimestamp instead of timestamp
-  await setDoc(workoutDocRef, workoutDataToSend);
+    // Create a reference to the user's workout collection
+    const userWorkoutsRef = collection(db, 'Workouts');
+    const workoutDocRef = doc(userWorkoutsRef, formattedTimestamp); // Use formattedTimestamp
 
-  navigation.navigate('WorkoutDetails', { 
-    duration: formatTime(elapsedTime), 
-    notes: inputText, 
-    exercises: exerciseData,
-    formattedTimestamp: formattedTimestamp, // Pass formattedTimestamp instead of timestamp
-  });
+    await setDoc(workoutDocRef, workoutDataToSend);
+
+    console.log(formattedTimestamp);
+
+    navigation.navigate('WorkoutDetails', { 
+      duration: formatTime(elapsedTime), 
+      notes: inputText, 
+      exercises: exerciseData,
+      formattedTimestamp: formattedTimestamp, // Pass formattedTimestamp instead of timestamp
+    });
+  } catch (error) {
+    console.error('Error finishing workout:', error.message);
+    openAnimatedMessage(`Error: ${error.message}`);
+  }
 }
+
 
 // Calculate 1 Rep Max (1RM) using the given formula
 export const calculate1RM = (weight, reps) => {
@@ -146,19 +163,34 @@ export const handleRepsChange = (text, exerciseIndex, setIndex, exerciseData, se
   }
 };
 
+// Function to retrieve sets from the last workout for the current user
 export const getSetsFromLastWorkout = async (exerciseName) => {
   try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+    
+    const uid = user.uid;
+
     const workoutsRef = collection(db, 'Workouts');
-    const querySnapshot = await getDocs(query(workoutsRef, orderBy('timestamp', 'desc'), limit(5)));
+    const querySnapshot = await getDocs(query(
+      workoutsRef,
+      where('uid', '==', uid) // Filter by UID
+    ));
 
     for (const doc of querySnapshot.docs) {
       const workoutData = doc.data();
-      const exercises = workoutData.exercises || [];
-      const exercise = exercises.find(ex => ex.exerciseName === exerciseName);
+      // Extract the UID from the document ID
+      const [, , , , , docUid] = doc.id.split('_'); // Assuming UID comes at the end
+      if (docUid === uid) {
+        const exercises = workoutData.exercises || [];
+        const exercise = exercises.find(ex => ex.exerciseName === exerciseName);
 
-      if (exercise) {
-        const lastWorkoutSets = exercise.sets.map(set => `${set.weight} kg x ${set.reps}`);
-        return lastWorkoutSets; // Directly return the sets array
+        if (exercise) {
+          const lastWorkoutSets = exercise.sets.map(set => `${set.weight} kg x ${set.reps}`);
+          return lastWorkoutSets; // Directly return the sets array
+        }
       }
     }
     return [];
@@ -168,25 +200,33 @@ export const getSetsFromLastWorkout = async (exerciseName) => {
   }
 }
 
-import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+// Function to count workouts for the current user within the current week
 export const countWorkoutsThisWeek = async () => {
   try {
-    const workoutsRef = collection(db, 'Workouts');
-    const today = new Date();
-    const startOfWeekDate = startOfWeek(today, { weekStartsOn: 1 }); // Explicitly setting week to start on Monday
-    const endOfWeekDate = endOfWeek(today, { weekStartsOn: 1 });
-    const querySnapshot = await getDocs(query(workoutsRef, orderBy('timestamp')));
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+    
+    const uid = user.uid;
 
+    const workoutsRef = collection(db, 'Workouts');
+    const querySnapshot = await getDocs(query(
+      workoutsRef,
+      where('uid', '==', uid) // Filter by UID
+    ));
+
+    // Now, you can iterate over the filtered documents and count the workouts as needed
     let workoutCount = 0;
 
     querySnapshot.forEach(doc => {
-      const workoutData = doc.data();
-      const workoutTimestamp = new Date(workoutData.timestamp.seconds * 1000); // Convert Firestore Timestamp to JavaScript Date
-      console.log(workoutData.timestamp.seconds * 1000); // Log the timestamp in milliseconds
-      if (isWithinInterval(workoutTimestamp, { start: startOfWeekDate, end: endOfWeekDate })) {
+      // Extract the UID from the document ID
+      const [, , , , , docUid] = doc.id.split('_'); // Assuming UID comes at the end
+      if (docUid === uid) {
         workoutCount++;
       }
     });
+
     console.log(workoutCount)
     return workoutCount;
   } catch (error) {
@@ -195,15 +235,28 @@ export const countWorkoutsThisWeek = async () => {
   }
 };
 
+// Function to retrieve the last workout for the current user
 export const getLastWorkout = async () => {
   try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+    
+    const uid = user.uid;
+
     const workoutsRef = collection(db, 'Workouts');
-    const querySnapshot = await getDocs(query(workoutsRef, orderBy('timestamp', 'desc'), limit(1)));
+    const querySnapshot = await getDocs(query(
+      workoutsRef,
+      where('uid', '==', uid), // Filter by UID
+      orderBy('timestamp', 'desc'), // Order by timestamp if needed
+      limit(1)
+    ));
 
     if (!querySnapshot.empty) {
       const lastWorkoutData = querySnapshot.docs[0].data();
       // You can format and process the data as needed before returning it
-      console.log('last: ',lastWorkoutData);
+      console.log('last: ', lastWorkoutData);
       return lastWorkoutData;
     } else {
       // Return null or handle the case when there are no workouts available

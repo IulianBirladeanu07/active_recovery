@@ -172,13 +172,15 @@ const StartWorkout = ({ route, navigation }) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     const contentHeight = event.nativeEvent.contentSize.height;
     const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
-
-    if (offsetY + scrollViewHeight >= contentHeight) {
+    const threshold = 100; // Adjust this threshold as needed
+    
+    if (offsetY + scrollViewHeight >= contentHeight - threshold) {
       setShowFinishButton(true);
     } else {
       setShowFinishButton(false);
     }
   };
+  
 
   const openAnimatedMessage = (message) => {
     setAnimatedMessage(message);
@@ -370,7 +372,7 @@ const ExerciseInput = ({
           <TextInput
             style={styles.inputField}
             placeholder="Weight" 
-            value={data.weight}
+            value={String(data.weight)} // Convert weight to string
             onChangeText={(text) =>
               handleWeightChange(
                 text,
@@ -386,7 +388,7 @@ const ExerciseInput = ({
           <TextInput
             style={styles.inputField}
             placeholder="Reps"
-            value={data.reps}
+            value={String(data.reps)} // Convert reps to string
             onChangeText={(text) =>
               handleRepsChange(
                 text,

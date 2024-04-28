@@ -58,7 +58,7 @@ const WorkoutScreen = () => {
   }, []);
 
   const handleStartWorkout = () => {
-    navigation.navigate('StartWorkout', { selectedWorkout: lastWorkout });
+    navigation.navigate('StartWorkout');
   };
 
   const handleLastWorkout = () => {
@@ -108,7 +108,7 @@ const WorkoutScreen = () => {
         <View style={styles.summaryCardsContainer}>
           <TouchableOpacity
             style={styles.summaryCard}
-            onPress={() => navigation.navigate('WorkoutTemplate')}
+            onPress={() => navigation.navigate('WorkoutHistory')}
           >
             <Image source={require('../../../assets/history_list.png')} style={styles.summaryCardIcon} />
             <Text style={styles.summaryCardText}>History</Text>

@@ -13,10 +13,16 @@ const LoginScreen = () => {
 
   const handleSignIn = async () => {
     try {
+      console.log('dsds')
       setLoading(true);
-      await signInWithEmailAndPassword(email, password);
+      await signInWithEmailAndPassword(email, password,navigation);
+      // If login is successful, navigate to WorkoutScreen
+      navigation.navigate('Home');
+      console.log('fuck')
+
     } catch (error) {
       console.error(error);
+      console.log(error)
       setError(handleSignInError(error));
     } finally {
       setLoading(false);
@@ -32,7 +38,7 @@ const LoginScreen = () => {
         return 'An error occurred. Please try again later.';
     }
   };
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
