@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,18 +7,15 @@ import {
   ScrollView,
   Modal,
   Animated,
-  PanResponder,
-  Dimensions,
   AppState,
-  BackHandler
+  BackHandler,
+  Alert,
 } from 'react-native';
 import { format } from 'date-fns';
 import { sendWorkoutDataToFirestore, handleAddExercises, handleValidation, handleInputChange, handleAddSet, handleWeightChange, handleRepsChange, getSetsFromLastWorkout } from './WorkoutHandler';
 import styles from './StartWorkoutStyles';
 import AnimatedMessage from '../../../helpers/AnimatedMessage';
 import { Swipeable } from 'react-native-gesture-handler';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import WorkoutDetails from '../WorkoutDetails/WorkoutDetails';
 
 const StartWorkout = ({ route, navigation }) => {
   const [showFinishButton, setShowFinishButton] = useState(false);
@@ -38,17 +35,70 @@ const StartWorkout = ({ route, navigation }) => {
   const [modalCallback, setModalCallback] = useState(() => {});
   const [lastWorkoutSets, setLastWorkoutSets] = useState([]); // State to store the sets from the last workout
 
- useEffect(() => {
+  const intervalRef = useRef(null);
+
+  const startTimer = () => {
+    intervalRef.current = setInterval(() => {
+      setElapsedTime(prevTime => prevTime + 1);
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    startTimer();
+    return stopTimer;
+  }, []);
+
+  useEffect(() => {
     const backAction = () => {
-      return true; // Returning true prevents the default back action
+      Alert.alert("Hold on!", "Are you sure you want to go back?", [
+        {
+          text: "Cancel",
+          onPress: () => null,
+          style: "cancel"
+        },
+        {
+          text: "YES", onPress: () => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              // Optionally, handle the case where there is no previous screen to go back to
+              Alert.alert("Alert", "No previous screen to go back to.");
+            }
+          }
+        }
+      ]);
+      return true; // Prevent the default back action (exiting the app)
     };
 
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
-    return () => backHandler.remove();
+    return () => {
+      backHandler.remove();
+    };
+  }, [navigation]); // Include navigation in the dependency array to ensure updated state
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'background') {
+        stopTimer();
+      } else if (nextAppState === 'active') {
+        startTimer();
+      }
+    });
+
+    return () => {
+      console.log('removing subscription');
+      subscription.remove();
+    };
   }, []);
-
-
+  
   useEffect(() => {
     const fetchLastWorkoutSets = async () => {
       try {
@@ -90,38 +140,10 @@ const StartWorkout = ({ route, navigation }) => {
     fetchLastWorkoutSets();
   }, [route.params?.selectedExercise, route.params?.selectedWorkout]);
   
-  // Effect for handling AppState changes
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (appState === 'active' && (nextAppState.match(/inactive|background/))) {
-        // When app goes to the background, save the current timestamp and elapsed time
-      +  setStartTime(Date.now() - elapsedTime * 1000); // Adjust startTime based on elapsed time
-      } else if (appState.match(/inactive|background/) && nextAppState === 'active') {
-        // When app comes to the foreground, update elapsed time
-        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
-      }
-      setAppState(nextAppState);
-    });
-
-    return () => {
-      subscription.remove();  
-    };
-  }, [appState, elapsedTime, startTime]);
-
-  // Effect for updating the timer every second
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setElapsedTime((prevElapsedTime) => prevElapsedTime + 1);
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
   useEffect(() => {
     navigation.setParams({ selectedExercise: selectedExercise });
   }, [selectedExercise]);
   
-
   useEffect(() => {
     if (route.params?.selectedExercise) {
       const newExerciseName = route.params.selectedExercise;
@@ -135,9 +157,10 @@ const StartWorkout = ({ route, navigation }) => {
         };
         setExerciseData(prevData => [...prevData, newExercise]);
         setSelectedExercise(newExerciseName);
+        console.log('Selected exercise from route parameters:', newExercise.exerciseName);
       }
     }
-  }, [route.params?.selectedExercise, exerciseData]);
+  }, [route.params?.selectedExercise]);
   
   
   useEffect(() => {
@@ -150,7 +173,8 @@ const StartWorkout = ({ route, navigation }) => {
       })));
       const firstExerciseName = exercises[0]?.exerciseName || null;
       setSelectedExercise(firstExerciseName);
-  
+      console.log('Selected exercise from loaded workout data:', firstExerciseName);
+
       // Check if any set is not validated for any exercise
       let anySetNotValidated = false;
       exercises.forEach(exercise => {
@@ -174,7 +198,8 @@ const StartWorkout = ({ route, navigation }) => {
 
   const confirmExit = () => {
     // Perform the actual exit logic here
-    clearInterval(elapsedTime); // Assuming 'elapsedTime' is controlled by a setInterval
+    stopTimer();
+    setElapsedTime(0); // Assuming 'elapsedTime' is controlled by a setInterval
     navigation.goBack(); // This will navigate the user back to the previous screen
   };
   
@@ -221,8 +246,9 @@ const StartWorkout = ({ route, navigation }) => {
   };
 
   const handleFinishWorkout = async () => {
-    console.log(exerciseData)
     try {
+      stopTimer();
+      setElapsedTime(0);
       await sendWorkoutDataToFirestore(
         exerciseData,
         inputText,
@@ -263,26 +289,22 @@ const StartWorkout = ({ route, navigation }) => {
   };
 
   const handleSwipeDelete = (exerciseIndex, setIndex) => {
-    if (exerciseData[exerciseIndex].sets.length > 1) {
-      // If more than one set, delete the specific set
-      const updatedSets = [...exerciseData[exerciseIndex].sets];
-      updatedSets.splice(setIndex, 1);
-      const updatedExerciseData = [...exerciseData];
-      updatedExerciseData[exerciseIndex].sets = updatedSets;
-      setExerciseData(updatedExerciseData);
-    } else {
-      // If only one set, show the modal for confirmation
-      openModal('Are you sure you want to delete this exercise?', () => {
-        // Delete the entire exercise only after confirming in the modal
-        const updatedExerciseData = [...exerciseData];
-        updatedExerciseData.splice(exerciseIndex, 1);
-        const remainingExercises = updatedExerciseData.map(exercise => exercise.exerciseName);
-        const newSelectedExercise = remainingExercises.length > 0 ? remainingExercises[0] : null;
-        console.log('New selected exercise:', newSelectedExercise); // Log the new selected exercise
-        setSelectedExercise(newSelectedExercise);
-        setExerciseData(updatedExerciseData);
-      });
-    }
+    setExerciseData(currentData => {
+      let newData = [...currentData];
+      let exerciseToUpdate = newData[exerciseIndex];
+  
+      if (exerciseToUpdate.sets.length > 1) {
+        // Remove only the set if more than one set exists
+        let updatedSets = [...exerciseToUpdate.sets];
+        updatedSets.splice(setIndex, 1);
+        exerciseToUpdate.sets = updatedSets;
+      } else {
+        // Remove the whole exercise if only one set exists
+        newData.splice(exerciseIndex, 1);
+      }
+  
+      return newData;
+    });
   };
   
   return (

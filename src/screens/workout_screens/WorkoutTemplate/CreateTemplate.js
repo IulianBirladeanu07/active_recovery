@@ -1,6 +1,8 @@
+// CreateTemplate.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { styles } from './CreateTemplateStyle'; // Import the provided styles
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { addTemplateToFirestore } from '../StartWorkout/WorkoutHandler';
+import { styles } from './CreateTemplateStyle';
 
 const CreateTemplate = ({ navigation, route }) => {
   const [templateName, setTemplateName] = useState('');
@@ -20,8 +22,7 @@ const CreateTemplate = ({ navigation, route }) => {
   }, [route.params]);
 
   const handleAddExercise = () => {
-    navigation.navigate('ExerciseList', {
-      previousScreen: 'CreateTemplate',
+    navigation.setOptions({
       onSelectExercise: (selectedExercise) => {
         if (!selectedExerciseNames.includes(selectedExercise)) {
           setExercises([...exercises, { exerciseName: selectedExercise, sets: [] }]);
@@ -29,8 +30,9 @@ const CreateTemplate = ({ navigation, route }) => {
         } else {
           alert('Exercise already exists');
         }
-      },
+      }
     });
+    navigation.navigate('ExerciseList', { previousScreen: 'CreateTemplate' });
   };
 
   const renderSetInputs = () => {
@@ -50,7 +52,7 @@ const CreateTemplate = ({ navigation, route }) => {
             <TextInput
               style={styles.input}
               placeholder="Reps"
-              onChangeText={(text) => handleRepsChange(text, index)}
+              onChangeText={(text) => handleRepsInputChange(text, index)}
               keyboardType="numeric"
             />
           </View>
@@ -64,33 +66,78 @@ const CreateTemplate = ({ navigation, route }) => {
     ));
   };
 
-  const handleSetInputChange = (text, exerciseIndex) => {
-    const updatedExercises = [...exercises];
-    const numberOfSets = parseInt(text) || 0;
-    if (numberOfSets >= 0) {
-      const currentSetsLength = updatedExercises[exerciseIndex].sets.length;
-      if (numberOfSets > currentSetsLength) {
-        for (let i = currentSetsLength; i < numberOfSets; i++) {
-          updatedExercises[exerciseIndex].sets.push({ reps: '', weight: '' });
-        }
-      } else if (numberOfSets < currentSetsLength) {
-        updatedExercises[exerciseIndex].sets.splice(numberOfSets);
-      }
-      setExercises(updatedExercises);
-    }
-  };
-
   const handleCreateTemplate = () => {
+    // Trim the templateName to remove any leading or trailing whitespace
+    const trimmedTemplateName = templateName.trim();
+
+    // Check if the trimmed templateName is not empty
+    if (!trimmedTemplateName) {
+      // Provide feedback to the user that the template name is required
+      alert("Template name is required.");
+      return; // Stop the function if the template name is not valid
+    }
+
+    // Check if any exercises have no sets or reps specified
+    const invalidExercise = exercises.find(exercise => {
+      // Check if any set has invalid reps
+      const invalidSet = exercise.sets.find(set => {
+        // Check if reps are not a positive integer
+        return set.reps.trim() === '' || !/^\d+$/.test(set.reps);
+      });
+
+      // Return true if any set has invalid reps
+      return exercise.sets.length === 0 || invalidSet;
+    });
+
+    if (invalidExercise) {
+      alert("Please specify valid values for sets and reps for each exercise.");
+      return; // Stop the function if any exercise is invalid
+    }
+
     const templateData = {
-      templateName: templateName,
+      templateName: trimmedTemplateName, // Use the trimmed name for consistency
       exercises: exercises,
     };
-    console.log('Template created:', templateData);
+
+    // Attempt to add the template to Firestore
+    addTemplateToFirestore(templateData, trimmedTemplateName)
+      .then(() => {
+        console.log('Template created:', templateData);
+        if (route.params && route.params.refreshTemplates) {
+          console.log('regf')
+          route.params.refreshTemplates(); // Invoke the refreshTemplates callback function
+        }
+        navigation.replace('WorkoutTemplate');
+      })
+      .catch((error) => {
+        // Handle errors here, possibly adjusting the UI to show an error message
+        console.error("Error creating template:", error.message);
+        alert(`Error: ${error.message}`);
+      });
   };
 
-  const handleRepsChange = (text, exerciseIndex) => {
+  const handleSetInputChange = (text, exerciseIndex) => {
+    if (text.trim() === '') {
+      Alert.alert("Invalid input", "Sets cannot be empty.");
+      return;
+    }
+    const numberOfSets = parseInt(text);
+    if (!Number.isInteger(numberOfSets) || numberOfSets <= 0) {
+      Alert.alert("Invalid input", "Sets must be a positive integer.");
+      return;
+    }
+
     const updatedExercises = [...exercises];
-    updatedExercises[exerciseIndex].reps = text;
+    const setsAdjustment = new Array(numberOfSets).fill().map(() => ({ reps: '', weight: '' }));
+    updatedExercises[exerciseIndex].sets = setsAdjustment;
+    setExercises(updatedExercises);
+  };
+
+  const handleRepsInputChange = (text, exerciseIndex) => {
+    const updatedExercises = [...exercises];
+    updatedExercises[exerciseIndex].sets.forEach(set => {
+      set.reps = text; // Update reps for all sets of the exercise
+    });
     setExercises(updatedExercises);
   };
 

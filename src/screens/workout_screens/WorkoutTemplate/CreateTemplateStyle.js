@@ -50,6 +50,7 @@ export const styles = StyleSheet.create({
   },
   column: {
     flex: 1,
+    marginRight: RFValue(10),
   },
   label: {
     fontSize: RFValue(14),
@@ -57,10 +58,11 @@ export const styles = StyleSheet.create({
     marginBottom: RFValue(5),
   },
   setInput: {
-    height: RFValue(10),
+    height: RFValue(45),
     backgroundColor: '#FFFFFF',
     borderRadius: RFValue(10),
     paddingHorizontal: RFValue(20),
+    marginBottom: RFValue(5),
   },
 });
 

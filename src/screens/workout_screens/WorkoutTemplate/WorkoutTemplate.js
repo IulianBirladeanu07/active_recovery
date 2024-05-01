@@ -1,31 +1,81 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import {styles} from '../../workout_screens/WorkoutTemplate/WorkoutTemplateStyle'
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
+import { styles } from '../../workout_screens/WorkoutTemplate/WorkoutTemplateStyle';
+import { fetchTemplatesFromFirestore } from '../StartWorkout/WorkoutHandler'; // Import the function to fetch templates
+
 const WorkoutTemplate = ({ navigation }) => {
-  // Preset workout templates
-  const presetTemplates = [
-    { name: 'Upper Lower', exercises: ['Bench Press', 'Squats', 'Pull-ups', 'Deadlifts'], sets: 4, reps: 8 },
-    { name: 'Push Pull Legs', exercises: ['Bench Press', 'Pull-ups', 'Squats', 'Leg Press'], sets: 3, reps: 10 },
-    { name: 'Bro Split', exercises: ['Biceps Curls', 'Triceps Extensions', 'Shoulder Press', 'Leg Curls'], sets: 5, reps: 12 },
-  ];
+  const [templates, setTemplates] = useState([]); // State to hold fetched templates
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    // Fetch templates from Firestore when the component mounts
+    const fetchTemplates = async () => {
+      try {
+        const fetchedTemplates = await fetchTemplatesFromFirestore();
+        console.log(fetchedTemplates);
+        setTemplates(fetchedTemplates);
+      } catch (error) {
+        console.error('Error fetching templates:', error);
+        // Handle error fetching templates
+      }
+    };
+
+    fetchTemplates();
+    return () => {
+    };
+  }, []);
+
+  const refreshTemplates = async () => {
+    try {
+      const fetchedTemplates = await fetchTemplatesFromFirestore();
+      setTemplates(fetchedTemplates);
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setRefreshing(true);
+      refreshTemplates().then(() => setRefreshing(false));
+    });
+
+    return unsubscribe;
+  }, [navigation, refreshTemplates]);
 
   // Function to start a workout with the selected template
-  const startWorkout = (template) => {
-    // Navigate to the StartWorkout screen with the selected template
-    navigation.navigate('StartWorkout', { selectedTemplate: template });
+  const startWorkoutWithTemplate = (template) => {
+    console.log('k')
+    if (template && template.data) {
+        console.log('tempalte:', template.data);
+      navigation.navigate('StartWorkout', { selectedTemplate: template.data });
+    } else {
+      console.error('Invalid template data:', template);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={refreshTemplates} />
+        }
+      >
         <Text style={styles.heading}>Preset Templates</Text>
-        {presetTemplates.map((template, index) => (
-          <TouchableOpacity key={index} onPress={() => startWorkout(template)}>
+        {templates.map((template, index) => (
+          <TouchableOpacity key={index} onPress={() => startWorkoutWithTemplate(template)}>
             <View style={styles.templateContainer}>
-              <Text style={styles.templateName}>{template.name}</Text>
-              <Text>Exercises: {template.exercises.join(', ')}</Text>
-              <Text>Sets: {template.sets}</Text>
-              <Text>Reps: {template.reps}</Text>
+              <Text style={styles.templateName}>{template.data.templateName}</Text>
+              {template.data.exercises.map((exercise, exerciseIndex) => (
+                <View key={exerciseIndex} style={styles.exerciseContainer}>
+                  <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
+                  {/* Displaying number of sets X reps */}
+                  <Text style={styles.text}>
+                    {exercise.sets.length} X {exercise.sets[0].reps}
+                  </Text>
+                </View>
+              ))}
             </View>
           </TouchableOpacity>
         ))}

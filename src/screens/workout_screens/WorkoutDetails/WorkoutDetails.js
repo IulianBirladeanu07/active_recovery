@@ -6,67 +6,43 @@ import { db, collection, getDocs} from '../../../services/firebase'; // Import F
 
 const WorkoutDetails = ({ route }) => {
   const { duration, notes, exercises, formattedTimestamp, sessionTitle, date } = route.params;
-  const [totalPRs, setTotalPRs] = useState(0); // State to store total PRs
+  const [totalPRs, setTotalPRs] = useState(0); 
 
   useEffect(() => {
     const countTotalPRs = async () => {
       let total = 0;
   
-      // Batch query to retrieve all relevant documents for the exercises
       const querySnapshot = await getDocs(collection(db, 'Workouts'));
-  
-      // Log the fetched documents for debugging
-    //   console.log('Fetched documents:', querySnapshot.docs);
-  
-      // Iterate through the exercises of the current workout
+
       exercises.forEach(exercise => {
         const exerciseName = exercise.exerciseName;
         const currentExerciseSets = exercise.sets;
-  
-        // Log the current exercise for debugging
-        // console.log('Current Exercise:', exercise);
-  
-        // Find the exercise in Firestore with the matching name
+
         const matchingExerciseDoc = querySnapshot.docs.find(doc => {
           const data = doc.data();
           return data.exercises.some(ex => ex.exerciseName === exerciseName);
         });
-  
-        // Log the matching document for debugging
-        // console.log('Matching Document:', matchingExerciseDoc);
-  
+
         if (matchingExerciseDoc) {
-          // Get the latest 1RM for the matching exercise from Firestore
           const matchingExercise = matchingExerciseDoc.data().exercises.find(ex => ex.exerciseName === exerciseName);
           const sets = matchingExercise.sets;
           const bestSet = findBestSet(sets);
           const prev1RM = parseFloat(bestSet.estimated1RM).toFixed(2) || 0;
-  
-          // Log the previous 1RM for debugging
-        //   console.log('Previous 1RM:', prev1RM);
-  
-          // Calculate the current 1RM for the current exercise
+
           const bestCurrentSet = findBestSet(currentExerciseSets);
           const current1RM = calculate1RM(parseFloat(bestCurrentSet.weight), parseInt(bestCurrentSet.reps, 10)).toFixed(2);
-  
-          // Log the current 1RM for debugging
-        //   console.log('Current 1RM:', current1RM);
-  
-          // Compare the current 1RM with the previous 1RM and count it as a PR if higher
+
           if (parseFloat(current1RM) > prev1RM) {
             total++;
           }
         }
       });
-  
-    //   console.log('Total PRs:', total); // Log the total PRs
       setTotalPRs(total);
     };
   
     countTotalPRs();
   }, [exercises]);
   
-  // Helper function to find the best set based on the highest 1RM
   const findBestSet = (sets) => {
     return sets.reduce((best, set) => {
       const current1RM = calculate1RM(parseFloat(set.weight), parseInt(set.reps, 10));
@@ -74,6 +50,8 @@ const WorkoutDetails = ({ route }) => {
     }, { estimated1RM: 0 });
   };
 
+
+  
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>{formattedTimestamp || 'what'}</Text>
