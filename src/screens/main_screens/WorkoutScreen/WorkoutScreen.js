@@ -110,7 +110,7 @@ const handleLastWorkout = () => {
         <View style={styles.summaryCardsContainer}>
           <TouchableOpacity
             style={styles.summaryCard}
-            onPress={() => navigation.navigate('WorkoutTemplate')}
+            onPress={() => navigation.navigate('WorkoutHistory')}
           >
             <Image source={require('../../../assets/history_list.png')} style={styles.summaryCardIcon} />
             <Text style={styles.summaryCardText}>History</Text>
@@ -124,7 +124,7 @@ const handleLastWorkout = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.summaryCard}
-            onPress={() => navigation.navigate('WorkoutMeasurements')}
+            onPress={() => navigation.navigate('WorkoutTemplate')}
           >
             <Image source={require('../../../assets/measurements.png')} style={styles.summaryCardIcon} />
             <Text style={styles.summaryCardText}>Measurements</Text>

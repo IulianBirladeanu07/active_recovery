@@ -77,7 +77,7 @@ const backExercises = [
       image: require('../exercises/images/s.png'),     
     },
     {
-      name: 'Close-Grip Lat Pulldowns',
+      name: 'Lat Pulldowns',
       muscleGroup: 'Back',
       category: 'Compound',
       description: 'Sit at a lat pulldown machine and grip the bar with your hands close together, palms facing you. Pull the bar down to your chest, squeezing your shoulder blades together, then slowly release it back up to the starting position.',
