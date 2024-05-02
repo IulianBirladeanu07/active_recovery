@@ -8,6 +8,25 @@ const CreateTemplate = ({ navigation, route }) => {
   const [templateName, setTemplateName] = useState('');
   const [exercises, setExercises] = useState([]);
   const [selectedExerciseNames, setSelectedExerciseNames] = useState([]);
+  
+  useEffect(() => {
+    console.log("Route Params:", route.params);
+    if (route.params && route.params.selectedTemplate) {
+      const { selectedTemplate: { data: { templateName, exercises } } } = route.params;
+      console.log("Selected Template:", templateName, exercises);
+      
+      // Set templateName
+      setTemplateName(templateName);
+  
+      // Set exercises
+      setExercises(exercises);
+  
+      // Set selectedExerciseNames
+      const selectedExerciseNames = exercises.map(exercise => exercise.exerciseName);
+      setSelectedExerciseNames(selectedExerciseNames);
+    }
+  }, [route.params]);
+  
 
   useEffect(() => {
     if (route.params && route.params.selectedExercise) {
@@ -41,20 +60,21 @@ const CreateTemplate = ({ navigation, route }) => {
         <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
         <View style={styles.row}>
           <View style={[styles.column, { marginRight: 10 }]}>
-            <TextInput
-              style={styles.input}
-              placeholder="Number of sets"
-              onChangeText={(text) => handleSetInputChange(text, index)}
-              keyboardType="numeric"
-            />
+          <TextInput
+            style={styles.input}
+            placeholder="Number of sets"
+            value={String(exercise.sets.length)} // Display the total number of sets
+            onChangeText={(text) => handleSetInputChange(text, index)} // Pass exercise index
+            keyboardType="numeric"
+          />
           </View>
           <View style={styles.column}>
             <TextInput
-              style={styles.input}
-              placeholder="Reps"
-              onChangeText={(text) => handleRepsInputChange(text, index)}
-              keyboardType="numeric"
-            />
+                style={styles.input}
+                placeholder="Reps"
+                value={exercise.sets.length > 0 ? exercise.sets[0].reps : ''} // Display reps of the first set
+                onChangeText={(text) => handleRepsInputChange(text, index, 0)} // Pass exercise index and set index
+            />         
           </View>
         </View>
         {index === exercises.length - 1 && (
@@ -65,6 +85,7 @@ const CreateTemplate = ({ navigation, route }) => {
       </View>
     ));
   };
+  
 
   const handleCreateTemplate = () => {
     // Trim the templateName to remove any leading or trailing whitespace
@@ -118,29 +139,45 @@ const CreateTemplate = ({ navigation, route }) => {
 
   const handleSetInputChange = (text, exerciseIndex) => {
     if (text.trim() === '') {
-      Alert.alert("Invalid input", "Sets cannot be empty.");
+      // If input is empty, consider it as deleting the sets
+      const updatedExercises = [...exercises];
+      updatedExercises[exerciseIndex].sets = [];
+      setExercises(updatedExercises);
       return;
     }
+  
     const numberOfSets = parseInt(text);
-    if (!Number.isInteger(numberOfSets) || numberOfSets <= 0) {
-      Alert.alert("Invalid input", "Sets must be a positive integer.");
+    if (!Number.isInteger(numberOfSets) || numberOfSets < 0) {
+      Alert.alert("Invalid input", "Sets must be a non-negative integer.");
       return;
     }
-
+  
     const updatedExercises = [...exercises];
-    const setsAdjustment = new Array(numberOfSets).fill().map(() => ({ reps: '', weight: '' }));
-    updatedExercises[exerciseIndex].sets = setsAdjustment;
+    // If the new number of sets is less than the current number, remove the excess sets
+    updatedExercises[exerciseIndex].sets = updatedExercises[exerciseIndex].sets.slice(0, numberOfSets);
+    // If the new number of sets is more than the current number, add empty sets
+    for (let i = updatedExercises[exerciseIndex].sets.length; i < numberOfSets; i++) {
+      updatedExercises[exerciseIndex].sets.push({ reps: '', weight: '' });
+    }
     setExercises(updatedExercises);
   };
-
-  const handleRepsInputChange = (text, exerciseIndex) => {
+    
+  const handleRepsInputChange = (text, exerciseIndex, setIndex) => {
     const updatedExercises = [...exercises];
-    updatedExercises[exerciseIndex].sets.forEach(set => {
-      set.reps = text; // Update reps for all sets of the exercise
-    });
+  
+    // Check if the set exists
+    if (!updatedExercises[exerciseIndex].sets[setIndex]) {
+      updatedExercises[exerciseIndex].sets[setIndex] = { reps: '', weight: '' };
+    }
+  
+    // Update reps for the specified set
+    updatedExercises[exerciseIndex].sets[setIndex].reps = text.trim();
+  
     setExercises(updatedExercises);
   };
-
+  
+  
+  
   return (
     <View style={styles.container}>
       <TextInput

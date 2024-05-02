@@ -11,7 +11,6 @@ import {
   BackHandler,
   Alert,
 } from 'react-native';
-import { format } from 'date-fns';
 import { sendWorkoutDataToFirestore, handleAddExercises, handleValidation, handleInputChange, handleAddSet, handleWeightChange, handleRepsChange, getSetsFromLastWorkout } from './WorkoutHandler';
 import styles from './StartWorkoutStyles';
 import AnimatedMessage from '../../../helpers/AnimatedMessage';
@@ -102,14 +101,10 @@ const StartWorkout = ({ route, navigation }) => {
   useEffect(() => {
     const fetchLastWorkoutSets = async () => {
       try {
-        // Check if route.params.selectedExercise is defined
         if (route.params?.selectedExercise) {
-          // Starting a new workout
           const { selectedExercise } = route.params;
-          // Fetch last workout sets only for the selected exercise
           const sets = await getSetsFromLastWorkout(selectedExercise);
           
-          // Update lastWorkoutSets for the selected exercise
           setExerciseData(prevData => {
             const updatedData = prevData.map(exercise => {
               if (exercise.exerciseName === selectedExercise) {
@@ -147,7 +142,6 @@ const StartWorkout = ({ route, navigation }) => {
   useEffect(() => {
     if (route.params?.selectedExercise) {
       const newExerciseName = route.params.selectedExercise;
-      // Check if the exercise is already present in exerciseData
       const isExerciseAlreadyAdded = exerciseData.some(exercise => exercise.exerciseName === newExerciseName);
       if (!isExerciseAlreadyAdded) {
         const newExercise = {
@@ -157,7 +151,6 @@ const StartWorkout = ({ route, navigation }) => {
         };
         setExerciseData(prevData => [...prevData, newExercise]);
         setSelectedExercise(newExerciseName);
-        console.log('Selected exercise from route parameters:', newExercise.exerciseName);
       }
     }
   }, [route.params?.selectedExercise]);
@@ -173,9 +166,7 @@ const StartWorkout = ({ route, navigation }) => {
       })));
       const firstExerciseName = exercises[0]?.exerciseName || null;
       setSelectedExercise(firstExerciseName);
-      console.log('Selected exercise from loaded workout data:', firstExerciseName);
 
-      // Check if any set is not validated for any exercise
       let anySetNotValidated = false;
       exercises.forEach(exercise => {
         exercise.sets.forEach(set => {
@@ -185,7 +176,7 @@ const StartWorkout = ({ route, navigation }) => {
           }
         });
       });
-      setIsValidationPressed(!anySetNotValidated); // Update isValidationPressed state based on the flag
+      setIsValidationPressed(!anySetNotValidated);
     } else {
       setIsValidationPressed(false);
     }
@@ -222,7 +213,6 @@ const StartWorkout = ({ route, navigation }) => {
       setShowFinishButton(false);
     }
   };
-  
 
   const openAnimatedMessage = (message) => {
     setAnimatedMessage(message);
@@ -289,24 +279,28 @@ const StartWorkout = ({ route, navigation }) => {
   };
 
   const handleSwipeDelete = (exerciseIndex, setIndex) => {
-    setExerciseData(currentData => {
-      let newData = [...currentData];
-      let exerciseToUpdate = newData[exerciseIndex];
-  
-      if (exerciseToUpdate.sets.length > 1) {
-        // Remove only the set if more than one set exists
-        let updatedSets = [...exerciseToUpdate.sets];
-        updatedSets.splice(setIndex, 1);
-        exerciseToUpdate.sets = updatedSets;
-      } else {
-        // Remove the whole exercise if only one set exists
-        newData.splice(exerciseIndex, 1);
-      }
-  
-      return newData;
-    });
+    if (exerciseData[exerciseIndex].sets.length > 1) {
+      // If more than one set, delete the specific set
+      const updatedSets = [...exerciseData[exerciseIndex].sets];
+      updatedSets.splice(setIndex, 1);
+      const updatedExerciseData = [...exerciseData];
+      updatedExerciseData[exerciseIndex].sets = updatedSets;
+      setExerciseData(updatedExerciseData);
+      console.log('Updated exercise data after deleting a set:', updatedExerciseData);
+    } else {
+      // If only one set, show the modal for confirmation
+      openModal('Are you sure you want to delete this exercise?', () => {
+        // Delete the entire exercise only after confirming in the modal
+        const updatedExerciseData = [...exerciseData];
+        updatedExerciseData.splice(exerciseIndex, 1);
+        const remainingExercises = updatedExerciseData.map(exercise => exercise.exerciseName);
+        const newSelectedExercise = remainingExercises.length > 0 ? remainingExercises[0] : null;
+        console.log('New selected exercise:', newSelectedExercise); // Log the new selected exercise
+        setSelectedExercise(newSelectedExercise);
+        setExerciseData(updatedExerciseData);
+      });
+    }
   };
-  
   return (
     <View style={styles.container}>
       <Modal transparent visible={isModalVisible} animationType="slide">

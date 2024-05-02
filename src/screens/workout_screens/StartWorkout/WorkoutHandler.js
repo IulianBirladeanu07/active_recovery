@@ -298,7 +298,6 @@ export const fetchTemplatesFromFirestore = async () => {
     }
 
     const templates = querySnapshot.docs.map(doc => ({
-      id: doc.id,
       data: doc.data()
     }));
     console.log('Templates retrieved for user:', templates);
