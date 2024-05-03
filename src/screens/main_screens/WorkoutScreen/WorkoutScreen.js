@@ -9,7 +9,6 @@ import ApplicationCustomScreen from '../../../components/ApplicationCustomScreen
 import { styles } from './WorkoutScreenStyles';
 import { AppContext } from '../../../../AppContext';
 
-// Custom progress bar component
 const ProgressBar = ({ progress }) => (
   <View style={{ flexDirection: 'row', height: 27, backgroundColor: '#E0E0E0', borderRadius: 6 }}>
     <View style={{ flex: progress, backgroundColor: '#e71d27', borderRadius: 6, }} />
@@ -25,24 +24,21 @@ const WorkoutScreen = () => {
     navigation.navigate('StartWorkout');
   };
 
-const handleLastWorkout = () => {
-  console.log('Last Workout:', lastWorkout);
-  
-  // Format the last workout data
-  const formattedWorkoutData = {
-    note: lastWorkout?.note || '', // Set the note as an empty string if it doesn't exist
-    exercises: lastWorkout?.exercises?.map(exercise => ({
-      exerciseName: exercise.exerciseName,
-      sets: exercise.sets
-    })) || [], // Map exercises to the required structure
+  const handleLastWorkout = () => {
+    const formattedWorkoutData = {
+      note: lastWorkout?.note || '',
+      exercises: lastWorkout?.exercises?.map(exercise => ({
+        exerciseName: exercise.exerciseName,
+        sets: exercise.sets
+      })) || [],
+    };
+
+    console.log('Formatted Workout Data:', formattedWorkoutData);
+
+    navigation.navigate('StartWorkout', { selectedWorkout: formattedWorkoutData });
   };
 
-  console.log('Formatted Workout Data:', formattedWorkoutData);
-  
-  navigation.navigate('StartWorkout', { selectedWorkout: formattedWorkoutData });
-};
-  
-const progress = workoutsThisWeek / 7; // Assuming goalWorkoutsPerWeek is 7
+  const progress = workoutsThisWeek > 7 ? 1 : workoutsThisWeek / 7;
 
   return (
     <ApplicationCustomScreen

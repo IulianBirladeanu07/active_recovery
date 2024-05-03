@@ -6,11 +6,9 @@ import {
   ScrollView,
   RefreshControl,
   Modal,
-  StyleSheet
 } from 'react-native';
 import { styles } from '../../workout_screens/WorkoutTemplate/WorkoutTemplateStyle';
 import { fetchTemplatesFromFirestore } from '../StartWorkout/WorkoutHandler';
-import style from 'react-native-datepicker/style';
 
 const WorkoutTemplate = ({ navigation }) => {
   const [templates, setTemplates] = useState([]);
