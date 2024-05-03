@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AppProvider } from './AppContext'; // Import AppProvider from your context file
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
 
 import LoginScreen from './src/screens/main_screens/LoginScreen/LoginScreen';
 import RegistrationScreen from './src/screens/main_screens/LoginScreen/RegistrationScreen'
@@ -23,25 +26,49 @@ import CreateTemplate from './src/screens/workout_screens/WorkoutTemplate/Create
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const [authenticated, setAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        setAuthenticated(true);
+      } else {
+        setAuthenticated(false);
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup function
+
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen options={{ headerShown: false }} name="Login" component={LoginScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="RegistrationScreen" component={RegistrationScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="Workout" component={WorkoutScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="Nutrition" component={NutritionScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="Progress" component={ProgressScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="WorkoutExercises" component={WorkoutExercises} />
-          <Stack.Screen options={{ headerShown: false }} name="WorkoutHistory" component={WorkoutHistory} />
-          <Stack.Screen options={{ headerShown: false }} name="WorkoutDetails" component={WorkoutDetails} />
-          <Stack.Screen options={{ headerShown: false }} name="WorkoutMeasurements" component={WorkoutMeasurements} />
-          <Stack.Screen options={{ headerShown: false }} name="StartWorkout" component={StartWorkout} />
-          <Stack.Screen options={{ headerShown: false }} name="ExerciseList" component={ExerciseList} />
-          <Stack.Screen options={{ headerShown: false }} name="WorkoutTemplate" component={WorkoutTemplate} />
-          <Stack.Screen options={{ headerShown: false }} name="CreateTemplate" component={CreateTemplate} />
-        </Stack.Navigator>
+        <AppProvider>
+          <Stack.Navigator>
+            {authenticated ? (
+              <>
+                <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
+                <Stack.Screen options={{ headerShown: false }} name="Workout" component={WorkoutScreen} />
+                <Stack.Screen options={{ headerShown: false }} name="Nutrition" component={NutritionScreen} />
+                <Stack.Screen options={{ headerShown: false }} name="Progress" component={ProgressScreen} />
+                <Stack.Screen options={{ headerShown: false }} name="WorkoutExercises" component={WorkoutExercises} />
+                <Stack.Screen options={{ headerShown: false }} name="WorkoutHistory" component={WorkoutHistory} />
+                <Stack.Screen options={{ headerShown: false }} name="WorkoutDetails" component={WorkoutDetails} />
+                <Stack.Screen options={{ headerShown: false }} name="WorkoutMeasurements" component={WorkoutMeasurements} />
+                <Stack.Screen options={{ headerShown: false }} name="StartWorkout" component={StartWorkout} />
+                <Stack.Screen options={{ headerShown: false }} name="ExerciseList" component={ExerciseList} />
+                <Stack.Screen options={{ headerShown: false }} name="WorkoutTemplate" component={WorkoutTemplate} />
+                <Stack.Screen options={{ headerShown: false }} name="CreateTemplate" component={CreateTemplate} />
+              </>
+            ) : (
+              <>
+                <Stack.Screen options={{ headerShown: false }} name="Login" component={LoginScreen} />
+                <Stack.Screen options={{ headerShown: false }} name="RegistrationScreen" component={RegistrationScreen} />
+              </>
+            )}
+          </Stack.Navigator>
+        </AppProvider>
       </NavigationContainer>
     </GestureHandlerRootView>
   );

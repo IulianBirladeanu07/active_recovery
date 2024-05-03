@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext } from 'react';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 
@@ -7,8 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import ApplicationCustomScreen from '../../../components/ApplicationCustomScreen/ApplicationCustomScreen';
 import { styles } from './WorkoutScreenStyles';
-import { countWorkoutsThisWeek, getLastWorkout } from '../../workout_screens/StartWorkout/WorkoutHandler';
-
+import { AppContext } from '../../../../AppContext';
 
 // Custom progress bar component
 const ProgressBar = ({ progress }) => (
@@ -20,37 +19,7 @@ const ProgressBar = ({ progress }) => (
 
 const WorkoutScreen = () => {
   const navigation = useNavigation();
-  const [workoutsThisWeek, setWorkoutsThisWeek] = useState(0);
-  const goalWorkoutsPerWeek = 7;
-  const [lastWorkout, setLastWorkout] = useState(null);
-
-  useEffect(() => {
-    const fetchWorkoutsThisWeek = async () => {
-      try {
-        const workoutCount = await countWorkoutsThisWeek();
-        setWorkoutsThisWeek(workoutCount);
-      } catch (error) {
-        console.error('Error fetching workouts for this week:', error.message);
-      }
-    };
-
-    const fetchLastWorkoutDetails = async () => {
-      try {
-        const user = firebase.auth().currentUser;
-        if (!user) {
-          throw new Error('User not authenticated.');
-        }
-        
-        const lastWorkoutData = await getLastWorkout();
-        setLastWorkout(lastWorkoutData);
-      } catch (error) {
-        console.error('Error fetching last workout details:', error.message);
-      }
-    };
-
-    fetchWorkoutsThisWeek();
-    fetchLastWorkoutDetails();
-  }, []);
+  const { workoutsThisWeek, lastWorkout } = useContext(AppContext);
 
   const handleStartWorkout = () => {
     navigation.navigate('StartWorkout');
@@ -73,9 +42,7 @@ const handleLastWorkout = () => {
   navigation.navigate('StartWorkout', { selectedWorkout: formattedWorkoutData });
 };
   
-  
-
-  const progress = workoutsThisWeek / goalWorkoutsPerWeek;
+const progress = workoutsThisWeek / 7; // Assuming goalWorkoutsPerWeek is 7
 
   return (
     <ApplicationCustomScreen
@@ -88,7 +55,7 @@ const handleLastWorkout = () => {
         </View>
         <View style={[styles.progressBarContainer, { marginTop: 10 }]}>
           <ProgressBar progress={progress} />
-          <Text style={styles.progressBarValue}>{workoutsThisWeek} / {goalWorkoutsPerWeek} days</Text>
+          <Text style={styles.progressBarValue}>{workoutsThisWeek} / 7 days</Text>
         </View>
         {lastWorkout && (
           <TouchableOpacity style={styles.lastWorkoutContainer} onPress={handleLastWorkout}>
