@@ -1,56 +1,18 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { countWorkoutsThisWeek, getLastWorkout, fetchTemplatesFromFirestore} from './src/screens/workout_screens/StartWorkout/WorkoutHandler';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { countWorkoutsThisWeek, getLastWorkout, fetchTemplatesFromFirestore } from './src/screens/workout_screens/StartWorkout/WorkoutHandler';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-import {getDocs, collection, db, } from './src/services/firebase'
-export const AppContext = createContext();
+import { getDocs, collection, db } from './src/services/firebase';
 
-// AppProvider.js
+export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
     const [workoutsThisWeek, setWorkoutsThisWeek] = useState(0);
     const [lastWorkout, setLastWorkout] = useState(null);
     const [workoutHistory, setWorkoutHistory] = useState([]);
     const [templates, setTemplates] = useState([]);
-  
-    const fetchWorkoutHistory = async () => {
-      try {
-        const user = firebase.auth().currentUser;
-        if (!user) {
-          throw new Error('User not authenticated.');
-        }
-  
-        const uid = user.uid;
-  
-        const querySnapshot = await getDocs(collection(db, 'Workouts'));
-        const workoutList = [];
-        querySnapshot.forEach((doc) => {
-          const workoutData = doc.data();
-          // Check if the workout data belongs to the current user
-          if (workoutData.uid === uid) {
-            workoutList.push(workoutData);
-          }
-        });
-        workoutList.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
-        setWorkoutHistory(workoutList);
-        console.log('WorkoutHistory fetched..')
-      } catch (error) {
-        console.error('Error fetching workout history:', error);
-      }
-    };
 
-    const fetchTemplates = async () => {
-      try {
-        const fetchedTemplates = await fetchTemplatesFromFirestore(); // Implement this function to fetch templates
-        setTemplates(fetchedTemplates);
-        console.log("WorkouTemplate fetched");
-      } catch (error) {
-        console.error('Error fetching templates:', error);
-      }     
-    };
-
-    useEffect(() => {
-      const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
           const user = firebase.auth().currentUser;
           if (user) {
@@ -58,7 +20,7 @@ export const AppProvider = ({ children }) => {
             const lastWorkoutData = await getLastWorkout();
             setWorkoutsThisWeek(workoutCount);
             setLastWorkout(lastWorkoutData);
-            console.log('LastWorkout fetched');
+            console.log('Data refreshed');
           } else {
             // User is not logged in, reset data to default values
             setWorkoutsThisWeek(0);
@@ -66,24 +28,58 @@ export const AppProvider = ({ children }) => {
             console.log('User not logged in');
           }
         } catch (error) {
-          console.error('Error fetching data:', error.message);
+          console.error('Error refreshing data:', error.message);
         }
-      };
-  
-      // Only fetch data if the user is authenticated
+    }, []);
+
+    const fetchWorkoutHistory = useCallback(async () => {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          console.error('User not authenticated.');
+          return;
+        }
+
+        const uid = user.uid;
+        const querySnapshot = await getDocs(collection(db, 'Workouts'));
+        const workoutList = [];
+        querySnapshot.forEach((doc) => {
+          const workoutData = doc.data();
+          if (workoutData.uid === uid) {
+            workoutList.push(workoutData);
+          }
+        });
+        workoutList.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+        setWorkoutHistory(workoutList);
+    }, []);
+
+    const fetchTemplates = useCallback(async () => {
+        const fetchedTemplates = await fetchTemplatesFromFirestore();
+        setTemplates(fetchedTemplates);
+    }, []);
+
+    useEffect(() => {
+      // Fetch initial data when the app starts or when the user logs in
       const unsubscribe = firebase.auth().onAuthStateChanged(user => {
         if (user) {
           fetchData();
-          fetchWorkoutHistory(); // Prefetch workout history
-          fetchTemplates(); // Prefetch templates
+          fetchWorkoutHistory();
+          fetchTemplates();
         }
       });
-  
+
       return () => unsubscribe(); // Cleanup function
-    }, []);
-  
+    }, [fetchData, fetchWorkoutHistory, fetchTemplates]);
+
+    const refreshAllData = useCallback(() => {
+      fetchData();
+      fetchWorkoutHistory();
+      fetchTemplates();
+    }, [fetchData, fetchWorkoutHistory, fetchTemplates]);
+
     return (
-      <AppContext.Provider value={{ workoutsThisWeek, lastWorkout, workoutHistory, templates }}>
+      <AppContext.Provider value={{
+        workoutsThisWeek, lastWorkout, workoutHistory, templates, refreshAllData
+      }}>
         {children}
       </AppContext.Provider>
     );

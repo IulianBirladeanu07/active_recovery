@@ -7,7 +7,7 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 
 import LoginScreen from './src/screens/main_screens/LoginScreen/LoginScreen';
-import RegistrationScreen from './src/screens/main_screens/LoginScreen/RegistrationScreen'
+import RegistrationScreen from './src/screens/main_screens/LoginScreen/RegistrationScreen';
 import HomeScreen from './src/screens/main_screens/HomeScreen/HomeScreen';
 import WorkoutScreen from './src/screens/main_screens/WorkoutScreen/WorkoutScreen';
 import NutritionScreen from './src/screens/main_screens/NutritionScreen/NutritionScreen';
@@ -38,7 +38,6 @@ export default function App() {
     });
 
     return () => unsubscribe(); // Cleanup function
-
   }, []);
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { sendWorkoutDataToFirestore, handleAddExercises, handleValidation, handl
 import styles from './StartWorkoutStyles';
 import AnimatedMessage from '../../../helpers/AnimatedMessage';
 import { Swipeable } from 'react-native-gesture-handler';
+import { AppContext } from '../../../../AppContext';
 
 const StartWorkout = ({ route, navigation }) => {
   const [showFinishButton, setShowFinishButton] = useState(false);
@@ -26,13 +27,13 @@ const StartWorkout = ({ route, navigation }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
-  const [startTime, setStartTime] = useState(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [appState, setAppState] = useState(AppState.currentState);
 
   const [animatedMessage, setAnimatedMessage] = useState('');
   const [modalCallback, setModalCallback] = useState(() => {});
   const [lastWorkoutSets, setLastWorkoutSets] = useState([]); // State to store the sets from the last workout
+
+  const { refreshAllData } = useContext(AppContext);
 
   const intervalRef = useRef(null);
 
@@ -79,6 +80,7 @@ const StartWorkout = ({ route, navigation }) => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
     return () => {
+      console.log('back removed');
       backHandler.remove();
     };
   }, [navigation]); // Include navigation in the dependency array to ensure updated state
@@ -239,6 +241,8 @@ const StartWorkout = ({ route, navigation }) => {
     try {
       stopTimer();
       setElapsedTime(0);
+      refreshAllData(); // Refresh data in the context
+      console.log('refreshed');
       await sendWorkoutDataToFirestore(
         exerciseData,
         inputText,

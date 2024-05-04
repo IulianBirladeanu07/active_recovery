@@ -23,7 +23,7 @@ const WorkoutTemplate = ({ navigation }) => {
         setTemplates(fetchedTemplates);
       } catch (error) {
         console.error('Error fetching templates:', error);
-      }
+      }     
     };
 
     fetchTemplates();

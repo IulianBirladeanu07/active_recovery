@@ -20,8 +20,10 @@ const WorkoutScreen = () => {
   const navigation = useNavigation();
   const { workoutsThisWeek, lastWorkout } = useContext(AppContext);
 
+  console.log('here');
+
   const handleStartWorkout = () => {
-    navigation.navigate('StartWorkout');
+    navigation.replace('StartWorkout');
   };
 
   const handleLastWorkout = () => {

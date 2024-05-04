@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
     container: {
-      padding: 5,
+      padding:5,
       flex: 1,
       backgroundColor: '#02111B',
     },
@@ -11,9 +11,9 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FFFFFF',
         textAlign: 'center',
-        marginTop: 40,
+        marginTop: 10,
         marginBottom: 10,
-    },
+      },
     workoutContainer: {
       backgroundColor: '#02111B',
       padding: 15,
@@ -43,12 +43,12 @@ export const styles = StyleSheet.create({
       color: '#FFFFFF',
       marginBottom: 3,
     },
-    bestSetContainer: {
+    setContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
     },
-    bestSetText: {
+    setDetails: {
       fontSize: 14,
       color: '#FFFFFF',
     },

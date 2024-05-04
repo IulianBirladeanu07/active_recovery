@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { AppContext } from '../../../../AppContext';
 import WorkoutSummary from '../WorkoutDetails/WorkoutSummary';
@@ -11,21 +11,28 @@ const HistoryScreen = ({ navigation }) => {
     return format(timestamp.toDate(), "d 'of' MMMM, yyyy ',' HH:mm ");
   };
 
-  const handleWorkoutPress = (workout) => {
+  const handleWorkoutPress = useCallback((workout) => {
     if (workout) {
       const formattedWorkoutData = {
-        duration: workout.duration,
-        notes: workout.notes,
-        exercises: workout.exercises,
-        formattedTimestamp: formatTimestamp(workout.timestamp),
-        sessionTitle: workout.sessionTitle,
-        date: workout.date,
+        note: workout.note,
+        exercises: workout.exercises.map((exercise) => ({
+          exerciseName: exercise.exerciseName,
+          sets: exercise.sets.map((set) => {
+            return {
+              weight: set.weight.toString(),
+              reps: set.reps.toString(),
+              isValidated: set.isValidated,
+            };
+          }),
+        })),
       };
-      navigation.navigate('WorkoutDetails', formattedWorkoutData);
+
+      console.log('f', formattedWorkoutData);
+      navigation.navigate('StartWorkout', { selectedWorkout: formattedWorkoutData });
     } else {
       console.error('Invalid workout data:', workout);
     }
-  };
+  }, [navigation]);
 
   return (
     <View style={styles.container}>

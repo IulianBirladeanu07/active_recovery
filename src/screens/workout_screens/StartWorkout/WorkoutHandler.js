@@ -1,4 +1,3 @@
-import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import { db, collection, setDoc, getDocs, doc, query, where, orderBy, limit } from '../../../services/firebase';
@@ -83,7 +82,7 @@ async function finishWorkout(exerciseData, inputText, navigation, includeInvalid
       duration: formatTime(elapsedTime), 
       notes: inputText, 
       exercises: exerciseData,
-      formattedTimestamp: formattedTimestamp, // Pass formattedTimestamp instead of timestamp
+      timestamp:workoutDataToSend.timestamp.toDateString() + " " + workoutDataToSend.timestamp.toLocaleTimeString(),
     });
   } catch (error) {
     console.error('Error finishing workout:', error.message);
@@ -172,21 +171,17 @@ export const getSetsFromLastWorkout = async (exerciseName) => {
     const workoutsRef = collection(db, 'Workouts');
     const querySnapshot = await getDocs(query(
       workoutsRef,
-      where('uid', '==', uid) // Filter by UID
+      where('uid', '==', uid),
+      orderBy('timestamp', 'desc'),
+      limit(50)  // Fetch only the most recent workout document
     ));
 
-    for (const doc of querySnapshot.docs) {
-      const workoutData = doc.data();
-      // Extract the UID from the document ID
-      const [, , , , , docUid] = doc.id.split('_'); // Assuming UID comes at the end
-      if (docUid === uid) {
-        const exercises = workoutData.exercises || [];
-        const exercise = exercises.find(ex => ex.exerciseName === exerciseName);
-
-        if (exercise) {
-          const lastWorkoutSets = exercise.sets.map(set => `${set.weight} kg x ${set.reps}`);
-          return lastWorkoutSets; // Directly return the sets array
-        }
+    if (!querySnapshot.empty) {
+      const workoutData = querySnapshot.docs[0].data();
+      const exercises = workoutData.exercises || [];
+      const exercise = exercises.find(ex => ex.exerciseName === exerciseName);
+      if (exercise) {
+        return exercise.sets.map(set => `${set.weight} kg x ${set.reps}`);
       }
     }
     return [];
@@ -195,6 +190,7 @@ export const getSetsFromLastWorkout = async (exerciseName) => {
     throw error;
   }
 }
+
 
 export const countWorkoutsThisWeek = async () => {
   try {

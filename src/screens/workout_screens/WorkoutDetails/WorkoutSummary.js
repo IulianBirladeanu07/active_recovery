@@ -60,20 +60,20 @@ const WorkoutSummary = ({ formattedTimestamp, duration, totalPRs, exercises }) =
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: {
     flex: 1,
     backgroundColor: '#02111B',
   },
   timestampContainer: {
     alignItems: 'center',
-    paddingTop: 10,
+    paddingTop: 0,
+    marginBottom: 30,
   },
   timestamp: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 10,
   },
   wrapper: {
     flex: 1,
