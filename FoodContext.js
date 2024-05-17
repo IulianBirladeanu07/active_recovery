@@ -1,25 +1,29 @@
 import React, { createContext, useContext, useState } from 'react';
 
-// Create a context for food management
 const FoodContext = createContext();
 
-// Custom hook to use the FoodContext
 export const useFoodContext = () => useContext(FoodContext);
 
-// Provider component that wraps the application
 export const FoodProvider = ({ children }) => {
   const [breakfastFoods, setBreakfastFoods] = useState([]);
   const [lunchFoods, setLunchFoods] = useState([]);
   const [dinnerFoods, setDinnerFoods] = useState([]);
 
-  // Function to add food to the specified meal
-  const handleAddFood = (food, meal) => {
+  const handleAddFood = (foodDetails, meal) => {
+    const newFood = {
+      name: foodDetails.name,
+      calories: foodDetails.calories,
+      quantity: foodDetails.quantity,
+      unit: foodDetails.unit,
+      image: foodDetails.image,
+    };
+
     if (meal === 'breakfast') {
-      setBreakfastFoods((prevFoods) => [...prevFoods, food]);
+      setBreakfastFoods((prevFoods) => [...prevFoods, newFood]);
     } else if (meal === 'lunch') {
-      setLunchFoods((prevFoods) => [...prevFoods, food]);
+      setLunchFoods((prevFoods) => [...prevFoods, newFood]);
     } else if (meal === 'dinner') {
-      setDinnerFoods((prevFoods) => [...prevFoods, food]);
+      setDinnerFoods((prevFoods) => [...prevFoods, newFood]);
     }
   };
 

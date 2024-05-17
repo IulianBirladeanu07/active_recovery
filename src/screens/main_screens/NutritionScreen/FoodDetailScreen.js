@@ -31,11 +31,13 @@ const FoodDetailScreen = ({ navigation }) => {
       return;
     }
 
+    const imageSource = getFoodImage(food.categories_tags_en);
     const foodDetails = {
       name: food.product_name || 'Unknown',
       calories: calculateNutrientValue(food.nutriments?.['energy-kcal_100g']),
       quantity,
       unit,
+      image: imageSource, // Pass the image source
     };
 
     navigation.navigate('Nutrition', { foodDetails, meal });

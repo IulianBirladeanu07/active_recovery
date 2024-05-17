@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Button, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Button, Animated, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import ApplicationCustomScreen from '../../../components/ApplicationCustomScreen/ApplicationCustomScreen';
@@ -122,13 +122,19 @@ const NutritionScreen = () => {
   const renderMealContainer = (meal, foods) => (
     <View style={styles.mealContainer}>
       <Text style={styles.mealTitle}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>
-      <ScrollView horizontal style={styles.mealList}>
-        {foods.map((food, index) => (
-          <View key={index} style={styles.foodItem}>
-            <Text style={styles.foodName}>{food.name}</Text>
-            <Text style={styles.foodNutrient}>Calories: {food.calories}</Text>
-          </View>
-        ))}
+      <ScrollView style={styles.mealScrollView}>
+        <View style={styles.foodContainer}>
+          {foods.map((food, index) => (
+            <View key={index} style={styles.foodItem}>
+              <Image source={food.image} style={styles.foodImage} />
+              <View style={styles.foodDetails}>
+                <Text style={styles.foodName}>{food.name}</Text>
+                <Text style={styles.foodNutrient}>Quantity: {food.quantity} {food.unit}</Text>
+              </View>
+              <Text style={styles.foodCalories}>{food.calories}</Text>
+            </View>
+          ))}
+        </View>
       </ScrollView>
     </View>
   );
@@ -138,45 +144,47 @@ const NutritionScreen = () => {
       headerLeft={<MaterialCommunityIcons name="account" size={28} color="#fdf5ec" />}
       headerRight={<MaterialCommunityIcons name="cog" size={28} color="#fdf5ec" />}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.contentContainer}>
-          <Text style={styles.headerText}>Nutrition Dashboard</Text>
-          <ProgressBar value={dailyNutrition.calories} maxValue={weightGoal.dailyCalorieGoal} />
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.contentContainer}>
+            <Text style={styles.headerText}>Nutrition Dashboard</Text>
+            <ProgressBar value={dailyNutrition.calories} maxValue={weightGoal.dailyCalorieGoal} />
 
-          <View style={styles.circularProgressContainer}>
-            <CircularProgress title="Protein" value={dailyNutrition.protein} maxValue={150} size={30} strokeWidth={3} color='#3498db' />
-            <CircularProgress title="Carbs" value={dailyNutrition.carbs} maxValue={300} size={30} strokeWidth={3} color='#e74c3c' />
-            <CircularProgress title="Fat" value={dailyNutrition.fat} maxValue={100} size={30} strokeWidth={3} color='#2ecc71' />
+            <View style={styles.circularProgressContainer}>
+              <CircularProgress title="Protein" value={dailyNutrition.protein} maxValue={150} size={30} strokeWidth={3} color='#3498db' />
+              <CircularProgress title="Carbs" value={dailyNutrition.carbs} maxValue={300} size={30} strokeWidth={3} color='#e74c3c' />
+              <CircularProgress title="Fat" value={dailyNutrition.fat} maxValue={100} size={30} strokeWidth={3} color='#2ecc71' />
+            </View>
+
+            <View style={styles.mealSelector}>
+              <TouchableOpacity
+                onPress={() => toggleMealVisibility('breakfast')}
+                style={[styles.mealButton, selectedMeal === 'breakfast' && styles.selectedMealButton]}
+              >
+                <Text style={styles.mealButtonText}>Breakfast</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => toggleMealVisibility('lunch')}
+                style={[styles.mealButton, selectedMeal === 'lunch' && styles.selectedMealButton]}
+              >
+                <Text style={styles.mealButtonText}>Lunch</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => toggleMealVisibility('dinner')}
+                style={[styles.mealButton, selectedMeal === 'dinner' && styles.selectedMealButton]}
+              >
+                <Text style={styles.mealButtonText}>Dinner</Text>
+              </TouchableOpacity>
+            </View>
+
+            {selectedMeal === 'breakfast' && renderMealContainer('breakfast', breakfastFoods)}
+            {selectedMeal === 'lunch' && renderMealContainer('lunch', lunchFoods)}
+            {selectedMeal === 'dinner' && renderMealContainer('dinner', dinnerFoods)}
+
+            <Button title="Add Food" onPress={() => navigation.navigate('FoodSelection', { meal: selectedMeal })} />
           </View>
-
-          <View style={styles.mealSelector}>
-            <TouchableOpacity
-              onPress={() => toggleMealVisibility('breakfast')}
-              style={[styles.mealButton, selectedMeal === 'breakfast' && styles.selectedMealButton]}
-            >
-              <Text style={styles.mealButtonText}>Breakfast</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => toggleMealVisibility('lunch')}
-              style={[styles.mealButton, selectedMeal === 'lunch' && styles.selectedMealButton]}
-            >
-              <Text style={styles.mealButtonText}>Lunch</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => toggleMealVisibility('dinner')}
-              style={[styles.mealButton, selectedMeal === 'dinner' && styles.selectedMealButton]}
-            >
-              <Text style={styles.mealButtonText}>Dinner</Text>
-            </TouchableOpacity>
-          </View>
-
-          {selectedMeal === 'breakfast' && renderMealContainer('breakfast', breakfastFoods)}
-          {selectedMeal === 'lunch' && renderMealContainer('lunch', lunchFoods)}
-          {selectedMeal === 'dinner' && renderMealContainer('dinner', dinnerFoods)}
-
-          <Button title="Add Food" onPress={() => navigation.navigate('FoodSelection', { meal: selectedMeal })} />
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
     </ApplicationCustomScreen>
   );
 };
@@ -187,10 +195,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
   },
+  scrollContainer: {
+    paddingVertical: 5,
+    paddingHorizontal: 5,
+  },
   contentContainer: {
     width: '100%',
     flex: 1,
-    marginBottom: 250,
+    marginBottom: 90,
   },
   headerText: {
     fontSize: 20,
@@ -203,7 +215,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'left',
-    marginBottom: 20,
   },
   progressBarContainer: {
     position: 'relative',
@@ -234,9 +245,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    width: '120%',
+    width: 325,
     marginTop: 20,
-    right: 30,
+    marginBottom: 20,
   },
   circularContainer: {
     justifyContent: 'center',
@@ -268,12 +279,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginTop: 5,
   },
   mealSelector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
   },
   mealButton: {
     flex: 1,
@@ -290,22 +299,39 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
   },
-  mealContainer: {
+  mealScrollView: {
+    maxHeight: 150, // Adjust this height as needed
     marginTop: 16,
+  },
+  mealContainer: {
+    flex: 1,
   },
   mealTitle: {
     fontSize: 20,
     color: '#FFFFFF',
-    marginBottom: 8,
+    marginBottom: 10,
+    marginTop: 20,
   },
-  mealList: {
-    marginBottom: 16,
+  foodContainer: {
+    backgroundColor: '#2c3e50',
+    borderRadius: 15,
+    overflow: 'hidden',
   },
   foodItem: {
-    backgroundColor: '#2c3e50',
-    borderRadius: 8,
-    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 3,
+    borderBottomWidth: 1,
+    borderBottomColor: '#34495e',
+  },
+  foodImage: {
+    width: 20,
+    height: 20,
     marginRight: 10,
+  },
+  foodDetails: {
+    flex: 1,
+    justifyContent: 'center',
   },
   foodName: {
     fontSize: 16,
@@ -314,6 +340,12 @@ const styles = StyleSheet.create({
   foodNutrient: {
     fontSize: 14,
     color: '#CCCCCC',
+  },
+  foodCalories: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'right',
   },
 });
 
