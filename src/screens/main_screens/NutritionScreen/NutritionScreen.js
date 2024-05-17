@@ -1,69 +1,320 @@
-import React, { useState } from 'react';
-import { View, Text, Button, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
-import BarcodeScanner from '../../../components/BarcodeScanner/BarcodeScanner';
-import { fetchProductDetails } from '../../../services/nutritionService';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Button, Animated, TouchableOpacity } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import ApplicationCustomScreen from '../../../components/ApplicationCustomScreen/ApplicationCustomScreen';
+import { useFoodContext } from '../../../../FoodContext';
 
 const NutritionScreen = () => {
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { breakfastFoods, lunchFoods, dinnerFoods, handleAddFood } = useFoodContext();
+  const [dailyNutrition, setDailyNutrition] = useState({
+    calories: 200,
+    protein: 100,
+    carbs: 250,
+    fat: 80,
+  });
 
-  const handleBarcodeRead = async (event) => {
-    setLoading(true);
-    setError('');
-    try {
-      const productDetails = await fetchProductDetails(event.data);
-      if (productDetails) {
-        setProduct(productDetails);
-      } else {
-        setError('Product not found. Try a different barcode.');
-      }
-    } catch (err) {
-      setError('Failed to fetch product details. Please try again.');
-      console.error(err);
-    }
-    setLoading(false);
+  const weightGoal = {
+    currentWeight: 70,
+    goalWeight: 65,
+    dailyCalorieGoal: 1800,
   };
 
-  return (
-    <View style={styles.container}>
-      <BarcodeScanner onBarcodeRead={handleBarcodeRead} />
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
-      {error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : (
-        product && (
-          <ScrollView style={styles.scrollView}>
-            <Text style={styles.productName}>{product.product_name || 'Unknown Product'}</Text>
-            <Text>{`Calories: ${product.nutriments?.energy_value || 'N/A'}`}</Text>
-            <Text>{`Fat: ${product.nutriments?.fat || 'N/A'}g`}</Text>
-            <Text>{`Carbohydrates: ${product.nutriments?.carbohydrates || 'N/A'}g`}</Text>
-            <Text>{`Proteins: ${product.nutriments?.proteins || 'N/A'}g`}</Text>
-            <Button title="Log this food" onPress={() => console.log('Food logged')} />
-          </ScrollView>
-        )
-      )}
+  const [selectedMeal, setSelectedMeal] = useState('breakfast');
+
+  useEffect(() => {
+    if (route.params?.foodDetails && route.params?.meal) {
+      handleAddFood(route.params.foodDetails, route.params.meal);
+      // Clear the params to prevent infinite loop
+      navigation.setParams({ foodDetails: null, meal: null });
+    }
+  }, [route.params?.foodDetails, route.params?.meal, handleAddFood, navigation]);
+
+  const ProgressBar = ({ value, maxValue }) => {
+    const percentage = (value / maxValue) * 100;
+    const fillWidth = `${percentage}%`;
+    const barColor = getColor(percentage);
+
+    return (
+      <View style={styles.progressBarContainer}>
+        <View style={[styles.progressBarFill, { width: fillWidth, backgroundColor: barColor }]} />
+        <Text style={styles.progressBarText}>
+          {`${value.toFixed(2)} / ${maxValue} Calories (${percentage.toFixed(2)}%)`}
+        </Text>
+      </View>
+    );
+  };
+
+  function getColor(percentage) {
+    if (percentage < 15) return '#e74c3c';
+    if (percentage < 60) return '#3498db';
+    return '#2ecc71';
+  }
+
+  const CircularProgress = ({ title, value, maxValue, size = 100, strokeWidth = 10, color }) => {
+    const animatedValue = useRef(new Animated.Value(0)).current;
+    const halfSize = size / 2;
+    const radius = halfSize - strokeWidth / 2;
+    const circumference = 2 * Math.PI * radius;
+    const percentage = (value / maxValue) * 100;
+
+    useEffect(() => {
+      Animated.timing(animatedValue, {
+        toValue: percentage,
+        duration: 1000,
+        useNativeDriver: false,
+      }).start();
+    }, [percentage]);
+
+    const strokeDashoffset = animatedValue.interpolate({
+      inputRange: [0, 100],
+      outputRange: [circumference, 0],
+    });
+
+    return (
+      <View style={styles.circularContainer}>
+        <Text style={styles.title}>{title}</Text>
+        <View style={{ width: size, height: size }}>
+          <View
+            style={[
+              styles.circle,
+              {
+                width: size,
+                height: size,
+                borderRadius: halfSize,
+                borderWidth: strokeWidth,
+                borderColor: color,
+                position: 'absolute',
+              },
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.animatedCircle,
+              {
+                width: size,
+                height: size,
+                borderRadius: halfSize,
+                borderWidth: strokeWidth,
+                borderColor: color,
+                position: 'absolute',
+                transform: [{ rotate: '-90deg' }],
+                strokeDasharray: `${circumference} ${circumference}`,
+                strokeDashoffset,
+              },
+            ]}
+          />
+          <View style={styles.centerText}>
+            {/* <Text style={styles.progressText}>{`${percentage.toFixed(2)}%`}</Text> */}
+          </View>
+        </View>
+        <Text style={styles.values}>{`${value} / ${maxValue}`}</Text>
+      </View>
+    );
+  };
+
+  const toggleMealVisibility = (meal) => {
+    setSelectedMeal(meal);
+  };
+
+  const renderMealContainer = (meal, foods) => (
+    <View style={styles.mealContainer}>
+      <Text style={styles.mealTitle}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>
+      <ScrollView horizontal style={styles.mealList}>
+        {foods.map((food, index) => (
+          <View key={index} style={styles.foodItem}>
+            <Text style={styles.foodName}>{food.name}</Text>
+            <Text style={styles.foodNutrient}>Calories: {food.calories}</Text>
+          </View>
+        ))}
+      </ScrollView>
     </View>
+  );
+
+  return (
+    <ApplicationCustomScreen
+      headerLeft={<MaterialCommunityIcons name="account" size={28} color="#fdf5ec" />}
+      headerRight={<MaterialCommunityIcons name="cog" size={28} color="#fdf5ec" />}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.contentContainer}>
+          <Text style={styles.headerText}>Nutrition Dashboard</Text>
+          <ProgressBar value={dailyNutrition.calories} maxValue={weightGoal.dailyCalorieGoal} />
+
+          <View style={styles.circularProgressContainer}>
+            <CircularProgress title="Protein" value={dailyNutrition.protein} maxValue={150} size={30} strokeWidth={3} color='#3498db' />
+            <CircularProgress title="Carbs" value={dailyNutrition.carbs} maxValue={300} size={30} strokeWidth={3} color='#e74c3c' />
+            <CircularProgress title="Fat" value={dailyNutrition.fat} maxValue={100} size={30} strokeWidth={3} color='#2ecc71' />
+          </View>
+
+          <View style={styles.mealSelector}>
+            <TouchableOpacity
+              onPress={() => toggleMealVisibility('breakfast')}
+              style={[styles.mealButton, selectedMeal === 'breakfast' && styles.selectedMealButton]}
+            >
+              <Text style={styles.mealButtonText}>Breakfast</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => toggleMealVisibility('lunch')}
+              style={[styles.mealButton, selectedMeal === 'lunch' && styles.selectedMealButton]}
+            >
+              <Text style={styles.mealButtonText}>Lunch</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => toggleMealVisibility('dinner')}
+              style={[styles.mealButton, selectedMeal === 'dinner' && styles.selectedMealButton]}
+            >
+              <Text style={styles.mealButtonText}>Dinner</Text>
+            </TouchableOpacity>
+          </View>
+
+          {selectedMeal === 'breakfast' && renderMealContainer('breakfast', breakfastFoods)}
+          {selectedMeal === 'lunch' && renderMealContainer('lunch', lunchFoods)}
+          {selectedMeal === 'dinner' && renderMealContainer('dinner', dinnerFoods)}
+
+          <Button title="Add Food" onPress={() => navigation.navigate('FoodSelection', { meal: selectedMeal })} />
+        </View>
+      </ScrollView>
+    </ApplicationCustomScreen>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
+    alignItems: 'center',
+    padding: 10,
   },
-  scrollView: {
-    padding: 20
+  contentContainer: {
+    width: '100%',
+    flex: 1,
+    marginBottom: 250,
   },
-  productName: {
+  headerText: {
     fontSize: 20,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 20,
   },
-  errorText: {
-    color: 'red',
+  sectionHeader: {
     fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'left',
+    marginBottom: 20,
+  },
+  progressBarContainer: {
+    position: 'relative',
+    height: 29,
+    width: '100%',
+    backgroundColor: '#e0e0e0',
+    borderRadius: 7,
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    position: 'absolute',
+    height: '100%',
+    borderRadius: 7,
+  },
+  progressBarText: {
+    position: 'absolute',
+    width: '100%',
     textAlign: 'center',
-    marginTop: 20
-  }
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+  },
+  circularProgressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    width: '120%',
+    marginTop: 20,
+    right: 30,
+  },
+  circularContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  circle: {
+    position: 'absolute',
+  },
+  animatedCircle: {
+    position: 'absolute',
+    borderTopColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'transparent',
+  },
+  centerText: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 5,
+  },
+  values: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginTop: 5,
+  },
+  mealSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  mealButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    backgroundColor: '#005050',
+    marginHorizontal: 5,
+  },
+  selectedMealButton: {
+    backgroundColor: '#008080',
+  },
+  mealButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  mealContainer: {
+    marginTop: 16,
+  },
+  mealTitle: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  mealList: {
+    marginBottom: 16,
+  },
+  foodItem: {
+    backgroundColor: '#2c3e50',
+    borderRadius: 8,
+    padding: 10,
+    marginRight: 10,
+  },
+  foodName: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  foodNutrient: {
+    fontSize: 14,
+    color: '#CCCCCC',
+  },
 });
 
 export default NutritionScreen;
