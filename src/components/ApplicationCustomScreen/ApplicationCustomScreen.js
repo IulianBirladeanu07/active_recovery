@@ -1,13 +1,16 @@
-// AppScreen.js
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-const ApplicationCustomScreen = ({ title, headerLeft, headerRight, children }) => {
+const ApplicationCustomScreen = ({ title, headerLeft, headerRight, onProfilePress, onSettingsPress, children }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.profileButton}>{headerLeft}</View>
-        <View style={styles.settingsButton}>{headerRight}</View>
+        <TouchableOpacity style={styles.profileButton} onPress={onProfilePress}>
+          {headerLeft}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.settingsButton} onPress={onSettingsPress}>
+          {headerRight}
+        </TouchableOpacity>
       </View>
       <Text style={styles.title}>{title}</Text>
       <View style={styles.buttonContainer}>{children}</View>

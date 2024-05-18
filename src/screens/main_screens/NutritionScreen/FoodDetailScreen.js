@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import PropTypes from 'prop-types';
+import { View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import styles from './FoodDetailScreenStyle'; // Import the new styles
 import { getFoodImage } from './FoodSelectionScreen'; // Reuse the image mapping function
 import { useRoute } from '@react-navigation/native';
@@ -24,25 +24,28 @@ const FoodDetailScreen = ({ navigation }) => {
     const quantityInGrams = unit === 'grams' ? quantity : quantity / unitConversion.ounces;
     return ((nutrientPer100g || 0) * (quantityInGrams / 100)).toFixed(2);
   };
-
+  
   const handleAddFood = useCallback(() => {
     if (quantity <= 0) {
       Alert.alert("Invalid Quantity", "Please enter a quantity greater than 0.");
       return;
     }
-
+  
     const imageSource = getFoodImage(food.categories_tags_en);
     const foodDetails = {
       name: food.product_name || 'Unknown',
-      calories: calculateNutrientValue(food.nutriments?.['energy-kcal_100g']),
+      calories: calculateNutrientValue(food.nutriments?.['energy-kcal_100g'], quantity, unit),
+      carbs: calculateNutrientValue(food.nutriments?.['carbohydrates_100g'], quantity, unit),
+      fat: calculateNutrientValue(food.nutriments?.['fat_100g'], quantity, unit),
+      protein: calculateNutrientValue(food.nutriments?.['proteins_100g'], quantity, unit),
       quantity,
       unit,
       image: imageSource, // Pass the image source
     };
-
+  
     navigation.navigate('Nutrition', { foodDetails, meal });
   }, [food, quantity, unit, navigation, meal]);
-
+  
   const imageSource = getFoodImage(food.categories_tags_en);
 
   return (
