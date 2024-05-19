@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { db, collection, addDoc, getDocs, query, orderBy, Timestamp, deleteDoc, doc } from './src/services/firebase';
+import { db, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc } from './src/services/firebase';
 
 const FoodContext = createContext();
 
@@ -16,7 +16,10 @@ export const FoodProvider = ({ children }) => {
         console.log('Fetching meals from Firestore...');
         const mealsQuery = query(collection(db, 'meals'), orderBy('timestamp', 'desc'));
         const snapshot = await getDocs(mealsQuery);
-        const meals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const meals = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return { id: doc.id, ...data, date: new Date(data.timestamp) };
+        });
         console.log('Fetched meals:', meals);
 
         const breakfast = meals.filter(meal => meal.meal === 'breakfast');
@@ -38,7 +41,7 @@ export const FoodProvider = ({ children }) => {
     fetchMeals();
   }, []);
 
-  const handleAddFood = async (foodDetails, meal) => {
+  const handleAddFood = async (foodDetails, meal, date) => {
     const newFood = {
       name: foodDetails.name,
       calories: foodDetails.calories,
@@ -49,12 +52,14 @@ export const FoodProvider = ({ children }) => {
       unit: foodDetails.unit,
       image: foodDetails.image,
       meal,
-      timestamp: Date.now(),
+      timestamp: new Date(date).toISOString(),
     };
     try {
       console.log('Adding new food to Firestore:', newFood);
       const docRef = await addDoc(collection(db, 'meals'), newFood);
       newFood.id = docRef.id; // Assign the Firestore document ID to the new food
+      newFood.date = new Date(newFood.timestamp); // Add the date field for local state
+
       console.log('New food added with ID:', newFood.id);
 
       if (meal === 'breakfast') {
@@ -66,6 +71,26 @@ export const FoodProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error adding food to Firestore:', error);
+    }
+  };
+
+  const handleUpdateFood = async (updatedFood) => {
+    try {
+      const foodRef = doc(db, 'meals', updatedFood.id);
+      console.log('Updating food in Firestore:', updatedFood);
+      await updateDoc(foodRef, updatedFood);
+
+      setBreakfastFoods((prevFoods) =>
+        prevFoods.map((food) => (food.id === updatedFood.id ? updatedFood : food))
+      );
+      setLunchFoods((prevFoods) =>
+        prevFoods.map((food) => (food.id === updatedFood.id ? updatedFood : food))
+      );
+      setDinnerFoods((prevFoods) =>
+        prevFoods.map((food) => (food.id === updatedFood.id ? updatedFood : food))
+      );
+    } catch (error) {
+      console.error('Error updating food in Firestore:', error);
     }
   };
 
@@ -85,8 +110,10 @@ export const FoodProvider = ({ children }) => {
   };
 
   return (
-    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddFood, handleDeleteFood }}>
+    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddFood, handleUpdateFood, handleDeleteFood }}>
       {children}
     </FoodContext.Provider>
   );
 };
+
+export default FoodProvider;

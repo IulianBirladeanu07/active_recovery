@@ -8,6 +8,9 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import styles from './FoodSelectionScreenStyle'; // Importing the improved styles
 import { useFoodContext } from '../../../../FoodContext';
 
+// USDA API Key
+const USDA_API_KEY = 'DEF1MdrT3VgRpaOygDAyNLrq4ccsCpCCI8sJZpnt';
+
 // Mapping categories to images
 const categoryImageMap = {
   almond: require('../../../assets/almond.png'),
@@ -101,11 +104,11 @@ const FoodItem = React.memo(({ item, onPress }) => {
         <Image source={imageSource} style={styles.foodImage} />
         <View style={styles.foodDetails}>
           <Text style={styles.foodName}>{item.product_name || 'Unknown'}</Text>
-          <Text style={styles.foodNutrient}>Calories: {item.nutriments?.['energy-kcal_100g'] || 'N/A'}</Text>
-          <Text style={styles.foodNutrient}>Protein: {item.nutriments?.proteins_100g || 'N/A'}g</Text>
-          <Text style={styles.foodNutrient}>Carbs: {item.nutriments?.carbohydrates_100g || 'N/A'}g</Text>
-          <Text style={styles.foodNutrient}>Fat: {item.nutriments?.fat_100g || 'N/A'}g</Text>
-          <Text style={styles.foodCategories}>Categories: {item.categories_tags_en?.join(', ') || 'N/A'}</Text>
+          <Text style={styles.foodNutrient}>Calories: {item.nutriments?.['energy-kcal_100g'] ?? 'N/A'}</Text>
+          <Text style={styles.foodNutrient}>Protein: {item.nutriments?.proteins_100g ?? 'N/A'}g</Text>
+          <Text style={styles.foodNutrient}>Carbs: {item.nutriments?.carbohydrates_100g ?? 'N/A'}g</Text>
+          <Text style={styles.foodNutrient}>Fat: {item.nutriments?.fat_100g ?? 'N/A'}g</Text>
+          <Text style={styles.foodCategories}>Categories: {item.categories_tags_en?.join(', ') ?? 'N/A'}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -119,43 +122,43 @@ const FoodSelectionScreen = () => {
   const [barcode, setBarcode] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [foods, setFoods] = useState([]);
-  const [recentSearches, setRecentSearches] = useState([]);
+  const [recentFoods, setRecentFoods] = useState([]);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchRecentSearches = async () => {
+    const fetchRecentFoods = async () => {
       try {
-        const localRecentSearches = await AsyncStorage.getItem('recentSearches');
-        const parsedLocalRecentSearches = localRecentSearches ? JSON.parse(localRecentSearches) : [];
+        const localRecentFoods = await AsyncStorage.getItem('recentFoods');
+        const parsedLocalRecentFoods = localRecentFoods ? JSON.parse(localRecentFoods) : [];
 
-        const recentSearchesData = await fetchDocuments('recentSearches', [], ['timestamp', 'desc'], 5);
-        const recentSearchesFromFirestore = recentSearchesData.map(item => item.query);
+        const recentFoodsData = await fetchDocuments('recentFoods', [], ['timestamp', 'desc'], 5);
+        const recentFoodsFromFirestore = recentFoodsData.map(item => item.food);
 
-        const combinedRecentSearches = [...new Set([...parsedLocalRecentSearches, ...recentSearchesFromFirestore])].slice(0, 5);
-        setRecentSearches(combinedRecentSearches);
+        const combinedRecentFoods = [...new Set([...parsedLocalRecentFoods, ...recentFoodsFromFirestore])].slice(0, 5);
+        setRecentFoods(combinedRecentFoods);
 
-        await AsyncStorage.setItem('recentSearches', JSON.stringify(combinedRecentSearches));
+        await AsyncStorage.setItem('recentFoods', JSON.stringify(combinedRecentFoods));
       } catch (err) {
-        console.error("Failed to fetch recent searches:", err);
-        setError('Failed to fetch recent searches. Please try again later.');
+        console.error("Failed to fetch recent foods:", err);
+        setError('Failed to fetch recent foods. Please try again later.');
       }
     };
-    fetchRecentSearches();
+    fetchRecentFoods();
   }, []);
 
   const fetchFoodsFromAPI = useCallback(async (query) => {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${query}&search_simple=1&action=process&json=1&fields=product_name,nutriments,id,categories_tags_en`
+        `https://api.nal.usda.gov/fdc/v1/foods/search?query=${query}&pageSize=20&api_key=${USDA_API_KEY}`
       );
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}`);
       }
       const data = await response.json();
-      return data.products || [];
+      return data.foods || [];
     } catch (err) {
       console.error("Failed to fetch foods from API:", err);
       setError('Failed to fetch foods. Please check your internet connection and try again.');
@@ -169,7 +172,7 @@ const FoodSelectionScreen = () => {
     try {
       const products = await fetchFoodsFromAPI(query);
       const sortedProducts = products.map(product => {
-        const name = product.product_name.toLowerCase();
+        const name = product.description.toLowerCase();
         const queryLower = query.toLowerCase();
         const index = name.indexOf(queryLower);
         let score = 0;
@@ -178,8 +181,20 @@ const FoodSelectionScreen = () => {
         } else if (index > 0) {
           score = 1;
         }
-        return { ...product, score };
-      }). sort((a, b) => b.score - a.score || a.product_name.localeCompare(b.product_name));
+        return { 
+          id: product.fdcId, 
+          product_name: product.description, 
+          nutriments: {
+            'energy-kcal_100g': product.foodNutrients.find(nutrient => nutrient.nutrientName === 'Energy')?.value || 0,
+            proteins_100g: product.foodNutrients.find(nutrient => nutrient.nutrientName === 'Protein')?.value || 0,
+            carbohydrates_100g: product.foodNutrients.find(nutrient => nutrient.nutrientName === 'Carbohydrate, by difference')?.value || 0,
+            fat_100g: product.foodNutrients.find(nutrient => nutrient.nutrientName === 'Total lipid (fat)')?.value || 0
+          },
+          categories_tags_en: product.foodCategory ? [product.foodCategory] : [],
+          image: getFoodImage(product.foodCategory ? [product.foodCategory] : []), // Assign image here
+          score
+        };
+      }).sort((a, b) => b.score - a.score || a.product_name.localeCompare(b.product_name));
       setFoods(sortedProducts);
       await addDocument('foodSearches', query, { products: sortedProducts });
     } catch (err) {
@@ -203,18 +218,18 @@ const FoodSelectionScreen = () => {
 
   const handleSearchComplete = useCallback(async () => {
     const query = searchQuery.trim();
-    if (query && !recentSearches.includes(query)) {
-      const updatedRecentSearches = [query, ...recentSearches].slice(0, 5);
-      setRecentSearches(updatedRecentSearches);
+    if (query && !recentFoods.some(food => food.id === query)) {
+      const updatedRecentFoods = [{ id: query, product_name: query, categories_tags_en: [], nutriments: {}, image: getFoodImage([]) }, ...recentFoods].slice(0, 5);
+      setRecentFoods(updatedRecentFoods);
       try {
-        await addDocument('recentSearches', `${query}_${Date.now()}`, { query });
-        await AsyncStorage.setItem('recentSearches', JSON.stringify(updatedRecentSearches));
+        await addDocument('recentFoods', `${query}_${Date.now()}`, { food: { id: query, product_name: query, categories_tags_en: [], nutriments: {}, image: getFoodImage([]) } });
+        await AsyncStorage.setItem('recentFoods', JSON.stringify(updatedRecentFoods));
       } catch (err) {
         console.error("Failed to save recent search:", err);
         setError('Failed to save recent search. Please try again later.');
       }
     }
-  }, [searchQuery, recentSearches]);
+  }, [searchQuery, recentFoods]);
 
   const handleBarcodeRead = useCallback(({ data }) => {
     setBarcode(data);
@@ -224,7 +239,7 @@ const FoodSelectionScreen = () => {
   }, [fetchFoods]);
 
   const handleFoodSelect = useCallback((food) => {
-    navigation.navigate('FoodDetail', { food, meal });
+    navigation.navigate('FoodDetail', { food, meal, date: new Date().toISOString() });
   }, [navigation, meal]);
 
   const renderItem = useCallback(({ item }) => (
@@ -250,20 +265,21 @@ const FoodSelectionScreen = () => {
             onChangeText={handleSearch}
             onEndEditing={handleSearchComplete}
           />
-          <TouchableOpacity style={styles.scanButton} onPress={() => setScanning(true)}> 
+          <TouchableOpacity style={styles.scanButton} onPress={() => setScanning(true)}>
             <Text style={styles.scanButtonText}>Scan Barcode</Text>
           </TouchableOpacity>
           {loading ? <ActivityIndicator size="large" color="#008080" /> : null}
-          {recentSearches.length > 0 && (
+          {recentFoods.length > 0 && (
             <>
-              <Text style={styles.recentSearchesTitle}>Recent Searches</Text>
+              <Text style={styles.recentSearchesTitle}>Recent Foods</Text>
               <FlatList
-                data={recentSearches}
-                keyExtractor={(item, index) => `${item}_${index}`}
+                data={recentFoods}
+                keyExtractor={(item, index) => `${item.id}_${index}`}
                 renderItem={({ item }) => (
-                  <TouchableOpacity onPress={() => handleSearch(item)}>
+                  <TouchableOpacity onPress={() => handleFoodSelect(item)}>
                     <View style={styles.recentSearchItem}>
-                      <Text style={styles.recentSearchText}>{item}</Text>
+                      <Image source={item.image} style={styles.foodImage} />
+                      <Text style={styles.recentSearchText}>{item.product_name}</Text>
                     </View>
                   </TouchableOpacity>
                 )}

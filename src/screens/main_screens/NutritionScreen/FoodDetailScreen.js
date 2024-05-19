@@ -3,15 +3,21 @@ import PropTypes from 'prop-types';
 import { View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import styles from './FoodDetailScreenStyle'; // Import the new styles
 import { getFoodImage } from './FoodSelectionScreen'; // Reuse the image mapping function
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { useFoodContext } from '../../../../FoodContext'; // Ensure the context is imported
 
-const FoodDetailScreen = ({ navigation }) => {
+const FoodDetailScreen = () => {
+  const navigation = useNavigation();
   const route = useRoute();
-  const { food, meal } = route.params;
-  const [quantity, setQuantity] = useState(100); // Default quantity in grams
-  const [unit, setUnit] = useState('grams');
+  const { food, meal, date, update, foodId } = route.params;
+  const { handleAddFood, handleUpdateFood } = useFoodContext();
+
+  const parsedDate = new Date(date); // Deserialize date string back to Date object
+  const [quantity, setQuantity] = useState(food.quantity || 100); // Default quantity in grams or the existing quantity
+  const [unit, setUnit] = useState(food.unit || 'grams');
   const [showMore, setShowMore] = useState(false);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [image, setImage] = useState(food.image || getFoodImage(food.categories_tags_en) || categoryImageMap.default);
 
   const unitConversion = {
     grams: 1,
@@ -24,38 +30,42 @@ const FoodDetailScreen = ({ navigation }) => {
     const quantityInGrams = unit === 'grams' ? quantity : quantity / unitConversion.ounces;
     return ((nutrientPer100g || 0) * (quantityInGrams / 100)).toFixed(2);
   };
-  
-  const handleAddFood = useCallback(() => {
+
+  const handleAddOrUpdateFood = useCallback(() => {
     if (quantity <= 0) {
       Alert.alert("Invalid Quantity", "Please enter a quantity greater than 0.");
       return;
     }
-  
-    const imageSource = getFoodImage(food.categories_tags_en);
+
     const foodDetails = {
+      ...food,
       name: food.product_name || 'Unknown',
-      calories: calculateNutrientValue(food.nutriments?.['energy-kcal_100g'], quantity, unit),
-      carbs: calculateNutrientValue(food.nutriments?.['carbohydrates_100g'], quantity, unit),
-      fat: calculateNutrientValue(food.nutriments?.['fat_100g'], quantity, unit),
-      protein: calculateNutrientValue(food.nutriments?.['proteins_100g'], quantity, unit),
+      calories: calculateNutrientValue(food.nutriments?.['energy-kcal_100g']),
+      carbs: calculateNutrientValue(food.nutriments?.['carbohydrates_100g']),
+      fat: calculateNutrientValue(food.nutriments?.['fat_100g']),
+      protein: calculateNutrientValue(food.nutriments?.['proteins_100g']),
       quantity,
       unit,
-      image: imageSource, // Pass the image source
+      image, // Ensure image has a valid value
     };
-  
-    navigation.navigate('Nutrition', { foodDetails, meal });
-  }, [food, quantity, unit, navigation, meal]);
-  
-  const imageSource = getFoodImage(food.categories_tags_en);
+
+    if (update) {
+      handleUpdateFood({ ...foodDetails, id: foodId }); // Update the existing food item
+    } else {
+      handleAddFood(foodDetails, meal, parsedDate); // Add a new food item
+    }
+
+    navigation.navigate('Nutrition');
+  }, [food, quantity, unit, update, navigation, meal, parsedDate, handleAddFood, handleUpdateFood, foodId, image]);
 
   return (
     <View style={styles.container}>
-      <Image source={imageSource} style={styles.foodImage} />
+      <Image source={image} style={styles.foodImage} />
       <Text style={styles.foodName}>{food.product_name || 'Unknown'}</Text>
       <Text style={styles.foodNutrient}>Calories: {calculateNutrientValue(food.nutriments?.['energy-kcal_100g'])} kcal</Text>
       <Text style={styles.foodNutrient}>Protein: {calculateNutrientValue(food.nutriments?.proteins_100g)} g</Text>
-      <Text style={styles.foodNutrient}>Carbs: {calculateNutrientValue(food.nutriments?.carbohydrates_100g)} g</Text>
-      <Text style={styles.foodNutrient}>Fat: {calculateNutrientValue(food.nutriments?.fat_100g)} g</Text>
+      <Text style={styles.foodNutrient}>Carbs: {calculateNutrientValue(food.nutriments?.['carbohydrates_100g'])} g</Text>
+      <Text style={styles.foodNutrient}>Fat: {calculateNutrientValue(food.nutriments?.['fat_100g'])} g</Text>
       {showMore && (
         <>
           <Text style={styles.foodNutrient}>Fiber: {calculateNutrientValue(food.nutriments?.fiber_100g)} g</Text>
@@ -99,8 +109,8 @@ const FoodDetailScreen = ({ navigation }) => {
           )}
         </View>
       </View>
-      <TouchableOpacity style={styles.addButton} onPress={handleAddFood}>
-        <Text style={styles.addButtonText}>Add Food</Text>
+      <TouchableOpacity style={styles.addButton} onPress={handleAddOrUpdateFood}>
+        <Text style={styles.addButtonText}>Update Food</Text>
       </TouchableOpacity>
     </View>
   );
@@ -111,6 +121,9 @@ FoodDetailScreen.propTypes = {
     params: PropTypes.shape({
       food: PropTypes.object.isRequired,
       meal: PropTypes.string.isRequired,
+      date: PropTypes.string.isRequired,
+      update: PropTypes.bool,
+      foodId: PropTypes.string.isRequired,
     }).isRequired,
   }).isRequired,
   navigation: PropTypes.object.isRequired,
