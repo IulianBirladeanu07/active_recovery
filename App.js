@@ -14,7 +14,6 @@ import WorkoutScreen from './src/screens/main_screens/WorkoutScreen/WorkoutScree
 import NutritionScreen from './src/screens/main_screens/NutritionScreen/NutritionScreen';
 import ProgressScreen from './src/screens/main_screens/ProgressScreen/ProgressScreen';
 
-import WorkoutExercises from './src/screens/workout_screens/WorkoutExercises/WorkoutExercises';
 import WorkoutHistory from './src/screens/workout_screens/WorkoutHistory/WorkoutHistory';
 import WorkoutDetails from './src/screens/workout_screens/WorkoutDetails/WorkoutDetails';
 import WorkoutMeasurements from './src/screens/workout_screens/WorkoutMeasurements/WorkoutMeasurements';
@@ -27,6 +26,7 @@ import CreateTemplate from './src/screens/workout_screens/WorkoutTemplate/Create
 import FoodSelectionScreen from './src/screens/main_screens/NutritionScreen/FoodSelectionScreen';
 import FoodDetailScreen from './src/screens/main_screens/NutritionScreen/FoodDetailScreen';
 import SettingsScreen from './src/components/Settings/Settings';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -58,7 +58,6 @@ export default function App() {
                   <Stack.Screen options={{ headerShown: false }} name="Nutrition" component={NutritionScreen} />
                   <Stack.Screen options={{ headerShown: false }} name="Progress" component={ProgressScreen} />
                   <Stack.Screen options={{ headerShown: false }} name="Settings" component={SettingsScreen} />
-                  <Stack.Screen options={{ headerShown: false }} name="WorkoutExercises" component={WorkoutExercises} />
                   <Stack.Screen options={{ headerShown: false }} name="WorkoutHistory" component={WorkoutHistory} />
                   <Stack.Screen options={{ headerShown: false }} name="WorkoutDetails" component={WorkoutDetails} />
                   <Stack.Screen options={{ headerShown: false }} name="WorkoutMeasurements" component={WorkoutMeasurements} />

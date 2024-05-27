@@ -5,40 +5,46 @@ const { width, height } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
+    padding: 15,
     backgroundColor: '#02111B',
-    paddingBottom: RFValue(10),
   },
   headerContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: RFValue(10),
-    paddingBottom: RFValue(10),
-    paddingTop: RFValue(10),
-    justifyContent: 'space-between',
+    marginBottom: 20,
+    alignItems: 'center',
   },
   headerText: {
-    fontSize: RFValue(28),
+    fontSize: RFValue(24),
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#FFFFFF',
   },
   progressBarContainer: {
-    alignItems: 'center',
     marginBottom: RFValue(10),
+    alignItems: 'center',
   },
   progressBarValue: {
     fontSize: RFValue(16),
-    color: '#fff',
+    color: '#FFFFFF',
   },
   lastWorkoutContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: '#02202B',
     borderRadius: 10,
     padding: RFValue(10),
     marginTop: RFValue(20),
-    marginBottom: RFValue(120),
+    height: RFValue(165), // Set height to match maxHeight
+    overflow: 'hidden', // Ensure content is clipped to the container bounds
+  },
+  lastWorkoutScroll: {
+    flex: 1,
+  },
+  lastWorkoutContent: {
+    flexGrow: 1, // Ensure content is scrollable
+    paddingBottom: RFValue(10),
   },
   lastWorkoutText: {
     fontSize: RFValue(16),
     fontWeight: 'bold',
+    color: '#FFFFFF',
     marginBottom: RFValue(5),
   },
   exerciseContainer: {
@@ -47,9 +53,18 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: RFValue(5),
   },
+  circularProgressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 20,
+    marginBottom: 20,
+  },
   exerciseName: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   bestSetContainer: {
     flexDirection: 'row',
@@ -57,6 +72,11 @@ export const styles = StyleSheet.create({
   },
   bestSetText: {
     fontSize: RFValue(14),
+    color: '#FFFFFF'
+  },
+  noWorkoutsText: {
+    fontSize: RFValue(18),
+    color: '#A0AEC0',
   },
   summaryContainer: {
     flexDirection: 'row',
@@ -74,20 +94,19 @@ export const styles = StyleSheet.create({
     marginTop: RFValue(5),
   },
   summaryCardsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: RFValue(40),
-    marginTop: RFValue(0),
+    flexDirection: 'row', // Changed from 'column' to 'row'
+    justifyContent: 'space-between', // This ensures spacing between buttons
+    alignItems: 'center', // This aligns items vertically in the center
+    marginTop: 10,
   },
   summaryCard: {
-    width: width > 400 ? '25%' : '45%', // Adjusts based on screen width
-    borderRadius: 10,
-    padding: RFValue(10),
-    marginBottom: RFValue(10),
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#008080',
+    backgroundColor: '#005050',
+    marginHorizontal: 5,
+    marginBottom: 10,
   },
   summaryCardText: {
     fontSize: RFValue(14),
@@ -102,11 +121,12 @@ export const styles = StyleSheet.create({
     marginBottom: RFValue(10),
   },
   startButton: {
-    backgroundColor: '#e71d27',
+    backgroundColor: '#29335c',
     borderRadius: 10,
     padding: RFValue(15),
     alignItems: 'center',
-    marginTop: RFValue(10),
+    marginTop: RFValue(75),
+    marginBottom: -15,
   },
   startButtonText: {
     fontSize: RFValue(18),

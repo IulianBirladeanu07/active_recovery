@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
-import styles from './FoodDetailScreenStyle'; // Import the new styles
-import { getFoodImage } from './FoodSelectionScreen'; // Reuse the image mapping function
+import styles from './FoodDetailScreenStyle';
+import { getFoodImage } from './FoodSelectionScreen';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { useFoodContext } from '../../../../FoodContext'; // Ensure the context is imported
+import { useFoodContext } from '../../../../FoodContext';
 
 const FoodDetailScreen = () => {
   const navigation = useNavigation();
@@ -12,12 +12,15 @@ const FoodDetailScreen = () => {
   const { food, meal, date, update, foodId } = route.params;
   const { handleAddFood, handleUpdateFood } = useFoodContext();
 
-  const parsedDate = new Date(date); // Deserialize date string back to Date object
-  const [quantity, setQuantity] = useState(food.quantity || 100); // Default quantity in grams or the existing quantity
+  // Parse date string back to Date object
+  const parsedDate = new Date(date);
+
+  const [quantity, setQuantity] = useState(food.quantity || 100);
   const [unit, setUnit] = useState(food.unit || 'grams');
   const [showMore, setShowMore] = useState(false);
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [image, setImage] = useState(food.image || getFoodImage(food.categories_tags_en) || categoryImageMap.default);
+
+  const image = food.image || getFoodImage(food.categories_tags_en);
 
   const unitConversion = {
     grams: 1,
@@ -32,8 +35,8 @@ const FoodDetailScreen = () => {
   };
 
   const handleAddOrUpdateFood = useCallback(() => {
-    if (quantity <= 0) {
-      Alert.alert("Invalid Quantity", "Please enter a quantity greater than 0.");
+    if (quantity <= 0 || isNaN(quantity)) {
+      Alert.alert("Invalid Quantity", "Please enter a valid quantity greater than 0.");
       return;
     }
 
@@ -46,13 +49,13 @@ const FoodDetailScreen = () => {
       protein: calculateNutrientValue(food.nutriments?.['proteins_100g']),
       quantity,
       unit,
-      image, // Ensure image has a valid value
+      image,
     };
 
     if (update) {
-      handleUpdateFood({ ...foodDetails, id: foodId }); // Update the existing food item
+      handleUpdateFood({ ...foodDetails, id: foodId });
     } else {
-      handleAddFood(foodDetails, meal, parsedDate); // Add a new food item
+      handleAddFood(foodDetails, meal, parsedDate.toISOString()); // Ensure date is passed as a string
     }
 
     navigation.navigate('Nutrition');
@@ -110,7 +113,7 @@ const FoodDetailScreen = () => {
         </View>
       </View>
       <TouchableOpacity style={styles.addButton} onPress={handleAddOrUpdateFood}>
-        <Text style={styles.addButtonText}>Update Food</Text>
+        <Text style={styles.addButtonText}>{update ? 'Update Food' : 'Add Food'}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -123,7 +126,7 @@ FoodDetailScreen.propTypes = {
       meal: PropTypes.string.isRequired,
       date: PropTypes.string.isRequired,
       update: PropTypes.bool,
-      foodId: PropTypes.string.isRequired,
+      foodId: PropTypes.string,
     }).isRequired,
   }).isRequired,
   navigation: PropTypes.object.isRequired,

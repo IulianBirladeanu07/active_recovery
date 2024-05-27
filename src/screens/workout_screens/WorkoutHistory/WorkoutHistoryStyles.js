@@ -20,8 +20,6 @@ export const styles = StyleSheet.create({
       borderRadius: 8,
       marginBottom: 10,
       marginTop: 10,
-      borderWidth: 2,
-      borderColor: '#008080', // Adjusted color
     },
     timestamp: {
       fontSize: 16,

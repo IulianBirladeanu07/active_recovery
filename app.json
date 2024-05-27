@@ -27,7 +27,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "This app uses the camera to scan barcodes."
+        "NSCameraUsageDescription": "This app uses the camera to scan barcodes.",
+        "NSHealthShareUsageDescription": "Health data is used to display your step count."
       }
     },
     "android": {
@@ -35,10 +36,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.yourcompany.activerecovery"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "scheme": "activerecovery"
   }
 }

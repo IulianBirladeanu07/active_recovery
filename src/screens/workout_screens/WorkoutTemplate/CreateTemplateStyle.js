@@ -1,68 +1,87 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
-
-const { width } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#02111B',
-    paddingBottom: RFValue(10),
-    paddingHorizontal: RFValue(20),
-    paddingTop: RFValue(60),
+    padding: RFValue(20),
   },
   input: {
     height: RFValue(45),
     backgroundColor: '#FFFFFF',
     borderRadius: RFValue(10),
     paddingHorizontal: RFValue(20),
-    marginBottom: RFValue(5),
-    marginRight: 2,
-  },
-  addButton: {
-    fontSize: RFValue(18),
-    color: '#FFFFFF',
-    backgroundColor: '#e71d27',
-    paddingVertical: RFValue(10),
-    borderRadius: RFValue(10),
-    textAlign: 'center',
-    marginTop: RFValue(2),
-    marginBottom: RFValue(5),
-  },
-  createTemplateButton: {
-    fontSize: RFValue(18),
-    color: '#FFFFFF',
-    backgroundColor: '#e71d27',
-    paddingVertical: RFValue(15),
-    borderRadius: RFValue(10),
-    textAlign: 'center',
+    fontSize: RFValue(16),
+    marginBottom: RFValue(15),
     marginTop: RFValue(20),
+    borderColor: '#008080',
+    borderWidth: 1,
+  },
+  exerciseContainer: {
+    backgroundColor: '#02202B',
+    borderRadius: RFValue(10),
+    padding: RFValue(15),
+    marginBottom: RFValue(15),
+    borderColor: '#008080',
+    borderWidth: 1,
   },
   exerciseName: {
-    fontSize: RFValue(16),
+    fontSize: RFValue(18),
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: RFValue(5),
+    marginBottom: RFValue(10),
   },
   row: {
     flexDirection: 'row',
-    marginBottom: RFValue(0),
+    justifyContent: 'space-between',
+    marginBottom: RFValue(10),
   },
   column: {
     flex: 1,
-    marginRight: RFValue(10),
   },
-  label: {
-    fontSize: RFValue(14),
+  addButton: {
+    backgroundColor: '#008080',
+    paddingVertical: RFValue(10),
+    paddingHorizontal: RFValue(20),
+    borderRadius: RFValue(10),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: RFValue(10),
+  },
+  addButtonText: {
     color: '#FFFFFF',
-    marginBottom: RFValue(5),
+    fontSize: RFValue(16),
+    fontWeight: 'bold',
   },
-  setInput: {
+  createTemplateButton: {
+    backgroundColor: '#29335c',
+    paddingVertical: RFValue(15),
+    borderRadius: RFValue(10),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: RFValue(20),
+  },
+  createTemplateButtonText: {
+    color: '#FFFFFF',
+    fontSize: RFValue(18),
+    fontWeight: 'bold',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  inputField: {
+    flex: 1,
     height: RFValue(45),
     backgroundColor: '#FFFFFF',
     borderRadius: RFValue(10),
     paddingHorizontal: RFValue(20),
-    marginBottom: RFValue(5),
+    fontSize: RFValue(16),
+    marginBottom: RFValue(10),
+    borderColor: '#008080',
+    borderWidth: 1,
+    marginHorizontal: RFValue(5),
   },
 });
 

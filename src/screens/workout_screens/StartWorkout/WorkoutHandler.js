@@ -1,6 +1,6 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-import { db, collection, setDoc, getDocs, getDoc, doc, query, where, orderBy, limit, FieldValue } from '../../../services/firebase';
+import { db, collection, setDoc, getDocs, getDoc, deleteDoc, doc, query, where, orderBy, limit, FieldValue } from '../../../services/firebase';
 
 export const sendWorkoutDataToFirestore = async (
   exerciseData,
@@ -304,50 +304,26 @@ export const fetchTemplatesFromFirestore = async () => {
   }
 };
 
-// Helper function to add a document to Firestore
-export const addDocument = async (collectionName, docId, data) => {
+export const deleteTemplateFromFirestore = async (templateName) => {
   try {
-    const docRef = doc(collection(db, collectionName), docId);
-    await setDoc(docRef, { ...data});
-  } catch (error) {
-    console.error(`Error adding document to ${collectionName}:`, error.message);
-    throw error;
-  }
-};
-
-// Helper function to fetch documents from Firestore
-export const fetchDocuments = async (collectionName, filters = [], order = null, limitCount = null) => {
-  try {
-    let q = collection(db, collectionName);
-    filters.forEach(filter => {
-      q = query(q, where(...filter));
-    });
-    if (order) {
-      q = query(q, orderBy(...order));
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
     }
-    if (limitCount) {
-      q = query(q, limit(limitCount));
-    }
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error(`Error fetching documents from ${collectionName}:`, error.message);
-    throw error;
-  }
-};
 
-// Helper function to fetch a single document from Firestore
-export const fetchDocument = async (collectionName, docId) => {
-  try {
-    const docRef = doc(collection(db, collectionName), docId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() };
+    const formattedTemplateName = `${templateName}_${user.uid}`;
+
+    const templateDocRef = await getDocs(collection(db, 'Templates'));
+    const templateToDelete = templateDocRef.docs.find(doc => doc.id === formattedTemplateName);
+
+    if (templateToDelete) {
+      await deleteDoc(templateToDelete.ref);
+      console.log('Template deleted:', formattedTemplateName);
     } else {
-      throw new Error('Document not found');
+      console.error('Template not found:', formattedTemplateName);
     }
   } catch (error) {
-    console.error(`Error fetching document from ${collectionName}:`, error.message);
+    console.error('Error deleting template from Firestore:', error.message);
     throw error;
   }
 };

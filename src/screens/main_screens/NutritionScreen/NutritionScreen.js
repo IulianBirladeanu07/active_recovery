@@ -33,11 +33,12 @@ const NutritionScreen = () => {
   const [selectedMeal, setSelectedMeal] = useState('breakfast');
 
   useEffect(() => {
-    if (route.params?.foodDetails && route.params?.meal) {
-      handleAddFood(route.params.foodDetails, route.params.meal, new Date(route.params.date));
-      navigation.setParams({ foodDetails: null, meal: null, date: null });
+    if (route.params?.food && route.params?.meal) {
+      const foodDate = new Date(route.params.date); // Convert the date string back to Date object
+      handleAddFood(route.params.food, route.params.meal, foodDate);
+      navigation.setParams({ food: null, meal: null, date: null });
     }
-  }, [route.params?.foodDetails, route.params?.meal, route.params?.date, handleAddFood, navigation]);
+  }, [route.params?.food, route.params?.meal, route.params?.date, handleAddFood, navigation]);
 
   useEffect(() => {
     const totalNutrition = calculateTotalNutrition();
@@ -90,21 +91,27 @@ const NutritionScreen = () => {
   };
 
   const handleFoodSelect = useCallback((item, meal) => {
-    // Ensure the product_name and image are passed correctly
     const foodDetails = {
       ...item,
       product_name: item.name,
-      image: item.image, // Pass the existing image
+      image: item.image,
       nutriments: {
         'energy-kcal_100g': item.calories,
         'carbohydrates_100g': item.carbs,
         'fat_100g': item.fat,
         'proteins_100g': item.protein,
       },
+      date: selectedDate.toISOString() // Convert date to string
     };
   
-    navigation.navigate('FoodDetail', { food: foodDetails, meal, date: selectedDate.toISOString(), update: true, foodId: item.id });
-  }, [navigation, selectedDate]);  
+    navigation.navigate('FoodDetail', { 
+      food: foodDetails, 
+      meal, 
+      date: selectedDate.toISOString(), // Ensure date is passed as a string
+      update: true, 
+      foodId: item.id 
+    });
+  }, [navigation, selectedDate]);
 
   return (
     <ApplicationCustomScreen
@@ -126,12 +133,12 @@ const NutritionScreen = () => {
               <MaterialCommunityIcons name="chevron-right" size={28} color="#fdf5ec" />
             </TouchableOpacity>
           </View>
-          <ProgressBar value={dailyNutrition.calories} maxValue={weightGoal.dailyCalorieGoal} />
+          <ProgressBar value={dailyNutrition.calories} maxValue={weightGoal.dailyCalorieGoal} customText={"Calories"} />
 
           <View style={styles.circularProgressContainer}>
-            <CircularProgress title="Protein" value={dailyNutrition.protein} maxValue={100} size={60} strokeWidth={6} color="#4CAF50" duration={1500} />
-            <CircularProgress title="Carbs" value={dailyNutrition.carbs} maxValue={100} size={60} strokeWidth={6} color="#e74c3c" duration={1500} />
-            <CircularProgress title="Fat" value={dailyNutrition.fat} maxValue={100} size={60} strokeWidth={6} color="#2ecc71" duration={1500} />
+            <CircularProgress title="Protein" value={dailyNutrition.protein.toFixed(0)} maxValue={100} size={60} strokeWidth={6} color="#29335c" duration={1500} />
+            <CircularProgress title="Carbs" value={dailyNutrition.carbs.toFixed(0)} maxValue={100} size={60} strokeWidth={6} color="#db2b39" duration={1500} />
+            <CircularProgress title="Fat" value={dailyNutrition.fat.toFixed(0)} maxValue={100} size={60} strokeWidth={6} color="#20a39e" duration={1500} />
           </View>
 
           <View style={styles.mealSelector}>

@@ -34,13 +34,11 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
   templateContainer: {
-    backgroundColor: '#02111B',
+    backgroundColor: '#02202B',
     borderRadius: 10,
     padding: 20,
     marginBottom: 10,
     marginHorizontal: 20,
-    borderWidth: 1,
-    borderColor: '#e71d27',
     position: 'relative', // Add this to allow positioning of the edit button
   },
   templateName: {
@@ -50,13 +48,17 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
   createTemplateButton: {
-    backgroundColor: '#e71d27',
+    backgroundColor: '#008080',
     borderRadius: 10,
     padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 20,
     marginBottom: 20,
+  },
+  createTemplateButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
   },
   // Edit button styles
   editButton: {
@@ -70,46 +72,35 @@ export const styles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
   },
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 22,
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: '#02111B',
-    borderRadius: 10,
-    padding: 35,
-    alignItems: 'center',
+  dropdown: {
+    position: 'absolute',
+    right: 20,
+    top: 40,
+    backgroundColor: '#02202B',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    zIndex: 10,
+    left: 20,
   },
-  buttonClose: {
-    backgroundColor: '#e71d27',
-    borderRadius: 10,
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 10,
-    elevation: 2,
-    marginBottom: 10,
   },
-  buttonStyle: {
-    backgroundColor: '#e71d27',
-    borderRadius: 10,
-    padding: 10,
-    elevation: 2,
-    marginBottom: 10,
+  dropdownItemText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#FFFFFF',
   },
-  textStyle: {
-    color: 'white',
-    fontWeight: 'bold',
+  cancelButtonText: {
+    color: 'red',
+    fontSize: 16,
     textAlign: 'center',
+    width: '100%',
   },
 });
-
-export default styles;

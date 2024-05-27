@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const ProgressBar = ({ value, maxValue }) => {
+const ProgressBar = ({ value, maxValue, customText }) => {
   const percentage = (value / maxValue) * 100;
   const fillWidth = `${percentage}%`;
   const barColor = getColor(percentage);
@@ -10,7 +10,7 @@ const ProgressBar = ({ value, maxValue }) => {
     <View style={styles.progressBarContainer}>
       <View style={[styles.progressBarFill, { width: fillWidth, backgroundColor: barColor }]} />
       <Text style={styles.progressBarText}>
-        {`${value.toFixed(2)} / ${maxValue} Calories (${percentage.toFixed(2)}%)`}
+        {`${value.toFixed(0)} / ${maxValue} ${customText} (${percentage.toFixed(0)}%)`}
       </Text>
     </View>
   );

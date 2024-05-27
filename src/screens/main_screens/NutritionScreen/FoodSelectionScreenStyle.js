@@ -29,9 +29,10 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     alignItems: 'center',
     marginTop: RFValue(10),
+    padding: 10,
   },
   foodDetails: {
-    marginLeft: RFValue(15),
+    marginLeft: RFValue(30),
   },
   foodName: {
     fontWeight: 'bold',
@@ -39,8 +40,8 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   foodNutrient: {
-    fontSize: RFValue(12),
-    color: '#fff',
+    fontSize: RFValue(10),
+    color: '#bbb',
   },
   foodCategories: {
     fontSize: RFValue(12),
@@ -54,6 +55,8 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   recentSearchItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: RFValue(10),
     borderBottomWidth: 1,
     borderTopWidth: 1,
@@ -61,6 +64,8 @@ const styles = StyleSheet.create({
   },
   recentSearchText: {
     color: '#fff',
+    fontSize: 12,
+    marginRight: 10,
   },
   error: {
     color: 'red',
@@ -82,6 +87,11 @@ const styles = StyleSheet.create({
     width: RFValue(40),
     height: RFValue(40),
     marginRight: RFValue(10),
+  },
+  recentFoodDetails: {
+    flex: 1,
+    justifyContent: 'space-between',
+    marginLeft: 15,
   },
 });
 

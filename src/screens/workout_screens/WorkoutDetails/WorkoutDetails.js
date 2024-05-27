@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, BackHandler, View } from 'react-native'; // Import BackHandler
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
+import { StyleSheet, BackHandler, View, Alert } from 'react-native'; 
+import { useNavigation } from '@react-navigation/native'; 
 import { calculate1RM } from '../../workout_screens/StartWorkout/WorkoutHandler';
 import { db, collection, getDocs } from '../../../services/firebase';
 import WorkoutSummary from '../WorkoutDetails/WorkoutSummary';
 
 const WorkoutDetails = ({ route }) => {
-  const navigation = useNavigation(); // Get navigation object
-
+  const navigation = useNavigation();
   const { duration, notes, exercises, timestamp } = route.params;
   const [totalPRs, setTotalPRs] = useState(0); 
+  const [completionStatus, setCompletionStatus] = useState('Completed');
+  const [comparisonData, setComparisonData] = useState('');
 
   useEffect(() => {
     const countTotalPRs = async () => {
@@ -30,7 +31,6 @@ const WorkoutDetails = ({ route }) => {
           const matchingExercise = matchingExerciseDoc.data().exercises.find(ex => ex.exerciseName === exerciseName);
           const sets = matchingExercise.sets;
           const bestSet = findBestSet(sets);
-          console.log(bestSet)
           const prev1RM = parseFloat(bestSet.estimated1RM).toFixed(2) || 0;
 
           const bestCurrentSet = findBestSet(currentExerciseSets);
@@ -42,11 +42,12 @@ const WorkoutDetails = ({ route }) => {
         }
       });
       setTotalPRs(total);
+      setComparisonData('You lifted more weight compared to your last workout!');
     };
-  
+
     countTotalPRs();
   }, [exercises]);
-  
+
   const findBestSet = (sets) => {
     return sets.reduce((best, set) => {
       const current1RM = calculate1RM(parseFloat(set.weight), parseInt(set.reps, 10));
@@ -54,11 +55,10 @@ const WorkoutDetails = ({ route }) => {
     }, { estimated1RM: 0 });
   };
 
-  // Add event listener for Android hardware back button
   useEffect(() => {
     const handleBackButton = () => {
-      navigation.replace("Workout") // Navigate to the previous screen (dashboard)
-      return true; // Prevent default behavior
+      navigation.replace("Workout")
+      return true;
     };
 
     BackHandler.addEventListener('hardwareBackPress', handleBackButton);
@@ -67,7 +67,7 @@ const WorkoutDetails = ({ route }) => {
       BackHandler.removeEventListener('hardwareBackPress', handleBackButton);
       setTotalPRs(0);
     };
-  }, []); // Ensure the effect is only applied once
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
@@ -77,6 +77,10 @@ const WorkoutDetails = ({ route }) => {
           duration={duration}
           totalPRs={totalPRs}
           exercises={exercises}
+          notes={notes}
+          completionStatus={completionStatus}
+          comparisonData={comparisonData}
+          showActions={true}
         />
       </View>
     </View>
@@ -94,13 +98,10 @@ const styles = StyleSheet.create({
   },
   summaryContainer: {
     width: 400, // Add your desired width
-    height: 400, // Add your desired height
-    borderWidth: 1,
-    borderColor: 'black',
-    borderRadius: 10,
-    padding: 10,
+    height: 650, // Add your desired height
+    padding: 20,
     marginTop: 100,
-    marginBottom: 200,
+    marginBottom: 100,
     justifyContent: 'center',
     alignItems: 'center', // Center the content inside the container
   },
