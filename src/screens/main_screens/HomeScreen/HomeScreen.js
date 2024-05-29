@@ -1,22 +1,26 @@
 // HomeScreen.js
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 import ApplicationCustomScreen from '../../../components/ApplicationCustomScreen/ApplicationCustomScreen';
 import ProgressBar from '../../../components/ProgressBar/ProgressBar';
 import CircularProgress from '../../../components/CircularProgress/CircularProgress';
-import StepCounter from '../../../components/StepCounter/StepCounter';
+import BarGraph from '../../../components/BarGraph/BarGraph'; // Assuming you have a BarGraph component
 
 const HomeScreen = () => {
-  const navigation = useNavigation();
 
   // Mock data for visual demonstration
+  const dailyCalories = [1000, 3800, 2000, 3500, 3600, 4000, 3400];
+  const totalCalories = dailyCalories.reduce((acc, curr) => acc + curr, 0);
+  const averageCalories = Math.round(totalCalories / dailyCalories.length);
+
   const dailyActivity = {
-    workoutTime: '45 mins',
-    caloriesBurned: '500 kcal',
+    workoutTime: '30 mins',
+    caloriesBurned: '300 kcal',
     exercisesCompleted: '5 exercises',
-    caloricIntake: '2000 kcal'
+    caloricIntake: '2000 kcal',
+    recentWorkout: 'Morning Yoga',
+    recentMeal: 'Breakfast: Oatmeal and fruits'
   };
 
   return (
@@ -27,26 +31,32 @@ const HomeScreen = () => {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.headerText}>Home Dashboard</Text>
 
-        {/* Summary of Today's Activity with Icons */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Today's Activity</Text>
-          <Text style={styles.summaryText}>Workout Time: {dailyActivity.workoutTime}</Text>
-          <Text style={styles.summaryText}>Calories Burned: {dailyActivity.caloriesBurned}</Text>
-          <Text style={styles.summaryText}>Exercises Completed: {dailyActivity.exercisesCompleted}</Text>
-          <Text style={styles.summaryText}>Caloric Intake: {dailyActivity.caloricIntake}</Text>
-        </View>
-
-        {/* Progress Bar for Weekly Activity */}
-        <View style={styles.progressContainer}>
-          <Text style={styles.sectionTitle}>Weekly Workout Goal</Text>
-          <ProgressBar value={0.5} maxValue={1} style={styles.progressBar} />
-          <StepCounter />
-        </View>
-
-        {/* Circular Progress Indicators */}
+        {/* Circular Progress Indicators for Weight Goal */}
         <View style={styles.circularProgressContainer}>
           <CircularProgress title="Weight Goal" value={180} maxValue={200} size={120} strokeWidth={10} color="#4caf50" duration={500} />
         </View>
+
+        {/* Containers for Recent Workout and Meal */}
+        <View style={styles.recentActivityContainer}>
+          <View style={styles.recentWorkoutContainer}>
+            <Text style={styles.sectionTitle}>Most Recent Workout</Text>
+            <Text style={styles.summaryText}>{dailyActivity.recentWorkout}</Text>
+          </View>
+          <View style={styles.recentMealContainer}>
+            <Text style={styles.sectionTitle}>Most Recent Meal</Text>
+            <Text style={styles.summaryText}>{dailyActivity.recentMeal}</Text>
+          </View>
+        </View>
+
+        {/* Bar Graph for Weekly Calorie Goal */}
+        <View style={styles.graphContainer}>
+          <Text style={styles.sectionTitle}>Weekly Calorie Intake</Text>
+            <BarGraph 
+              dailyCalories={dailyCalories} 
+              targetCalories={2500}
+              colors={['#4caf50', '#2196f3', '#ffeb3b', '#ff9800', '#009688', '#673ab7', '#e91e63']}
+              /> 
+                     </View>
 
       </ScrollView>
     </ApplicationCustomScreen>
@@ -67,11 +77,32 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  sectionContainer: {
+  circularProgressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: 20,
+  },
+  recentActivityContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  recentWorkoutContainer: {
+    flex: 1,
+    marginRight: 10,
     padding: 10,
     backgroundColor: '#02202B',
     borderRadius: 10,
+  },
+  recentMealContainer: {
+    flex: 1,
+    marginLeft: 10,
+    padding: 10,
+    backgroundColor: '#02202B',
+    borderRadius: 10,
+  },
+  graphContainer: {
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
@@ -83,15 +114,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     marginBottom: 5,
-  },
-  progressContainer: {
-    marginBottom: 20,
-  },
-  circularProgressContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    marginBottom: 20,
   },
   progressBar: {
     width: '100%',
