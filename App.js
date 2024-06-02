@@ -22,12 +22,12 @@ import StartWorkout from './src/screens/workout_screens/StartWorkout/StartWorkou
 import ExerciseList from './src/screens/workout_screens/ExerciseList/ExerciseList';
 import WorkoutTemplate from './src/screens/workout_screens/WorkoutTemplate/WorkoutTemplate';
 import CreateTemplate from './src/screens/workout_screens/WorkoutTemplate/CreateTemplate';
+import MeasurementScreen from './src/screens/workout_screens/Measurements/MeasurementsScreen';
 
 import FoodSelectionScreen from './src/screens/main_screens/NutritionScreen/FoodSelectionScreen';
 import FoodDetailScreen from './src/screens/main_screens/NutritionScreen/FoodDetailScreen';
 import SettingsScreen from './src/components/Settings/Settings';
 import ProfileScreen from './src/components/Profile/ProfileScreen';
-import { Profile } from 'react-native-fbsdk-next';
 
 const Stack = createNativeStackNavigator();
 
@@ -62,7 +62,7 @@ export default function App() {
                   <Stack.Screen options={{ headerShown: false }} name="Profile" component={ProfileScreen} />
                   <Stack.Screen options={{ headerShown: false }} name="WorkoutHistory" component={WorkoutHistory} />
                   <Stack.Screen options={{ headerShown: false }} name="WorkoutDetails" component={WorkoutDetails} />
-                  <Stack.Screen options={{ headerShown: false }} name="WorkoutMeasurements" component={WorkoutMeasurements} />
+                  <Stack.Screen options={{ headerShown: false }} name="MeasurementsScreen" component={MeasurementScreen} />
                   <Stack.Screen options={{ headerShown: false }} name="StartWorkout" component={StartWorkout} />
                   <Stack.Screen options={{ headerShown: false }} name="ExerciseList" component={ExerciseList} />
                   <Stack.Screen options={{ headerShown: false }} name="WorkoutTemplate" component={WorkoutTemplate} />

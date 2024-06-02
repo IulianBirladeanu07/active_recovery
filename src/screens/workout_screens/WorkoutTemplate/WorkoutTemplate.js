@@ -122,7 +122,7 @@ const WorkoutTemplate = ({ navigation }) => {
               <View key={exerciseIndex} style={styles.exerciseContainer}>
                 <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
                 <Text style={styles.text}>
-                  {exercise.sets.length} X {exercise.sets[0].reps}
+                  {exercise.sets && exercise.sets.length > 0 ? `${exercise.sets.length} X ${exercise.sets[0].reps}` : 'No sets defined'}
                 </Text>
               </View>
             ))}

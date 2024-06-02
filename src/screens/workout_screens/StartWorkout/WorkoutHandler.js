@@ -327,3 +327,56 @@ export const deleteTemplateFromFirestore = async (templateName) => {
     throw error;
   }
 };
+
+export const sendMeasurementsToFirestore = async (measurements) => {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+
+    const uid = user.uid;
+    const timestamp = new Date();
+    const formattedTimestamp = `${timestamp.getFullYear()}_${(timestamp.getMonth() + 1)}_${timestamp.getDate()}_${timestamp.getHours()}_${timestamp.getMinutes()}_${uid}`;
+
+    const measurementsDataToSend = {
+      ...measurements,
+      uid: uid,
+      timestamp: timestamp,
+    };
+
+    // Create a reference to the user's measurements collection
+    const userMeasurementsRef = collection(db, 'measurements');
+    const measurementDocRef = doc(userMeasurementsRef, formattedTimestamp);
+
+    await setDoc(measurementDocRef, measurementsDataToSend);
+    console.log('Measurements saved:', measurementsDataToSend);
+  } catch (error) {
+    console.error('Error saving measurements:', error.message);
+    throw error;
+  }
+};
+
+export const fetchLastMeasurements = async () => {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+
+    const uid = user.uid;
+
+    const measurementsRef = collection(db, 'measurements');
+    const q = query(measurementsRef, where('uid', '==', uid), orderBy('timestamp', 'desc'), limit(1));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].data();
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching last measurements:', error.message);
+    throw error;
+  }
+};

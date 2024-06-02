@@ -88,7 +88,7 @@ const WorkoutScreen = () => {
           <TouchableOpacity style={styles.summaryCard} onPress={() => navigation.navigate('WorkoutTemplate')}>
             <Text style={styles.summaryCardText}>Templates</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.summaryCard} onPress={() => navigation.navigate('WorkoutTemplate')}>
+          <TouchableOpacity style={styles.summaryCard} onPress={() => navigation.navigate('MeasurementsScreen')}>
             <Text style={styles.summaryCardText}>Size tracker</Text>
           </TouchableOpacity>
         </View>
