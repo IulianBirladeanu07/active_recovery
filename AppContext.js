@@ -11,6 +11,20 @@ export const AppProvider = ({ children }) => {
     const [lastWorkout, setLastWorkout] = useState(null);
     const [workoutHistory, setWorkoutHistory] = useState([]);
     const [templates, setTemplates] = useState([]);
+    
+    const [userSettings, setUserSettingsState] = useState({
+      targetCalories: 2000,
+      targetProtein: 150,
+      targetFats: 70,
+      targetCarbs: 250,
+    });
+  
+    const setUserSettings = (settings) => {
+      setUserSettingsState((prevSettings) => ({
+        ...prevSettings,
+        ...settings,
+      }));
+    };
 
     const fetchData = useCallback(async () => {
         try {
@@ -78,7 +92,7 @@ export const AppProvider = ({ children }) => {
 
     return (
       <AppContext.Provider value={{
-        workoutsThisWeek, lastWorkout, workoutHistory, templates, refreshAllData
+        workoutsThisWeek, lastWorkout, workoutHistory, templates, refreshAllData, userSettings, setUserSettings
       }}>
         {children}
       </AppContext.Provider>

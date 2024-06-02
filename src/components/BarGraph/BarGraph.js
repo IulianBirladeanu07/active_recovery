@@ -2,17 +2,19 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 const BarGraph = ({ dailyCalories, targetCalories, colors }) => {
-  // Calculate the average of dailyCalories
-  const averageCalories = dailyCalories.reduce((sum, curr) => sum + curr, 0) / dailyCalories.length;
-  
-  // Determine the maximum scale using a fixed base or max from data
+  // Filter out days with zero calories for average calculation
+  const activeDays = dailyCalories.filter(cal => cal > 0);
+  const averageCalories = activeDays.reduce((sum, curr) => sum + curr, 0) / (activeDays.length || 1); // Avoid division by zero
+
+  // Determine the maximum scale using a fixed base, max from data, or targetCalories
   const baseMaxCalorie = 3000; // Adjust this base to suit typical data ranges
   const maxCalorie = Math.max(baseMaxCalorie, ...dailyCalories, averageCalories, targetCalories);
-  const containerHeight = 200; // Fixed container height
+  const containerHeight = 175; // Fixed container height
+  const minBarHeight = 5; // Minimum bar height for visibility
 
   const getSafeHeight = (calories) => {
     const height = (calories / maxCalorie) * containerHeight;
-    return Math.min(height, containerHeight); // Ensures height doesn't exceed container
+    return Math.max(height, minBarHeight); // Ensures minimum height
   };
 
   const renderDottedLine = (position) => (
@@ -26,7 +28,7 @@ const BarGraph = ({ dailyCalories, targetCalories, colors }) => {
   const renderMilestoneLines = () => {
     const milestones = [];
     const increment = 500;
-    for (let i = 1; i * increment <= maxCalorie; i++) {
+    for (let i = 0; i * increment <= maxCalorie; i++) {
       const milestoneCalories = increment * i;
       const position = getSafeHeight(milestoneCalories);
 
@@ -43,11 +45,15 @@ const BarGraph = ({ dailyCalories, targetCalories, colors }) => {
   return (
     <View style={styles.container}>
       <View style={styles.barsContainer}>
-        {dailyCalories.map((calories, index) => (
-          <View key={index} style={[styles.dayContainer, { height: getSafeHeight(calories), backgroundColor: colors[index % colors.length] }]}>
-            <Text style={styles.calorieText}>{calories} kcal</Text>
-          </View>
-        ))}
+        {dailyCalories.length > 0 ? (
+          dailyCalories.map((calories, index) => (
+            <View key={index} style={[styles.dayContainer, { height: getSafeHeight(calories), backgroundColor: colors[index % colors.length] }]}>
+              <Text style={styles.calorieText}>{calories} kcal</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.placeholderText}>No data available</Text>
+        )}
         {renderMilestoneLines()}
       </View>
       <Text style={styles.averageText}>Avg this week: {averageCalories.toFixed(2)} kcal</Text>
@@ -59,13 +65,14 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#02202B',
     borderRadius: 10,
-    marginBottom: 20,
     alignItems: 'center',
+    paddingHorizontal: 5,
+    paddingVertical: 10,
   },
   barsContainer: {
     position: 'relative',
     flexDirection: 'row',
-    height: 250,
+    height: 200,
     alignItems: 'flex-end',
     width: '100%',
     overflow: 'hidden',
@@ -74,12 +81,12 @@ const styles = StyleSheet.create({
   dayContainer: {
     flex: 1,
     alignItems: 'center',
-    marginHorizontal: 7, // Increased margin
+    marginHorizontal: 8, // Increased margin
     borderRadius: 5,
-    zIndex: 3,
+    justifyContent: 'flex-end',
+    marginBottom: 10,
   },
   bar: {
-    width: 20, // Reduced width for thinner bars
     borderRadius: 5,
     zIndex: 3,
   },
@@ -87,13 +94,20 @@ const styles = StyleSheet.create({
     marginTop: 5,
     color: '#aaa',
     fontWeight: 'bold',
-    fontSize: 8
+    fontSize: 8,
+    textAlign: 'center',
   },
   averageText: {
     marginTop: 10,
     color: '#FFFFFF',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  placeholderText: {
+    color: '#aaa',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 20,
   },
   dottedLine: {
     position: 'absolute',
@@ -110,7 +124,7 @@ const styles = StyleSheet.create({
   },
   milestoneText: {
     position: 'absolute',
-    left: 0,
+    left: 2,
     color: '#FFF',
     fontSize: 8,
     transform: [{ translateY: -10 }]

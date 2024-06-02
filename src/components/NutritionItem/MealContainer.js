@@ -1,37 +1,43 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import FoodItem from './FoodItem';
-const MealContainer = ({ meal, foods, onSwipeableOpen, onPress }) => (
-  <View style={styles.mealContainer}>
-    <Text style={styles.mealTitle}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>
+
+const MealContainer = ({ 
+  meal, 
+  foods, 
+  foodName, 
+  foodCalories, 
+  foodNutrient, 
+  foodImage, 
+  onSwipeableOpen, 
+  onPress, 
+  mealContainer, 
+  mealTitle, 
+  mealScrollView, 
+  isFoodDeletable, // New prop
+  displayMealName // New prop
+}) => (
+  <View style={mealContainer}>
+    {displayMealName && <Text style={mealTitle}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>}
     <FlatList
       data={foods}
       renderItem={({ item }) => (
-        <FoodItem item={item} meal={meal} onSwipeableOpen={onSwipeableOpen} onPress={() => onPress(item, meal)} />
+        <FoodItem 
+          item={item}
+          meal={meal} 
+          onSwipeableOpen={onSwipeableOpen}
+          onPress={() => onPress(item, meal)} 
+          foodName={foodName}
+          foodCalories={foodCalories}
+          foodNutrient={foodNutrient}
+          foodImage={foodImage}
+          isFoodDeletable={isFoodDeletable} // Pass the prop to FoodItem
+        />
       )}
       keyExtractor={(item, index) => index.toString()}
-      style={styles.mealScrollView}
+      style={mealScrollView}
     />
   </View>
 );
-
-const styles = StyleSheet.create({
-  mealContainer: {
-    flex: 1,
-    marginTop: 5,
-    backgroundColor: '#02202B',
-    borderRadius: 10,
-  },
-  mealTitle: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    marginBottom: 10,
-    marginTop: 5,
-    left: 10,
-  },
-  mealScrollView: {
-    height: 150, // Fixed height to make the content scrollable within
-  },
-});
 
 export default MealContainer;

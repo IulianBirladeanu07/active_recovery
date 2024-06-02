@@ -1,25 +1,39 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { db, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc } from './src/services/firebase';
+import { db, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc, where } from './src/services/firebase';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
 
 const FoodContext = createContext();
 
 export const useFoodContext = () => useContext(FoodContext);
 
 export const FoodProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(null);
   const [breakfastFoods, setBreakfastFoods] = useState([]);
   const [lunchFoods, setLunchFoods] = useState([]);
   const [dinnerFoods, setDinnerFoods] = useState([]);
 
   useEffect(() => {
+    const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+      setCurrentUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     const fetchMeals = async () => {
+      if (!currentUser) return;
+
       try {
         console.log('Fetching meals from Firestore...');
-        const mealsQuery = query(collection(db, 'meals'), orderBy('timestamp', 'desc'));
+        const mealsQuery = query(collection(db, 'meals'), where('uid', '==', currentUser.uid), orderBy('timestamp', 'desc'));
         const snapshot = await getDocs(mealsQuery);
-        const meals = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return { id: doc.id, ...data, date: new Date(data.timestamp) };
-        });
+        const meals = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: new Date(doc.data().timestamp)
+        }));
         console.log('Fetched meals:', meals);
 
         const breakfast = meals.filter(meal => meal.meal === 'breakfast');
@@ -39,10 +53,13 @@ export const FoodProvider = ({ children }) => {
     };
 
     fetchMeals();
-  }, []);
+  }, [currentUser]);
 
   const handleAddFood = async (foodDetails, meal, date) => {
+    if (!currentUser) return;
+
     const newFood = {
+      uid: currentUser.uid,
       name: foodDetails.name,
       calories: foodDetails.calories,
       quantity: foodDetails.quantity,
@@ -75,6 +92,8 @@ export const FoodProvider = ({ children }) => {
   };
 
   const handleUpdateFood = async (updatedFood) => {
+    if (!currentUser || updatedFood.uid !== currentUser.uid) return;
+
     try {
       const foodRef = doc(db, 'meals', updatedFood.id);
       console.log('Updating food in Firestore:', updatedFood);
@@ -95,6 +114,8 @@ export const FoodProvider = ({ children }) => {
   };
 
   const handleDeleteFood = async (id, meal) => {
+    if (!currentUser) return;
+
     try {
       await deleteDoc(doc(db, 'meals', id));
       if (meal === 'breakfast') {
@@ -109,8 +130,47 @@ export const FoodProvider = ({ children }) => {
     }
   };
 
+  const fetchWeeklyCalorieData = async () => {
+    if (!currentUser) return;
+
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const pastWeek = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), startOfDay.getDate() - 6);
+
+    console.log('Fetching data from:', pastWeek.toISOString());
+
+    const mealsQuery = query(collection(db, 'meals'), where('uid', '==', currentUser.uid), where('timestamp', '>=', pastWeek.toISOString()), orderBy('timestamp', 'asc'));
+
+    const snapshot = await getDocs(mealsQuery);
+    console.log(`Retrieved ${snapshot.docs.length} documents`);
+
+    const weekMeals = snapshot.docs.map(doc => {
+      const data = doc.data();
+      const date = new Date(data.timestamp);
+      console.log('Processing meal:', data.calories, 'Calories on', date);
+      return { ...data, date };
+    });
+
+    const dailyCalories = Array(7).fill(0);
+    weekMeals.forEach(meal => {
+      const dayIndex = Math.floor((meal.date - pastWeek) / (1000 * 60 * 60 * 24));
+      console.log(`Day Index: ${dayIndex} for date ${meal.date}`);
+      if (dayIndex >= 0 && dayIndex < 7) {
+        const mealCalories = parseFloat(meal.calories);
+        if (!isNaN(mealCalories)) {
+          dailyCalories[dayIndex] += mealCalories;
+          console.log(`Adding ${mealCalories} calories to day ${dayIndex}`);
+        } else {
+          console.log('Invalid calorie value:', meal.calories);
+        }
+      }
+    });
+    console.log('Final dailyCalories:', dailyCalories);
+    return dailyCalories;
+  };
+
   return (
-    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddFood, handleUpdateFood, handleDeleteFood }}>
+    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddFood, handleUpdateFood, handleDeleteFood, fetchWeeklyCalorieData }}>
       {children}
     </FoodContext.Provider>
   );

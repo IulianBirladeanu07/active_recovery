@@ -1,124 +1,258 @@
-// HomeScreen.js
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
+import React, { useContext, useState, useCallback, useEffect } from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { View, Text, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import ApplicationCustomScreen from '../../../components/ApplicationCustomScreen/ApplicationCustomScreen';
+import CustomButton from '../../../components/CustomButton/CustomButton';
+import BarGraph from '../../../components/BarGraph/BarGraph';
 import ProgressBar from '../../../components/ProgressBar/ProgressBar';
-import CircularProgress from '../../../components/CircularProgress/CircularProgress';
-import BarGraph from '../../../components/BarGraph/BarGraph'; // Assuming you have a BarGraph component
+import MealContainer from '../../../components/NutritionItem/MealContainer';
+import CustomDropdown from '../../../components/CustomDropdown/CustomDropdown';
+import { useFoodContext } from '../../../../FoodContext';
+import { AppContext } from '../../../../AppContext';
+import useDailyNutrition from '../../../helpers/useDailyNutrtion';
+import styles from './HomeScreenStyles';
 
 const HomeScreen = () => {
+  const { breakfastFoods, lunchFoods, dinnerFoods, fetchWeeklyCalorieData } = useFoodContext();
+  const { workoutsThisWeek, lastWorkout } = useContext(AppContext);
+  const [selectedMeal, setSelectedMeal] = useState('breakfast'); // Default to breakfast
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [dailyCalories, setDailyCalories] = useState([]);
 
-  // Mock data for visual demonstration
-  const dailyCalories = [1000, 3800, 2000, 3500, 3600, 4000, 3400];
-  const totalCalories = dailyCalories.reduce((acc, curr) => acc + curr, 0);
-  const averageCalories = Math.round(totalCalories / dailyCalories.length);
+  useEffect(() => {
+    const fetchAndSetCalories = async () => {
+      try {
+        const caloriesData = await fetchWeeklyCalorieData(); // Assuming this function returns a promise
+        setDailyCalories(caloriesData);
+      } catch (error) {
+        console.error('Failed to fetch calories data:', error);
+        setDailyCalories([]); // Set to an empty array in case of an error
+      }
+    };
 
-  const dailyActivity = {
-    workoutTime: '30 mins',
-    caloriesBurned: '300 kcal',
-    exercisesCompleted: '5 exercises',
-    caloricIntake: '2000 kcal',
-    recentWorkout: 'Morning Yoga',
-    recentMeal: 'Breakfast: Oatmeal and fruits'
+    fetchAndSetCalories();
+  }, [selectedDate]); // Ensure selectedDate is included in your component's props if it affects data fetching
+
+  console.log('isArray: ', Array.isArray(dailyCalories));
+  console.log('dailyCalories: ', dailyCalories);
+  const navigation = useNavigation();
+  const route = useRoute();
+
+  const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate); // Use the custom hook
+
+  const handleLastWorkout = () => {
+    const formattedWorkoutData = {
+      note: lastWorkout?.note || '',
+      exercises: lastWorkout?.exercises?.map(exercise => ({
+        exerciseName: exercise.exerciseName,
+        sets: exercise.sets
+      })) || [],
+    };
+
+    navigation.navigate('StartWorkout', { selectedWorkout: formattedWorkoutData });
   };
+
+  const handleHomePress = () => {
+    navigation.navigate('Home');
+  };
+
+  const handleWorkoutPress = () => {
+    navigation.navigate('Workout');
+  };
+
+  const handleNutritionPress = () => {
+    navigation.navigate('Nutrition');
+  };
+
+  const handleProgressPress = () => {
+    navigation.navigate('Progress');
+  };
+
+  const handleProfilePress = () => {
+    navigation.navigate('Profile');
+  };
+
+  const isButtonActive = (screenName) => {
+    return route.name === screenName;
+  };
+
+  const getMealFoods = () => {
+    const today = selectedDate.toISOString().split('T')[0]; // Format date to yyyy-mm-dd
+
+    const filterFoodsByDate = (foods) => {
+      return foods.filter(food => {
+        const foodDate = new Date(food.date).toISOString().split('T')[0]; // Convert food date to yyyy-mm-dd
+        return foodDate === today;
+      });
+    };
+
+    switch (selectedMeal) {
+      case 'breakfast':
+        return filterFoodsByDate(breakfastFoods);
+      case 'lunch':
+        return filterFoodsByDate(lunchFoods);
+      case 'dinner':
+        return filterFoodsByDate(dinnerFoods);
+      default:
+        return [];
+    }
+  };
+
+  const handleFoodSelect = useCallback((item, meal) => {
+    const foodDetails = {
+      ...item,
+      product_name: item.name,
+      image: item.image,
+      nutriments: {
+        'energy-kcal_100g': item.calories,
+        'carbohydrates_100g': item.carbs,
+        'fat_100g': item.fat,
+        'proteins_100g': item.protein,
+      },
+      date: selectedDate.toISOString() // Convert date to string
+    };
+
+    navigation.navigate('FoodDetail', { 
+      food: foodDetails, 
+      meal, 
+      date: selectedDate.toISOString(), // Ensure date is passed as a string
+      update: true, 
+      foodId: item.id 
+    });
+  }, [navigation, selectedDate]);
+
+  const mealOptions = [
+    { label: 'Breakfast', value: 'breakfast' },
+    { label: 'Lunch', value: 'lunch' },
+    { label: 'Dinner', value: 'dinner' },
+  ];
+
+  const handleMealSelect = (meal) => {
+    setSelectedMeal(meal);
+    setDropdownVisible(false);
+  };
+
+  const weightGoal = {
+    currentWeight: 70,
+    goalWeight: 65,
+    dailyCalorieGoal: 1800,
+  };
+
 
   return (
     <ApplicationCustomScreen
-      headerLeft={<MaterialCommunityIcons name="account" size={28} color="#fdf5ec" />}
-      headerRight={<FontAwesome name="cog" size={28} color="#fdf5ec" />}
+      headerLeft={<Ionicons name="person-circle-outline" size={28} color="#fdf5ec" />}
+      headerRight={<Ionicons name="settings-outline" size={28} color="#fdf5ec" />}
+      onProfilePress={handleProfilePress}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.headerText}>Home Dashboard</Text>
+      <FlatList
+        contentContainerStyle={styles.container}
+        data={[{ key: 'content' }]}
+        renderItem={({ item }) => (
+          <View>
+            <Text style={styles.headerText}>Home Dashboard</Text>
+            <ProgressBar value={dailyNutrition.calories} maxValue={weightGoal.dailyCalorieGoal} customText={"Calories"} />
 
-        {/* Circular Progress Indicators for Weight Goal */}
-        <View style={styles.circularProgressContainer}>
-          <CircularProgress title="Weight Goal" value={180} maxValue={200} size={120} strokeWidth={10} color="#4caf50" duration={500} />
-        </View>
+            <View style={styles.recentActivityContainer}>
+              <View style={styles.recentWorkoutContainer}>
+                <Text style={styles.lastWorkoutText}>   Most Recent Workout</Text>
+                {lastWorkout ? (
+                  <ScrollView
+                    style={styles.lastWorkoutScroll}
+                    contentContainerStyle={styles.lastWorkoutContent}
+                    nestedScrollEnabled={true}
+                  >
+                    <TouchableOpacity onPress={handleLastWorkout}>
+                      {lastWorkout.exercises && lastWorkout.exercises.map((exercise, index) => (
+                        <View key={index} style={styles.exerciseContainer}>
+                          <View style={styles.exerciseHeader}>
+                            <Ionicons name="barbell-outline" size={20} color="#008080" />
+                            <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
+                          </View>
+                          <View style={styles.bestSetContainer}>
+                            <Text style={styles.bestSetText}>
+                              {exercise.sets && exercise.sets.length > 0
+                                ? `${exercise.sets[0].weight} kg x ${exercise.sets[0].reps} reps`
+                                : 'N/A'}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </TouchableOpacity>
+                  </ScrollView>
+                ) : (
+                  <View style={styles.noWorkoutsContainer}>
+                    <Text style={styles.noWorkoutsText}>There are no previous workouts</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.recentMealContainer}>
+                <TouchableOpacity onPress={() => setDropdownVisible(!dropdownVisible)}>
+                  <Text style={styles.mealTitle}>{selectedMeal.charAt(0).toUpperCase() + selectedMeal.slice(1)}</Text>
+                </TouchableOpacity>
+                <CustomDropdown
+                  options={mealOptions}
+                  selectedValue={selectedMeal}
+                  onSelect={handleMealSelect}
+                  isVisible={dropdownVisible}
+                />
+                <MealContainer
+                  meal={selectedMeal}
+                  foods={getMealFoods()}
+                  mealContainer={styles.mealContainer}
+                  mealTitle={styles.mealTitle}
+                  mealScrollView={styles.mealScrollView}
+                  foodImage={styles.foodImage}
+                  foodName={styles.foodName}
+                  foodCalories={styles.foodCalories}
+                  foodNutrient={styles.foodNutrient}
+                  isFoodDeletable={false}
+                  onPress={handleFoodSelect}
+                />
+              </View>
+            </View>
 
-        {/* Containers for Recent Workout and Meal */}
-        <View style={styles.recentActivityContainer}>
-          <View style={styles.recentWorkoutContainer}>
-            <Text style={styles.sectionTitle}>Most Recent Workout</Text>
-            <Text style={styles.summaryText}>{dailyActivity.recentWorkout}</Text>
+            <View style={styles.graphContainer}>
+              <BarGraph
+                dailyCalories={dailyCalories}
+                targetCalories={2500}
+                colors={['#4caf50', '#2196f3', '#ffeb3b', '#ff9800', '#009688', '#673ab7', '#e91e63']}
+              />
+            </View>
+
+            <View style={styles.buttonContainer}>
+              <CustomButton
+                icon={<Ionicons name="home-outline" size={28} color="#fdf5ec" />}
+                label="Dashboard"
+                onPress={handleHomePress}
+                isActive={isButtonActive('Home')}
+              />
+              <CustomButton
+                icon={<Ionicons name="barbell-outline" size={28} color="#fdf5ec" />}
+                label="Workout"
+                onPress={handleWorkoutPress}
+                isActive={isButtonActive('Workout')}
+              />
+              <CustomButton
+                icon={<Ionicons name="restaurant-outline" size={28} color="#fdf5ec" />}
+                label="Nutrition"
+                onPress={handleNutritionPress}
+                isActive={isButtonActive('Nutrition')}
+              />
+              <CustomButton
+                icon={<Ionicons name="stats-chart-outline" size={28} color="#fdf5ec" />}
+                label="Progress"
+                onPress={handleProgressPress}
+                isActive={isButtonActive('Progress')}
+              />
+            </View>
           </View>
-          <View style={styles.recentMealContainer}>
-            <Text style={styles.sectionTitle}>Most Recent Meal</Text>
-            <Text style={styles.summaryText}>{dailyActivity.recentMeal}</Text>
-          </View>
-        </View>
-
-        {/* Bar Graph for Weekly Calorie Goal */}
-        <View style={styles.graphContainer}>
-          <Text style={styles.sectionTitle}>Weekly Calorie Intake</Text>
-            <BarGraph 
-              dailyCalories={dailyCalories} 
-              targetCalories={2500}
-              colors={['#4caf50', '#2196f3', '#ffeb3b', '#ff9800', '#009688', '#673ab7', '#e91e63']}
-              /> 
-                     </View>
-
-      </ScrollView>
+        )}
+      />
     </ApplicationCustomScreen>
   );
 };
-
-// Styles for the HomeScreen
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 20,
-    backgroundColor: '#02111B',
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  circularProgressContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  recentActivityContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  recentWorkoutContainer: {
-    flex: 1,
-    marginRight: 10,
-    padding: 10,
-    backgroundColor: '#02202B',
-    borderRadius: 10,
-  },
-  recentMealContainer: {
-    flex: 1,
-    marginLeft: 10,
-    padding: 10,
-    backgroundColor: '#02202B',
-    borderRadius: 10,
-  },
-  graphContainer: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
-  },
-  summaryText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginBottom: 5,
-  },
-  progressBar: {
-    width: '100%',
-    height: 20,
-  },
-});
 
 export default HomeScreen;

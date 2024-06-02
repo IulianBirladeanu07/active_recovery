@@ -2,8 +2,12 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Animated } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 
-const FoodItem = ({ item, meal, onSwipeableOpen, onPress }) => {
+const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage, onSwipeableOpen, onPress, isFoodDeletable }) => {
   const renderRightActions = (progress, dragX) => {
+    if (!isFoodDeletable) {
+      return null;
+    }
+
     const translateX = dragX.interpolate({
       inputRange: [-100, 0],
       outputRange: [-100, 0],
@@ -29,15 +33,16 @@ const FoodItem = ({ item, meal, onSwipeableOpen, onPress }) => {
   };
 
   return (
+    
     <Swipeable renderRightActions={renderRightActions} onSwipeableOpen={() => onSwipeableOpen(item, meal)}>
       <TouchableOpacity onPress={onPress}>
         <View style={styles.foodItem}>
-          <Image source={item.image} style={styles.foodImage} />
+          <Image source={item.image} style={foodImage} />
           <View style={styles.foodDetails}>
-            <Text style={styles.foodName}>{item.name}</Text>
-            <Text style={styles.foodNutrient}>{item.quantity} {item.unit}</Text>
+            <Text style={foodName}>{item.name}</Text>
+            <Text style={foodNutrient}>{item.quantity} {item.unit}</Text>
           </View>
-          <Text style={styles.foodCalories}>{item.calories}</Text>
+          <Text style={foodCalories}>{item.calories}</Text>
         </View>
       </TouchableOpacity>
     </Swipeable>
@@ -52,28 +57,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#34495e',
   },
-  foodImage: {
-    width: 30,
-    height: 30,
-    marginRight: 10,
-  },
   foodDetails: {
     flex: 1,
     justifyContent: 'center',
-  },
-  foodName: {
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  foodNutrient: {
-    fontSize: 14,
-    color: '#CCCCCC',
-  },
-  foodCalories: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'right',
   },
   deleteButtonContainer: {
     justifyContent: 'center',

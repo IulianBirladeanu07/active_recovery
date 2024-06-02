@@ -85,20 +85,6 @@ export const styles = StyleSheet.create({
     marginTop: RFValue(10),
     paddingTop: RFValue(30),
   },
-  summaryItem: {
-    alignItems: 'center',
-  },
-  summaryText: {
-    fontSize: RFValue(16),
-    color: '#FFFFFF',
-    marginTop: RFValue(5),
-  },
-  summaryCardsContainer: {
-    flexDirection: 'row', // Changed from 'column' to 'row'
-    justifyContent: 'space-between', // This ensures spacing between buttons
-    alignItems: 'center', // This aligns items vertically in the center
-    marginTop: 10,
-  },
   summaryCard: {
     flex: 1,
     padding: 10,
@@ -113,12 +99,6 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: RFValue(5),
     textAlign: 'center',
-  },
-  summaryCardIcon: {
-    width: RFValue(50),
-    height: RFValue(50),
-    resizeMode: 'contain',
-    marginBottom: RFValue(10),
   },
   startButton: {
     backgroundColor: '#29335c',

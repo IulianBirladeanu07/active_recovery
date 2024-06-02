@@ -7,18 +7,16 @@ import { useFoodContext } from '../../../../FoodContext';
 import CircularProgress from '../../../components/CircularProgress/CircularProgress';
 import ProgressBar from '../../../components/ProgressBar/ProgressBar';
 import MealContainer from '../../../components/NutritionItem/MealContainer';
+import useDailyNutrition from '../../../helpers/useDailyNutrtion'
+import styles from './NutritionScreenStyles';
 
 const NutritionScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { breakfastFoods, lunchFoods, dinnerFoods, handleAddFood, handleDeleteFood } = useFoodContext();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [dailyNutrition, setDailyNutrition] = useState({
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0,
-  });
+
+  const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate); // Use the custom hook
 
   const weightGoal = {
     currentWeight: 70,
@@ -39,28 +37,6 @@ const NutritionScreen = () => {
       navigation.setParams({ food: null, meal: null, date: null });
     }
   }, [route.params?.food, route.params?.meal, route.params?.date, handleAddFood, navigation]);
-
-  useEffect(() => {
-    const totalNutrition = calculateTotalNutrition();
-    setDailyNutrition(totalNutrition);
-  }, [breakfastFoods, lunchFoods, dinnerFoods, selectedDate]);
-
-  const calculateTotalNutrition = () => {
-    const allFoods = [...breakfastFoods, ...lunchFoods, ...dinnerFoods].filter(
-      (food) => new Date(food.date).toDateString() === selectedDate.toDateString()
-    );
-    const totalCalories = allFoods.reduce((total, food) => total + Number(food.calories), 0);
-    const totalProtein = allFoods.reduce((total, food) => total + Number(food.protein), 0);
-    const totalCarbs = allFoods.reduce((total, food) => total + Number(food.carbs), 0);
-    const totalFat = allFoods.reduce((total, food) => total + Number(food.fat), 0);
-
-    return {
-      calories: totalCalories,
-      protein: totalProtein,
-      carbs: totalCarbs,
-      fat: totalFat,
-    };
-  };
 
   const toggleMealVisibility = (meal) => {
     setSelectedMeal(meal);
@@ -168,6 +144,15 @@ const NutritionScreen = () => {
               foods={filteredFoods}
               onSwipeableOpen={handleSwipeableOpen}
               onPress={(item) => handleFoodSelect(item, 'breakfast')}
+              mealContainer={styles.mealContainer}
+              mealTitle={styles.mealTitle}
+              mealScrollView={styles.mealScrollView}
+              foodImage={styles.foodImage}
+              foodName={styles.foodName}
+              foodCalories={styles.foodCalories}
+              foodNutrient={styles.foodNutrient}
+              isFoodDeletable={true}
+              displayMealName={true}
             />
           )}
           {selectedMeal === 'lunch' && (
@@ -176,6 +161,15 @@ const NutritionScreen = () => {
               foods={filteredFoods}
               onSwipeableOpen={handleSwipeableOpen}
               onPress={(item) => handleFoodSelect(item, 'lunch')}
+              mealContainer={styles.mealContainer}
+              mealTitle={styles.mealTitle}
+              mealScrollView={styles.mealScrollView}
+              foodImage={styles.foodImage}
+              foodName={styles.foodName}
+              foodCalories={styles.foodCalories}
+              foodNutrient={styles.foodNutrient}
+              isFoodDeletable={true}
+              displayMealName={true}
             />
           )}
           {selectedMeal === 'dinner' && (
@@ -184,9 +178,17 @@ const NutritionScreen = () => {
               foods={filteredFoods}
               onSwipeableOpen={handleSwipeableOpen}
               onPress={(item) => handleFoodSelect(item, 'dinner')}
+              mealContainer={styles.mealContainer}
+              mealTitle={styles.mealTitle}
+              mealScrollView={styles.mealScrollView}
+              foodImage={styles.foodImage}
+              foodName={styles.foodName}
+              foodCalories={styles.foodCalories}
+              foodNutrient={styles.foodNutrient}
+              isFoodDeletable={true}
+              displayMealName={true}
             />
           )}
-
           <View style={styles.footer}>
             <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('FoodSelection', { meal: selectedMeal, date: selectedDate.toISOString() })}>
               <Text style={styles.addButtonText}>Add Food</Text>
@@ -200,90 +202,5 @@ const NutritionScreen = () => {
     </ApplicationCustomScreen>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#02111B',
-  },
-  scrollContainer: {
-    paddingVertical: 5,
-    paddingHorizontal: 5,
-  },
-  contentContainer: {
-    width: '100%',
-    flex: 1,
-    marginBottom: 110,
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 20,
-  },
-  dateNavigation: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  dateText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  circularProgressContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  mealSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  mealButton: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: '#005050',
-    marginHorizontal: 5,
-    marginBottom: 10,
-  },
-  selectedMealButton: {
-    backgroundColor: '#008080',
-  },
-  mealButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 10,
-  },
-  addButton: {
-    flex: 1,
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    left: 5,
-  },
-  totalCaloriesText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'right',
-  },
-});
 
 export default NutritionScreen;

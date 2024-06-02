@@ -3,154 +3,122 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-    paddingTop: 10,
-    justifyContent: 'space-between',
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#02111B',
+  },
+  scrollContainer: {
+    paddingVertical: 5,
+    paddingHorizontal: 5,
+  },
+  contentContainer: {
+    width: '100%',
+    flex: 1,
+    marginBottom: 110,
   },
   headerText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  dailyNutritionContainer: {
-    marginTop: 20,
-    paddingHorizontal: 10,
-  },
-  sectionHeader: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#FFFFFF',
+    marginBottom: 20,
+  },
+  dateNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 10,
   },
-  nutritionDetails: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 10,
-  },
-  nutritionLabel: {
-    fontSize: 16,
-    marginBottom: 5,
-  },
-  weightGoalContainer: {
-    marginTop: 20,
-    paddingHorizontal: 10,
-  },
-  weightGoalLabel: {
-    fontSize: 16,
-    color: '#fff',
-    marginBottom: 5,
-  },
-  trackWeightButton: {
-    backgroundColor: '#e71d27',
-    borderRadius: 10,
-    padding: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  trackWeightButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fdf5ec',
-  },
-  waterIntakeContainer: {
-    marginTop: 20,
-    paddingHorizontal: 10,
-  },
-  waterIntakeLabel: {
-    fontSize: 16,
-    color: '#fff',
-    marginBottom: 5,
-  },
-  logWaterButton: {
-    backgroundColor: '#e71d27',
-    borderRadius: 10,
-    padding: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  logWaterButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fdf5ec',
-  },
-  viewRecipesButton: {
-    backgroundColor: '#e71d27',
-    borderRadius: 10,
-    padding: 15,
-    alignItems: 'center',
-    marginTop: 20,
-    marginHorizontal: 10,
-  },
-  viewRecipesButtonText: {
+  dateText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fdf5ec',
+    color: '#FFFFFF',
   },
-  suggestedRecipesContainer: {
+  circularProgressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    width: '100%',
     marginTop: 20,
-    paddingHorizontal: 10,
+    marginBottom: 20,
   },
-  recipeCard: {
-    width: width > 400 ? '30%' : '45%', // Adjusts based on screen width
+  mealSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  mealButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    backgroundColor: '#005050',
+    marginHorizontal: 5,
     marginBottom: 10,
   },
-  recipeImage: {
-    width: '100%',
-    height: 150,
-    borderRadius: 10,
-    marginBottom: 5,
+  selectedMealButton: {
+    backgroundColor: '#008080',
   },
-  recipeTitle: {
+  mealButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 10,
+  },
+  addButton: {
+    flex: 1,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    left: 5,
   },
-  mealsContainer: {
-    marginTop: 20,
-    paddingHorizontal: 10,
+  totalCaloriesText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'right',
   },
-  mealCard: {
-    backgroundColor: '#fff',
+  mealContainer: {
+    flex: 1,
+    marginTop: 5,
+    backgroundColor: '#02202B',
     borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
   },
   mealTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 5,
-  },
-  mealDetails: {
-    fontSize: 16,
-    color: '#000',
-  },
-  progressBarContainer: {
-    marginTop: 10,
-    paddingHorizontal: 10,
-    marginBottom : 200,
-  },
-  progressBar: {
-    flexDirection: 'row',
-    height: 100,
-    width: 100,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 12,
-    overflow: 'hidden', // Ensure that child elements respect the border radius
-  },
-  progressBarFill: {
-    backgroundColor: '#e71d27',
-    flex: 1, // Fills available space
-    borderRadius: 10,
-  },
-  progressBarValue: {
-    color: '#fff',
-    fontSize: 16,
+    fontSize: 20,
+    color: '#FFFFFF',
+    marginBottom: 10,
     marginTop: 5,
-    textAlign: 'center',
+    left: 10,
+  },
+  mealScrollView: {
+    height: 150, // Fixed height to make the content scrollable within
+  },
+  foodImage: {
+    width: 30,
+    height: 30,
+    marginRight: 10,
+  },
+  foodName: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  foodNutrient: {
+    fontSize: 14,
+    color: '#CCCCCC',
+  },
+  foodCalories: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'right',
   },
 });
 

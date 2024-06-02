@@ -26,7 +26,8 @@ import CreateTemplate from './src/screens/workout_screens/WorkoutTemplate/Create
 import FoodSelectionScreen from './src/screens/main_screens/NutritionScreen/FoodSelectionScreen';
 import FoodDetailScreen from './src/screens/main_screens/NutritionScreen/FoodDetailScreen';
 import SettingsScreen from './src/components/Settings/Settings';
-
+import ProfileScreen from './src/components/Profile/ProfileScreen';
+import { Profile } from 'react-native-fbsdk-next';
 
 const Stack = createNativeStackNavigator();
 
@@ -58,6 +59,7 @@ export default function App() {
                   <Stack.Screen options={{ headerShown: false }} name="Nutrition" component={NutritionScreen} />
                   <Stack.Screen options={{ headerShown: false }} name="Progress" component={ProgressScreen} />
                   <Stack.Screen options={{ headerShown: false }} name="Settings" component={SettingsScreen} />
+                  <Stack.Screen options={{ headerShown: false }} name="Profile" component={ProfileScreen} />
                   <Stack.Screen options={{ headerShown: false }} name="WorkoutHistory" component={WorkoutHistory} />
                   <Stack.Screen options={{ headerShown: false }} name="WorkoutDetails" component={WorkoutDetails} />
                   <Stack.Screen options={{ headerShown: false }} name="WorkoutMeasurements" component={WorkoutMeasurements} />
