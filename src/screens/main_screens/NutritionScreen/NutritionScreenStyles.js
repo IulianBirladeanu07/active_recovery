@@ -16,13 +16,14 @@ const styles = StyleSheet.create({
   contentContainer: {
     width: '100%',
     flex: 1,
-    marginBottom: 110,
+    marginBottom: 100,
   },
   headerText: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 20,
+    alignSelf: 'center'
   },
   dateNavigation: {
     flexDirection: 'row',

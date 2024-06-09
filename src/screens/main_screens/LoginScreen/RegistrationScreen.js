@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { signUpWithEmailAndPassword } from '../../../services/firebase';
 import styles from './RegistrationScreenStyle'; // Import styles
 
-const RegistrationScreen = ({ navigation }) => {
+const RegistrationScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmedPassword, setConfirmedPassword] = useState('');
@@ -14,6 +14,7 @@ const RegistrationScreen = ({ navigation }) => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const navigation = useNavigation();
 
   const handleConfirmDate = (selectedDate) => {
     setDateOfBirth(selectedDate.toISOString().split('T')[0]); // Format date as YYYY-MM-DD
@@ -58,15 +59,13 @@ const RegistrationScreen = ({ navigation }) => {
         setLoading(false);
         return;
       }
-      // Additional form validation such as password strength, etc.
-      // ...
       await signUpWithEmailAndPassword(email, password, fullName, dateOfBirth);
       setError(null);
-      console.log('ddss')
       navigation.navigate('Login');
     } catch (error) {
       console.error(error);
       setError('An error occurred during registration. Please try again.');
+    } finally {
       setLoading(false);
     }
   };

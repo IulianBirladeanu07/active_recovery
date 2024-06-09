@@ -20,6 +20,9 @@ const HomeScreen = () => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dailyCalories, setDailyCalories] = useState([]);
+  const { userSettings } = useContext(AppContext);
+  const { targetCalories} = userSettings;
+
 
   useEffect(() => {
     const fetchAndSetCalories = async () => {
@@ -72,6 +75,10 @@ const HomeScreen = () => {
 
   const handleProfilePress = () => {
     navigation.navigate('Profile');
+  };
+
+  const handleSettingsPress = () => {
+    navigation.navigate('Settings');
   };
 
   const isButtonActive = (screenName) => {
@@ -134,18 +141,13 @@ const HomeScreen = () => {
     setDropdownVisible(false);
   };
 
-  const weightGoal = {
-    currentWeight: 70,
-    goalWeight: 65,
-    dailyCalorieGoal: 1800,
-  };
-
 
   return (
     <ApplicationCustomScreen
       headerLeft={<Ionicons name="person-circle-outline" size={28} color="#fdf5ec" />}
       headerRight={<Ionicons name="settings-outline" size={28} color="#fdf5ec" />}
       onProfilePress={handleProfilePress}
+      onSettingsPress={handleSettingsPress}
     >
       <FlatList
         contentContainerStyle={styles.container}
@@ -153,7 +155,7 @@ const HomeScreen = () => {
         renderItem={({ item }) => (
           <View>
             <Text style={styles.headerText}>Home Dashboard</Text>
-            <ProgressBar value={dailyNutrition.calories} maxValue={weightGoal.dailyCalorieGoal} customText={"Calories"} />
+            <ProgressBar value={dailyNutrition.calories} maxValue={targetCalories} customText={"Calories"} />
 
             <View style={styles.recentActivityContainer}>
               <View style={styles.recentWorkoutContainer}>

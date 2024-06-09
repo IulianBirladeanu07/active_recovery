@@ -137,29 +137,23 @@ export const FoodProvider = ({ children }) => {
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const pastWeek = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), startOfDay.getDate() - 6);
 
-    console.log('Fetching data from:', pastWeek.toISOString());
-
     const mealsQuery = query(collection(db, 'meals'), where('uid', '==', currentUser.uid), where('timestamp', '>=', pastWeek.toISOString()), orderBy('timestamp', 'asc'));
 
     const snapshot = await getDocs(mealsQuery);
-    console.log(`Retrieved ${snapshot.docs.length} documents`);
 
     const weekMeals = snapshot.docs.map(doc => {
       const data = doc.data();
       const date = new Date(data.timestamp);
-      console.log('Processing meal:', data.calories, 'Calories on', date);
       return { ...data, date };
     });
 
     const dailyCalories = Array(7).fill(0);
     weekMeals.forEach(meal => {
       const dayIndex = Math.floor((meal.date - pastWeek) / (1000 * 60 * 60 * 24));
-      console.log(`Day Index: ${dayIndex} for date ${meal.date}`);
       if (dayIndex >= 0 && dayIndex < 7) {
         const mealCalories = parseFloat(meal.calories);
         if (!isNaN(mealCalories)) {
           dailyCalories[dayIndex] += mealCalories;
-          console.log(`Adding ${mealCalories} calories to day ${dayIndex}`);
         } else {
           console.log('Invalid calorie value:', meal.calories);
         }

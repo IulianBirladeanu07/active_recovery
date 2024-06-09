@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native
 import { AppContext } from '../../../../AppContext';
 import WorkoutSummary from '../WorkoutDetails/WorkoutSummary';
 import { format } from 'date-fns';
+import styles from './WorkoutHistoryStyles';
 
 const HistoryScreen = ({ navigation }) => {
   const { workoutHistory } = useContext(AppContext);
@@ -27,7 +28,7 @@ const HistoryScreen = ({ navigation }) => {
         })),
       };
 
-      console.log('f', formattedWorkoutData);
+      console.log('Formatted Workout Data:', formattedWorkoutData);
       navigation.navigate('StartWorkout', { selectedWorkout: formattedWorkoutData });
     } else {
       console.error('Invalid workout data:', workout);
@@ -41,14 +42,17 @@ const HistoryScreen = ({ navigation }) => {
         data={workoutHistory}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.container}
+            style={styles.itemContainer}
             onPress={() => handleWorkoutPress(item)}
           >
             <WorkoutSummary
               formattedTimestamp={formatTimestamp(item.timestamp)}
               duration={item.duration}
-              totalPRs={item.totalPRs}
+              totalPRs={item.totalPRs || 0}
               exercises={item.exercises}
+              notes={item.notes}
+              // completionStatus={completionStatus}
+              // comparisonData={comparisonData}
             />
           </TouchableOpacity>
         )}
@@ -57,21 +61,5 @@ const HistoryScreen = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#02111B',
-    padding: 20,
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
-    marginTop: 20,
-    alignSelf: 'center'
-  },
-});
 
 export default HistoryScreen;

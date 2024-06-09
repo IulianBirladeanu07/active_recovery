@@ -48,7 +48,7 @@ const BarGraph = ({ dailyCalories, targetCalories, colors }) => {
         {dailyCalories.length > 0 ? (
           dailyCalories.map((calories, index) => (
             <View key={index} style={[styles.dayContainer, { height: getSafeHeight(calories), backgroundColor: colors[index % colors.length] }]}>
-              <Text style={styles.calorieText}>{calories} kcal</Text>
+              <Text style={styles.calorieText}>{calories.toFixed(0)} kcal</Text>
             </View>
           ))
         ) : (
@@ -56,7 +56,7 @@ const BarGraph = ({ dailyCalories, targetCalories, colors }) => {
         )}
         {renderMilestoneLines()}
       </View>
-      <Text style={styles.averageText}>Avg this week: {averageCalories.toFixed(2)} kcal</Text>
+      <Text style={styles.averageText}>Average this week: {averageCalories.toFixed(0)} kcals</Text>
     </View>
   );
 };
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   },
   calorieText: {
     marginTop: 5,
-    color: '#aaa',
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 8,
     textAlign: 'center',

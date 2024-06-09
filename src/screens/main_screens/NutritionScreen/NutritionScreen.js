@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import ApplicationCustomScreen from '../../../components/ApplicationCustomScreen/ApplicationCustomScreen';
 import { useFoodContext } from '../../../../FoodContext';
+import { AppContext } from '../../../../AppContext';
 import CircularProgress from '../../../components/CircularProgress/CircularProgress';
 import ProgressBar from '../../../components/ProgressBar/ProgressBar';
 import MealContainer from '../../../components/NutritionItem/MealContainer';
@@ -13,19 +15,19 @@ import styles from './NutritionScreenStyles';
 const NutritionScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const { userSettings } = useContext(AppContext);
   const { breakfastFoods, lunchFoods, dinnerFoods, handleAddFood, handleDeleteFood } = useFoodContext();
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate); // Use the custom hook
+  const { targetCalories, targetProtein, targetFats, targetCarbs } = userSettings;
 
-  const weightGoal = {
-    currentWeight: 70,
-    goalWeight: 65,
-    dailyCalorieGoal: 1800,
+  const handleSettingsPress = () => {
+    navigation.navigate('Settings');
   };
 
-  const navigateToSettings = () => {
-    navigation.navigate('Settings');
+  const handleProfilePress = () => {
+    navigation.navigate('Profile');
   };
 
   const [selectedMeal, setSelectedMeal] = useState('breakfast');
@@ -91,11 +93,10 @@ const NutritionScreen = () => {
 
   return (
     <ApplicationCustomScreen
-      title="Dashboard"
-      headerLeft={<MaterialCommunityIcons name="account" size={28} color="#fdf5ec" />}
-      headerRight={<MaterialCommunityIcons name="cog" size={28} color="#fdf5ec" />}
-      onProfilePress={navigateToSettings}
-      onSettingsPress={navigateToSettings}
+      headerLeft={<Ionicons name="person-circle-outline" size={28} color="#fdf5ec" />}
+      headerRight={<Ionicons name="settings-outline" size={28} color="#fdf5ec" />}
+      onProfilePress={handleProfilePress}
+      onSettingsPress={handleSettingsPress}
     >
       <View style={styles.container}>
         <View style={styles.contentContainer}>
@@ -109,12 +110,12 @@ const NutritionScreen = () => {
               <MaterialCommunityIcons name="chevron-right" size={28} color="#fdf5ec" />
             </TouchableOpacity>
           </View>
-          <ProgressBar value={dailyNutrition.calories} maxValue={weightGoal.dailyCalorieGoal} customText={"Calories"} />
+          <ProgressBar value={dailyNutrition.calories} maxValue={targetCalories} customText={"Calories"} />
 
           <View style={styles.circularProgressContainer}>
-            <CircularProgress title="Protein" value={dailyNutrition.protein.toFixed(0)} maxValue={100} size={60} strokeWidth={6} color="#29335c" duration={1500} />
-            <CircularProgress title="Carbs" value={dailyNutrition.carbs.toFixed(0)} maxValue={100} size={60} strokeWidth={6} color="#db2b39" duration={1500} />
-            <CircularProgress title="Fat" value={dailyNutrition.fat.toFixed(0)} maxValue={100} size={60} strokeWidth={6} color="#20a39e" duration={1500} />
+            <CircularProgress title="Protein" value={dailyNutrition.protein.toFixed(0)} maxValue={targetProtein} size={60} strokeWidth={6} color="#29335c" duration={1500} />
+            <CircularProgress title="Carbs" value={dailyNutrition.carbs.toFixed(0)} maxValue={targetCarbs} size={60} strokeWidth={6} color="#db2b39" duration={1500} />
+            <CircularProgress title="Fat" value={dailyNutrition.fat.toFixed(0)} maxValue={targetFats} size={60} strokeWidth={6} color="#20a39e" duration={1500} />
           </View>
 
           <View style={styles.mealSelector}>

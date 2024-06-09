@@ -11,7 +11,7 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FFFFFF',
         textAlign: 'center',
-        marginTop: 10,
+        marginTop: 40,
         marginBottom: 10,
       },
     workoutContainer: {

@@ -99,7 +99,7 @@ const WorkoutSummary = ({
           <View style={styles.summaryContainer}>
             <View style={styles.summaryItem}>
               <MaterialCommunityIcons name="timer-outline" size={24} color="white" />
-              <Text style={styles.summaryText}>{duration}</Text>
+              <Text style={styles.summaryText}>{duration} min</Text>
             </View>
             <View style={styles.summaryItem}>
               <MaterialCommunityIcons name="trophy-outline" size={24} color="white" />
@@ -171,9 +171,7 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
     padding: 10,
-    borderWidth: 2,
     borderRadius: 10,
-    borderColor: '#008080',
     backgroundColor: '#02202B',
     marginBottom: 10,
   },

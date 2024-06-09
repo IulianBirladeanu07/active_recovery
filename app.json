@@ -29,10 +29,15 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan barcodes.",
         "NSHealthShareUsageDescription": "Health data is used to display your step count."
-      }
+      },
+      "bundleIdentifier": "iulianBirladeanu"
     },
     "android": {
-      "permissions": ["CAMERA"],
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -42,6 +47,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "activerecovery"
+    "scheme": "activerecovery",
+    "extra": {
+      "eas": {
+        "projectId": "10e8fbd0-5cc8-488e-8605-6a4e8d5817b0"
+      }
+    }
   }
 }

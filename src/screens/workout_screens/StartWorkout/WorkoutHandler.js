@@ -50,7 +50,7 @@ async function finishWorkout(exerciseData, inputText, navigation, includeInvalid
   try {
     const user = firebase.auth().currentUser;
     if (!user) {
-      throw new Error('User not authenticated.');
+      throw new Error('User not authenticated..');
     }
 
     const uid = user.uid; // Get UID of the authenticated user
@@ -60,6 +60,7 @@ async function finishWorkout(exerciseData, inputText, navigation, includeInvalid
       uid: uid, // Store the user's ID in the workout document
       timestamp: timestamp,
       note: inputText,
+      duration: formatTime(elapsedTime), 
       exercises: exerciseData.map(exercise => ({
         ...exercise,
         sets: exercise.sets.map(set => ({
