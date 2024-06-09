@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
-import { AppContext } from '../../../AppContext';
+import { AuthContext } from  '../../context/AuthContext'
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -9,7 +9,7 @@ import firebase from 'firebase/compat/app';
 import { saveUserProfile, fetchUserProfile } from '../../helpers/userProfile';
 
 const ProfileScreen = ({ navigation }) => {
-  const { setUserSettings, userSettings } = useContext(AppContext);
+  const { setUserSettings, userSettings } = useContext(AuthContext);
   const [profilePicture, setProfilePicture] = useState(userSettings.profilePicture || 'https://via.placeholder.com/150');
   const [targetCalories, setTargetCalories] = useState(String(userSettings.targetCalories || ''));
   const [targetProtein, setTargetProtein] = useState(String(userSettings.targetProtein || ''));

@@ -1,12 +1,12 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { AppContext } from '../../../AppContext';
+import { AuthContext } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import firebase from 'firebase/compat/app';
 
 const SettingsScreen = ({ navigation }) => {
-  const { userSettings, setUserSettings } = useContext(AppContext);
+  const { userSettings, setUserSettings } = useContext(AuthContext);
   const [notificationsEnabled, setNotificationsEnabled] = useState(userSettings.notificationsEnabled || false);
   const [darkTheme, setDarkTheme] = useState(userSettings.darkTheme || false);
 
