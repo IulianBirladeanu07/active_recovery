@@ -1,5 +1,5 @@
 import React, { useContext, useState, useCallback, useEffect } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { View, Text, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ApplicationCustomScreen from '../../components/ApplicationCustomScreen/ApplicationCustomScreen';
@@ -9,7 +9,7 @@ import ProgressBar from '../../components/ProgressBar/ProgressBar';
 import MealContainer from '../../components/NutritionItem/MealContainer';
 import CustomDropdown from '../../components/CustomDropdown/CustomDropdown';
 import { useFoodContext } from '../../context/FoodContext';
-import { AuthContext } from '../../context/AuthContext'
+import { AuthContext } from '../../context/AuthContext';
 import useDailyNutrition from '../../helpers/useDailyNutrtion';
 import styles from './HomeScreenStyles';
 import { WorkoutContext } from '../../context/WorkoutContext';
@@ -22,27 +22,32 @@ const HomeScreen = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dailyCalories, setDailyCalories] = useState([]);
   const { userSettings } = useContext(WorkoutContext);
-  const { targetCalories} = userSettings;
-
-
-  useEffect(() => {
-    const fetchAndSetCalories = async () => {
-      try {
-        const caloriesData = await fetchWeeklyCalorieData(); // Assuming this function returns a promise
-        setDailyCalories(caloriesData);
-      } catch (error) {
-        console.error('Failed to fetch calories data:', error);
-        setDailyCalories([]); // Set to an empty array in case of an error
-      }
-    };
-
-    fetchAndSetCalories();
-  }, [selectedDate]); // Ensure selectedDate is included in your component's props if it affects data fetching
+  const { targetCalories } = userSettings;
 
   const navigation = useNavigation();
   const route = useRoute();
 
   const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate); // Use the custom hook
+
+  const fetchAndSetCalories = async () => {
+    try {
+      const caloriesData = await fetchWeeklyCalorieData(); // Assuming this function returns a promise
+      setDailyCalories(caloriesData);
+    } catch (error) {
+      console.error('Failed to fetch calories data:', error);
+      setDailyCalories([]); // Set to an empty array in case of an error
+    }
+  };
+
+  useEffect(() => {
+    fetchAndSetCalories();
+  }, [selectedDate]); // Ensure selectedDate is included in your component's props if it affects data fetching
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchAndSetCalories(); // Fetch data when the screen is focused
+    }, [])
+  );
 
   const handleLastWorkout = () => {
     const formattedWorkoutData = {
@@ -140,7 +145,6 @@ const HomeScreen = () => {
     setDropdownVisible(false);
   };
 
-
   return (
     <ApplicationCustomScreen
       headerLeft={<Ionicons name="person-circle-outline" size={28} color="#fdf5ec" />}
@@ -218,7 +222,7 @@ const HomeScreen = () => {
             <View style={styles.graphContainer}>
               <BarGraph
                 dailyCalories={dailyCalories}
-                targetCalories={2500}
+                targetCalories={targetCalories}
                 colors={['#4caf50', '#2196f3', '#ffeb3b', '#ff9800', '#009688', '#673ab7', '#e91e63']}
               />
             </View>

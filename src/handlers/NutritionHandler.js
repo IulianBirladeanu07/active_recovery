@@ -2,6 +2,21 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import { db, collection, setDoc, getDocs, getDoc, doc, query, where, orderBy, limit, deleteDoc } from '../services/firebase';
 
+// Utility function to recursively remove undefined values from an object
+const removeUndefined = (obj) => {
+  if (Array.isArray(obj)) {
+    return obj.map(removeUndefined).filter(item => item !== undefined);
+  } else if (obj !== null && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .map(([k, v]) => [k, removeUndefined(v)])
+        .filter(([_, v]) => v !== undefined)
+    );
+  } else {
+    return obj;
+  }
+};
+
 export const addDocument = async (collectionName, docId, data) => {
   try {
     const user = firebase.auth().currentUser;
@@ -10,8 +25,11 @@ export const addDocument = async (collectionName, docId, data) => {
     }
     const uid = user.uid;
 
+    // Clean the data to remove undefined values
+    const cleanedData = removeUndefined({ ...data, uid });
+
     const docRef = doc(collection(db, collectionName), docId);
-    await setDoc(docRef, { ...data, uid });
+    await setDoc(docRef, cleanedData);
   } catch (error) {
     console.error(`Error adding document to ${collectionName}:`, error.message);
     throw error;

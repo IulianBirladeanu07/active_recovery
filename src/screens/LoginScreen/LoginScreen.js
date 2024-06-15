@@ -13,12 +13,9 @@ const LoginScreen = () => {
 
   const handleSignIn = async () => {
     try {
-      console.log('dsds')
-      setLoading(true);
       await signInWithEmailAndPassword(email, password,navigation);
       // If login is successful, navigate to WorkoutScreen
       navigation.navigate('Home');
-      console.log('fuck')
 
     } catch (error) {
       console.error(error);
@@ -32,10 +29,17 @@ const LoginScreen = () => {
   const handleSignInError = (error) => {
     switch (error.code) {
       case 'auth/user-not-found':
+        return 'No account found with this email. Please check the email address or register for a new account.';
       case 'auth/wrong-password':
-        return 'Incorrect email or password. Please try again.';
+        return 'Incorrect password. Please try again or reset your password if you have forgotten it.';
+      case 'auth/invalid-email':
+        return 'The email address is not formatted correctly. Please enter a valid email address.';
+      case 'auth/user-disabled':
+        return 'This account has been disabled. Please contact support for more information.';
+      case 'auth/too-many-requests':
+        return 'Too many unsuccessful login attempts. Please try again later or reset your password.';
       default:
-        return 'An error occurred. Please try again later.';
+        return 'An unexpected error occurred. Please try again later. If the problem persists, contact support with this error code: ' + error.code;
     }
   };
 

@@ -1,8 +1,8 @@
 import React, { createContext, useState, useEffect } from 'react';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-
 export const AuthContext = createContext();
+
 
 export const AuthProvider = ({ children }) => {
     const [authenticated, setAuthenticated] = useState(false);

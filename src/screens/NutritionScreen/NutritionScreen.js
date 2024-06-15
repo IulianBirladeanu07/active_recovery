@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import ApplicationCustomScreen from '../../components/ApplicationCustomScreen/ApplicationCustomScreen';
-import { useFoodContext } from '../../context/FoodContext'
+import { useFoodContext } from '../../context/FoodContext';
 import CircularProgress from '../../components/CircularProgress/CircularProgress';
 import ProgressBar from '../../components/ProgressBar/ProgressBar';
 import MealContainer from '../../components/NutritionItem/MealContainer';
-import useDailyNutrition from '../../helpers/useDailyNutrtion'
+import useDailyNutrition from '../../helpers/useDailyNutrtion';
 import styles from './NutritionScreenStyles';
 import { WorkoutContext } from '../../context/WorkoutContext';
 
@@ -19,7 +18,7 @@ const NutritionScreen = () => {
   const { breakfastFoods, lunchFoods, dinnerFoods, handleAddFood, handleDeleteFood } = useFoodContext();
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate); // Use the custom hook
+  const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate);
   const { targetCalories, targetProtein, targetFats, targetCarbs } = userSettings;
 
   const handleSettingsPress = () => {
@@ -33,8 +32,8 @@ const NutritionScreen = () => {
   const [selectedMeal, setSelectedMeal] = useState('breakfast');
 
   useEffect(() => {
-    if (route.params?.food && route.params?.meal) {
-      const foodDate = new Date(route.params.date); // Convert the date string back to Date object
+    if (route.params?.food && route.params?.meal && route.params?.date) {
+      const foodDate = new Date(route.params.date);
       handleAddFood(route.params.food, route.params.meal, foodDate);
       navigation.setParams({ food: null, meal: null, date: null });
     }
@@ -79,13 +78,13 @@ const NutritionScreen = () => {
         'fat_100g': item.fat,
         'proteins_100g': item.protein,
       },
-      date: selectedDate.toISOString() // Convert date to string
+      date: selectedDate.toISOString()
     };
   
     navigation.navigate('FoodDetail', { 
       food: foodDetails, 
       meal, 
-      date: selectedDate.toISOString(), // Ensure date is passed as a string
+      date: selectedDate.toISOString(), 
       update: true, 
       foodId: item.id 
     });

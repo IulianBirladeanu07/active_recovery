@@ -12,27 +12,32 @@ const CircularProgress = ({ title, value, maxValue, size = 100, strokeWidth = 10
 
   const strokeOffset = useSharedValue(circumference);
 
+  // Calculate the percentage for display purposes
+  const displayPercentage = ((value / maxValue) * 100).toFixed(0);
+
+  // Cap the percentage for animation to 100%
+  const cappedPercentage = Math.min((value / maxValue) * 100, 100);
+
   const percentage = useDerivedValue(() => {
-    const number = ((circumference - strokeOffset.value) / circumference) * 100;
-    return withTiming(number, { duration });
+    return cappedPercentage;
   });
 
   const animatedCircleProps = useAnimatedProps(() => {
     return {
-      strokeDashoffset: withTiming(strokeOffset.value, { duration }),
+      strokeDashoffset: withTiming(circumference - (cappedPercentage / 100) * circumference, { duration }),
       stroke: color,
     };
   });
 
   const animatedTextProps = useAnimatedProps(() => {
     return {
-      text: `${Math.round(percentage.value)}%`,
+      text: `${displayPercentage}%`,
     };
   });
 
   useEffect(() => {
-    strokeOffset.value = circumference - (value / maxValue) * circumference;
-  }, [value, maxValue]);
+    strokeOffset.value = circumference - (cappedPercentage / 100) * circumference;
+  }, [value, maxValue, cappedPercentage, circumference, strokeOffset]);
 
   return (
     <View style={styles.container}>

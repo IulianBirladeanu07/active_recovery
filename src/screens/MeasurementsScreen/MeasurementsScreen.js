@@ -14,6 +14,7 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { saveMeasurementsToFirestore, fetchLastMeasurements } from '../../helpers/useMeasurements';
+import  styles from './MeasurementScreenStyle'
 
 const MeasurementScreen = () => {
   const navigation = useNavigation();

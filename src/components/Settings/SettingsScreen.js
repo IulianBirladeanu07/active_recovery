@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,8 +7,15 @@ import firebase from 'firebase/compat/app';
 
 const SettingsScreen = ({ navigation }) => {
   const { userSettings, setUserSettings } = useContext(AuthContext);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(userSettings.notificationsEnabled || false);
-  const [darkTheme, setDarkTheme] = useState(userSettings.darkTheme || false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(userSettings?.notificationsEnabled || false);
+  const [darkTheme, setDarkTheme] = useState(userSettings?.darkTheme || false);
+
+  useEffect(() => {
+    if (userSettings) {
+      setNotificationsEnabled(userSettings.notificationsEnabled || false);
+      setDarkTheme(userSettings.darkTheme || false);
+    }
+  }, [userSettings]);
 
   const handleSave = async () => {
     try {
@@ -115,6 +122,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     marginBottom: 20,
+    marginTop: 40
   },
   card: {
     backgroundColor: '#02202B',

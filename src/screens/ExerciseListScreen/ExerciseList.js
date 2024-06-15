@@ -53,7 +53,6 @@ const ExerciseList = ({ route }) => {
   }, [navigation]);
 
   const handleSelectedExercise = (exerciseName) => {
-    console.log('Selected exercise:', exerciseName);
     const previousScreen = route.params ? route.params.previousScreen : null;
 
     if (previousScreen === 'StartWorkout') {

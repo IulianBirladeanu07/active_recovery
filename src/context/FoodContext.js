@@ -57,7 +57,10 @@ export const FoodProvider = ({ children }) => {
 
   const handleAddFood = async (foodDetails, meal, date) => {
     if (!currentUser) return;
-
+  
+    // Convert the date string back to a Date object
+    const foodDate = new Date(date);
+  
     const newFood = {
       uid: currentUser.uid,
       name: foodDetails.name,
@@ -69,16 +72,18 @@ export const FoodProvider = ({ children }) => {
       unit: foodDetails.unit,
       image: foodDetails.image,
       meal,
-      timestamp: new Date(date).toISOString(),
+      timestamp: foodDate.toISOString(), // Store the date in ISO format for Firestore
     };
+  
     try {
       console.log('Adding new food to Firestore:', newFood);
       const docRef = await addDoc(collection(db, 'meals'), newFood);
       newFood.id = docRef.id; // Assign the Firestore document ID to the new food
-      newFood.date = new Date(newFood.timestamp); // Add the date field for local state
-
+      newFood.date = foodDate; // Add the date field for local state
+  
       console.log('New food added with ID:', newFood.id);
-
+  
+      // Update the state based on the meal type
       if (meal === 'breakfast') {
         setBreakfastFoods((prevFoods) => [...prevFoods, newFood]);
       } else if (meal === 'lunch') {

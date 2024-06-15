@@ -1,14 +1,11 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 
-// Funcție pentru înregistrare cu email și parolă
 const signUpWithEmailAndPassword = async (email, password) => {
   const response = await firebase.auth().createUserWithEmailAndPassword(email, password);
   await response.user.sendEmailVerification();
-  console.log('Verification email sent to:', email);
 };
 
-// Funcție pentru autentificare cu email și parolă
 const signInWithEmailAndPassword = async (email, password, navigation) => {
   const response = await firebase.auth().signInWithEmailAndPassword(email, password);
   const user = response.user;

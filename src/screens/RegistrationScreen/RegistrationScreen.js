@@ -28,7 +28,6 @@ const RegistrationScreen = () => {
   const handleSignUp = async () => {
     try {
       setLoading(true);
-      // Perform form validation
       if (!email || !password || !confirmedPassword || !fullName || !dateOfBirth) {
         setError('Please fill out all fields.');
         setLoading(false);

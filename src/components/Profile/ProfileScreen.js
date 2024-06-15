@@ -1,26 +1,27 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
-import { AuthContext } from  '../../context/AuthContext'
+import { AuthContext } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import firebase from 'firebase/compat/app';
 import { saveUserProfile, fetchUserProfile } from '../../helpers/userProfile';
+import { WorkoutContext } from '../../context/WorkoutContext';
 
 const ProfileScreen = ({ navigation }) => {
-  const { setUserSettings, userSettings } = useContext(AuthContext);
-  const [profilePicture, setProfilePicture] = useState(userSettings.profilePicture || 'https://via.placeholder.com/150');
-  const [targetCalories, setTargetCalories] = useState(String(userSettings.targetCalories || ''));
-  const [targetProtein, setTargetProtein] = useState(String(userSettings.targetProtein || ''));
-  const [targetFats, setTargetFats] = useState(String(userSettings.targetFats || ''));
-  const [targetCarbs, setTargetCarbs] = useState(String(userSettings.targetCarbs || ''));
-  const [username, setUsername] = useState(userSettings.username || '');
-  const [email, setEmail] = useState(userSettings.email || '');
-  const [age, setAge] = useState(String(userSettings.age || ''));
-  const [weight, setWeight] = useState(String(userSettings.weight || ''));
-  const [height, setHeight] = useState(String(userSettings.height || ''));
-  const [dob, setDob] = useState(userSettings.dob ? new Date(userSettings.dob) : new Date());
+  const { setUserSettings, userSettings } = useContext(WorkoutContext);
+  const [profilePicture, setProfilePicture] = useState(userSettings?.profilePicture || 'https://via.placeholder.com/150');
+  const [targetCalories, setTargetCalories] = useState(String(userSettings?.targetCalories || ''));
+  const [targetProtein, setTargetProtein] = useState(String(userSettings?.targetProtein || ''));
+  const [targetFats, setTargetFats] = useState(String(userSettings?.targetFats || ''));
+  const [targetCarbs, setTargetCarbs] = useState(String(userSettings?.targetCarbs || ''));
+  const [username, setUsername] = useState(userSettings?.username || '');
+  const [email, setEmail] = useState(userSettings?.email || '');
+  const [age, setAge] = useState(String(userSettings?.age || ''));
+  const [weight, setWeight] = useState(String(userSettings?.weight || ''));
+  const [height, setHeight] = useState(String(userSettings?.height || ''));
+  const [dob, setDob] = useState(userSettings?.dob ? new Date(userSettings.dob) : new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState({});
   const [isEditing, setIsEditing] = useState(false);
@@ -55,7 +56,7 @@ const ProfileScreen = ({ navigation }) => {
     };
 
     loadUserProfile();
-  }, []);
+  }, [setUserSettings]);
 
   const validate = () => {
     let valid = true;
@@ -136,17 +137,17 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleCancel = () => {
-    setProfilePicture(userSettings.profilePicture || 'https://via.placeholder.com/150');
-    setTargetCalories(String(userSettings.targetCalories || ''));
-    setTargetProtein(String(userSettings.targetProtein || ''));
-    setTargetFats(String(userSettings.targetFats || ''));
-    setTargetCarbs(String(userSettings.targetCarbs || ''));
-    setUsername(userSettings.username || '');
-    setEmail(userSettings.email || '');
-    setAge(String(userSettings.age || ''));
-    setWeight(String(userSettings.weight || ''));
-    setHeight(String(userSettings.height || ''));
-    setDob(userSettings.dob ? new Date(userSettings.dob) : new Date());
+    setProfilePicture(userSettings?.profilePicture || 'https://via.placeholder.com/150');
+    setTargetCalories(String(userSettings?.targetCalories || ''));
+    setTargetProtein(String(userSettings?.targetProtein || ''));
+    setTargetFats(String(userSettings?.targetFats || ''));
+    setTargetCarbs(String(userSettings?.targetCarbs || ''));
+    setUsername(userSettings?.username || '');
+    setEmail(userSettings?.email || '');
+    setAge(String(userSettings?.age || ''));
+    setWeight(String(userSettings?.weight || ''));
+    setHeight(String(userSettings?.height || ''));
+    setDob(userSettings?.dob ? new Date(userSettings.dob) : new Date());
     setErrors({});
     setIsEditing(false);
   };
@@ -160,7 +161,7 @@ const ProfileScreen = ({ navigation }) => {
     });
 
     if (!result.canceled) {
-      setProfilePicture(result.uri);
+      setProfilePicture(result.assets[0].uri);
     }
   };
 
@@ -396,6 +397,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     alignItems: 'center',
     marginBottom: 20,
+    marginTop: 40,
   },
   profilePicture: {
     width: 100,
