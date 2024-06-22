@@ -1,124 +1,74 @@
-# ActiveRecovery
+# [Active Recovery]
 
-ActiveRecovery is a React Native mobile application designed to help users with their recovery routines. This project uses Expo to facilitate development and deployment.
+Aceasta este aplicația [Active Recovery] dezvoltata pentru lucrarea de licenta.
 
-## Table of Contents
+## Adresa Repository-ului
 
-- [Installation](#installation)
-- [Running the App](#running-the-app)
-- [Building the App](#building-the-app)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
+Repository-ul complet al aplicației, inclusiv codul sursă, poate fi găsit la următoarea adresă: [https://github.com/IulianBirladeanu07/active_recovery](https://github.com/IulianBirladeanu07/active_recovery)
 
-## Installation
+## Pașii de Compilare ai Aplicației
 
-Before you start, ensure you have the following installed:
+1. **Instalare Node.js și npm**:
+    - Asigură-te că ai instalat [Node.js](https://nodejs.org/) și [npm](https://www.npmjs.com/).
 
-- [Node.js](https://nodejs.org/)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+2. **Clonează repository-ul**:
+    ```bash
+    git clone https://github.com/IulianBirladeanu07/active_recovery.git
+    cd active_recovery
+    ```
 
-1. Clone the repository:
+3. **Instalează dependențele**:
+    ```bash
+    npm install
+    ```
 
-```bash
-git clone https://github.com/yourusername/ActiveRecovery.git
-cd ActiveRecovery
-```
+## Pașii de Instalare și Lansare a Aplicației
 
-2. Install dependencies:
+1. **Instalare Expo CLI**:
+    - Dacă nu ai deja instalat Expo CLI, instalează-l folosind npm:
+    ```bash
+    npm install -g expo-cli
+    ```
 
-Using npm:
-```bash
-npm install
-```
+2. **Lansare server Expo**:
+    ```bash
+    npx expo start
+    ```
 
-Using yarn:
-```bash
-yarn install
-```
+3. **Descarcă aplicația Expo Go**:
+    - Descarcă și instalează aplicația Expo Go pe dispozitivul tău mobil din App Store (iOS) sau Google Play Store (Android).
 
-## Running the App
+4. **Scanează codul QR**:
+    - Scanează codul QR afișat în terminal sau în Expo Dev Tools în browser folosind aplicația Expo Go.
 
-To start the app, follow these steps:
+5. **Lansare aplicație**:
+    - După scanarea codului QR, aplicația va fi lansată pe dispozitivul tău mobil.
 
-1. Start the Expo server:
+## Structura Proiectului
 
-Using npx:
-```bash
-npx expo start
-```
-
-2. Download the Expo Go app on your mobile device from the [App Store (iOS)](https://apps.apple.com/us/app/expo-go/id982107779) or [Google Play Store (Android)](https://play.google.com/store/apps/details?id=host.exp.exponent&hl=en&gl=US).
-
-3. Scan the QR code displayed in the terminal or the Expo Dev Tools in your browser with the Expo Go app.
-
-## Building the App
-
-To build the app for production, you can use the Expo build service:
-
-1. Make sure you are logged in to Expo:
-
-```bash
-expo login
-```
-
-2. Initiate the build process:
-
-For iOS:
-```bash
-expo build:ios
-```
-
-For Android:
-```bash
-expo build:android
-```
-
-3. Follow the instructions provided by Expo to complete the build process.
-
-## Project Structure
-
-Here is a brief overview of the project structure:
-
-```
-ActiveRecovery/
-├── assets/             # Asset files such as images, fonts, etc.
+```plaintext
+active_recovery/
+├── assets/             # Fișiere de resurse, cum ar fi imagini, fonturi, etc.
 ├── src/
-│   ├── __mocks__/      # Mock files for testing
-│   ├── __tests__/      # Test files
-│   ├── assets/         # Additional asset files
-│   ├── components/     # Reusable components
-│   ├── context/        # Context providers
-│   ├── exercises/      # Exercise-related files
-│   ├── handlers/       # Handlers for various functionalities
-│   ├── helpers/        # Helper functions
-│   ├── screens/        # Application screens
-│   ├── services/       # Service files
-│   ├── utils/          # Utility functions
-│   └── index.js        # Entry point for the source files
-├── App.js              # Entry point of the application
-├── app.json            # Expo configuration
-├── babel.config.js     # Babel configuration
-├── eas.json            # Expo Application Services configuration
-├── jest.config.js      # Jest configuration
-├── jest.setup.js       # Jest setup file
-├── node_modules/       # Node.js modules
-├── package.json        # Project metadata and dependencies
-├── package-lock.json   # Lockfile for npm
-└── README.md           # Project documentation
-```
-
-## Contributing
-
-Contributions are welcome! Please fork the repository and use a feature branch. Pull requests are warmly welcome.
-
-1. Fork the repository.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
-
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
+│   ├── mocks/          # Fișiere mock pentru testare
+│   ├── tests/          # Fișiere de test
+│   ├── assets/         # Fișiere de resurse suplimentare
+│   ├── components/     # Componente reutilizabile
+│   ├── context/        # Provideri de context
+│   ├── exercises/      # Fișiere legate de exerciții
+│   ├── handlers/       # Handlere pentru diferite funcționalități
+│   ├── helpers/        # Funcții ajutătoare
+│   ├── screens/        # Ecranele aplicației
+│   ├── services/       # Fișiere de servicii
+│   ├── utils/          # Funcții utilitare
+│   └── index.js        # Punctul de intrare pentru fișierele sursă
+├── App.js              # Punctul de intrare al aplicației
+├── app.json            # Configurația Expo
+├── babel.config.js     # Configurația Babel
+├── eas.json            # Configurația Expo Application Services
+├── jest.config.js      # Configurația Jest
+├── jest.setup.js       # Fișierul de configurare Jest
+├── node_modules/       # Modulele Node.js
+├── package.json        # Metadatele proiectului și dependențele
+├── package-lock.json   # Fișierul de blocare pentru npm
+└── README.md           # Documentația proiectului
