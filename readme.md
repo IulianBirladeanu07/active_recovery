@@ -16,50 +16,73 @@ ActiveRecovery is a React Native mobile application designed to help users with 
 Before you start, ensure you have the following installed:
 
 - [Node.js](https://nodejs.org/)
-- [npm](https://www.npmjs.com/)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 - [Expo CLI](https://docs.expo.dev/get-started/installation/)
 
 1. Clone the repository:
-   
-git clone https://github.com/yourusername/active_recovery.git
-cd active_recovery
 
-Install dependencies:
+```bash
+git clone https://github.com/yourusername/ActiveRecovery.git
+cd ActiveRecovery
+```
+
+2. Install dependencies:
+
 Using npm:
+```bash
 npm install
+```
 
-Running the App
+Using yarn:
+```bash
+yarn install
+```
+
+## Running the App
+
 To start the app, follow these steps:
 
-Start the Expo server:
+1. Start the Expo server:
+
 Using npx:
+```bash
 npx expo start
+```
 
-2.Download the Expo Go app on your mobile device from the App Store (iOS) or Google Play Store (Android).
+2. Download the Expo Go app on your mobile device from the [App Store (iOS)](https://apps.apple.com/us/app/expo-go/id982107779) or [Google Play Store (Android)](https://play.google.com/store/apps/details?id=host.exp.exponent&hl=en&gl=US).
 
-Scan the QR code displayed in the terminal or the Expo Dev Tools in your browser with the Expo Go app.
+3. Scan the QR code displayed in the terminal or the Expo Dev Tools in your browser with the Expo Go app.
 
-Building the App
+## Building the App
+
 To build the app for production, you can use the Expo build service:
 
-Make sure you are logged in to Expo:
-expo login
+1. Make sure you are logged in to Expo:
 
-Initiate the build process:
+```bash
+expo login
+```
+
+2. Initiate the build process:
 
 For iOS:
-
+```bash
 expo build:ios
+```
 
 For Android:
+```bash
 expo build:android
+```
 
-Follow the instructions provided by Expo to complete the build process.
+3. Follow the instructions provided by Expo to complete the build process.
 
-Project Structure
+## Project Structure
+
 Here is a brief overview of the project structure:
 
-active_recovery/
+```
+ActiveRecovery/
 ├── assets/             # Asset files such as images, fonts, etc.
 ├── src/
 │   ├── __mocks__/      # Mock files for testing
@@ -84,14 +107,18 @@ active_recovery/
 ├── package.json        # Project metadata and dependencies
 ├── package-lock.json   # Lockfile for npm
 └── README.md           # Project documentation
+```
 
-Contributing
+## Contributing
+
 Contributions are welcome! Please fork the repository and use a feature branch. Pull requests are warmly welcome.
 
-Fork the repository.
-Create your feature branch (git checkout -b feature/AmazingFeature).
-Commit your changes (git commit -m 'Add some AmazingFeature').
-Push to the branch (git push origin feature/AmazingFeature).
-Open a Pull Request.
-License
-Distributed under the MIT License. See LICENSE for more information.
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
