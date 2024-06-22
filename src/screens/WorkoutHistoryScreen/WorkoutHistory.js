@@ -28,7 +28,6 @@ const HistoryScreen = ({ navigation }) => {
         })),
       };
 
-      console.log('Formatted Workout Data:', formattedWorkoutData);
       navigation.navigate('StartWorkout', { selectedWorkout: formattedWorkoutData });
     } else {
       console.error('Invalid workout data:', workout);
@@ -51,8 +50,6 @@ const HistoryScreen = ({ navigation }) => {
               totalPRs={item.totalPRs || 0}
               exercises={item.exercises}
               notes={item.notes}
-              // completionStatus={completionStatus}
-              // comparisonData={comparisonData}
             />
           </TouchableOpacity>
         )}

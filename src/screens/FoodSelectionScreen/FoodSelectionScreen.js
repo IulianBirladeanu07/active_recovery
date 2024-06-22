@@ -159,6 +159,7 @@ const FoodSelectionScreen = () => {
     try {
       const products = await fetchFoodsFromUSDAAPI(query);
       const sortedProducts = products.map(product => {
+        console.log("Sorted Products categories: ", sortedProducts)
         const name = product.description.toLowerCase();
         const queryLower = query.toLowerCase();
         const index = name.indexOf(queryLower);
@@ -238,6 +239,7 @@ const FoodSelectionScreen = () => {
 
     try {
       const products = await fetchFoodsFromOpenFoodFactsAPI(data);
+      console.log(products);
       if (products.length > 0) {
         const product = products[0];
         const food = {
