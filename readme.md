@@ -59,9 +59,7 @@ Follow the instructions provided by Expo to complete the build process.
 Project Structure
 Here is a brief overview of the project structure:
 
-perl
-Copiază codul
-ActiveRecovery/
+active_recovery/
 ├── assets/             # Asset files such as images, fonts, etc.
 ├── src/
 │   ├── __mocks__/      # Mock files for testing
@@ -86,6 +84,7 @@ ActiveRecovery/
 ├── package.json        # Project metadata and dependencies
 ├── package-lock.json   # Lockfile for npm
 └── README.md           # Project documentation
+
 Contributing
 Contributions are welcome! Please fork the repository and use a feature branch. Pull requests are warmly welcome.
 
