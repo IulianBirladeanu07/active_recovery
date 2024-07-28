@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import ApplicationCustomScreen from '../../components/ApplicationCustomScreen/ApplicationCustomScreen';
 import { useFoodContext } from '../../context/FoodContext';
 import CircularProgress from '../../components/CircularProgress/CircularProgress';
@@ -17,19 +18,11 @@ const NutritionScreen = () => {
   const { userSettings } = useContext(WorkoutContext);
   const { breakfastFoods, lunchFoods, dinnerFoods, handleAddFood, handleDeleteFood } = useFoodContext();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedMeal, setSelectedMeal] = useState('breakfast');
 
   const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate);
   const { targetCalories, targetProtein, targetFats, targetCarbs } = userSettings;
-
-  const handleSettingsPress = () => {
-    navigation.navigate('Settings');
-  };
-
-  const handleProfilePress = () => {
-    navigation.navigate('Profile');
-  };
-
-  const [selectedMeal, setSelectedMeal] = useState('breakfast');
 
   useEffect(() => {
     if (route.params?.food && route.params?.meal && route.params?.date) {
@@ -39,8 +32,12 @@ const NutritionScreen = () => {
     }
   }, [route.params?.food, route.params?.meal, route.params?.date, handleAddFood, navigation]);
 
-  const toggleMealVisibility = (meal) => {
-    setSelectedMeal(meal);
+  const handleSettingsPress = () => {
+    navigation.navigate('Settings');
+  };
+
+  const handleProfilePress = () => {
+    navigation.navigate('Profile');
   };
 
   const calculateTotalCalories = (foods) => {
@@ -51,20 +48,21 @@ const NutritionScreen = () => {
     handleDeleteFood(item.id, meal, selectedDate);
   };
 
-  const selectedFoods = selectedMeal === 'breakfast' ? breakfastFoods : selectedMeal === 'lunch' ? lunchFoods : dinnerFoods;
-  const filteredFoods = selectedFoods.filter(food => new Date(food.date).toDateString() === selectedDate.toDateString());
-  const totalCalories = calculateTotalCalories(filteredFoods);
-
-  const handlePreviousDay = () => {
-    const previousDay = new Date(selectedDate);
-    previousDay.setDate(selectedDate.getDate() - 1);
-    setSelectedDate(previousDay);
+  const selectedFoods = {
+    breakfast: breakfastFoods.filter(food => new Date(food.date).toDateString() === selectedDate.toDateString()),
+    lunch: lunchFoods.filter(food => new Date(food.date).toDateString() === selectedDate.toDateString()),
+    dinner: dinnerFoods.filter(food => new Date(food.date).toDateString() === selectedDate.toDateString()),
   };
 
-  const handleNextDay = () => {
-    const nextDay = new Date(selectedDate);
-    nextDay.setDate(selectedDate.getDate() + 1);
-    setSelectedDate(nextDay);
+  const totalCalories = calculateTotalCalories(selectedFoods[selectedMeal]);
+  const remainingCalories = targetCalories - totalCalories;
+  console.log(remainingCalories)
+
+  const handleDateChange = (event, date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (date) {
+      setSelectedDate(date);
+    }
   };
 
   const handleFoodSelect = useCallback((item, meal) => {
@@ -80,7 +78,7 @@ const NutritionScreen = () => {
       },
       date: selectedDate.toISOString()
     };
-  
+
     navigation.navigate('FoodDetail', { 
       food: foodDetails, 
       meal, 
@@ -99,101 +97,62 @@ const NutritionScreen = () => {
     >
       <View style={styles.container}>
         <View style={styles.contentContainer}>
-          <Text style={styles.headerText}>Nutrition Dashboard</Text>
           <View style={styles.dateNavigation}>
-            <TouchableOpacity onPress={handlePreviousDay}>
-              <MaterialCommunityIcons name="chevron-left" size={28} color="#fdf5ec" />
+            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+              <MaterialCommunityIcons name="calendar" size={28} color="#fdf5ec" />
             </TouchableOpacity>
             <Text style={styles.dateText}>{selectedDate.toDateString()}</Text>
-            <TouchableOpacity onPress={handleNextDay}>
-              <MaterialCommunityIcons name="chevron-right" size={28} color="#fdf5ec" />
-            </TouchableOpacity>
           </View>
-          <ProgressBar value={dailyNutrition.calories} maxValue={targetCalories} customText={"Calories"} />
-
-          <View style={styles.circularProgressContainer}>
-            <CircularProgress title="Protein" value={dailyNutrition.protein.toFixed(0)} maxValue={targetProtein} size={60} strokeWidth={6} color="#29335c" duration={1500} />
-            <CircularProgress title="Carbs" value={dailyNutrition.carbs.toFixed(0)} maxValue={targetCarbs} size={60} strokeWidth={6} color="#db2b39" duration={1500} />
-            <CircularProgress title="Fat" value={dailyNutrition.fat.toFixed(0)} maxValue={targetFats} size={60} strokeWidth={6} color="#20a39e" duration={1500} />
-          </View>
-
-          <View style={styles.mealSelector}>
-            <TouchableOpacity
-              onPress={() => toggleMealVisibility('breakfast')}
-              style={[styles.mealButton, selectedMeal === 'breakfast' && styles.selectedMealButton]}
-            >
-              <Text style={styles.mealButtonText}>Breakfast</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => toggleMealVisibility('lunch')}
-              style={[styles.mealButton, selectedMeal === 'lunch' && styles.selectedMealButton]}
-            >
-              <Text style={styles.mealButtonText}>Lunch</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => toggleMealVisibility('dinner')}
-              style={[styles.mealButton, selectedMeal === 'dinner' && styles.selectedMealButton]}
-            >
-              <Text style={styles.mealButtonText}>Dinner</Text>
-            </TouchableOpacity>
-          </View>
-
-          {selectedMeal === 'breakfast' && (
-            <MealContainer
-              meal="breakfast"
-              foods={filteredFoods}
-              onSwipeableOpen={handleSwipeableOpen}
-              onPress={(item) => handleFoodSelect(item, 'breakfast')}
-              mealContainer={styles.mealContainer}
-              mealTitle={styles.mealTitle}
-              mealScrollView={styles.mealScrollView}
-              foodImage={styles.foodImage}
-              foodName={styles.foodName}
-              foodCalories={styles.foodCalories}
-              foodNutrient={styles.foodNutrient}
-              isFoodDeletable={true}
-              displayMealName={true}
+          {showDatePicker && (
+            <DateTimePicker
+              value={selectedDate}
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
             />
           )}
-          {selectedMeal === 'lunch' && (
-            <MealContainer
-              meal="lunch"
-              foods={filteredFoods}
-              onSwipeableOpen={handleSwipeableOpen}
-              onPress={(item) => handleFoodSelect(item, 'lunch')}
-              mealContainer={styles.mealContainer}
-              mealTitle={styles.mealTitle}
-              mealScrollView={styles.mealScrollView}
-              foodImage={styles.foodImage}
-              foodName={styles.foodName}
-              foodCalories={styles.foodCalories}
-              foodNutrient={styles.foodNutrient}
-              isFoodDeletable={true}
-              displayMealName={true}
-            />
-          )}
-          {selectedMeal === 'dinner' && (
-            <MealContainer
-              meal="dinner"
-              foods={filteredFoods}
-              onSwipeableOpen={handleSwipeableOpen}
-              onPress={(item) => handleFoodSelect(item, 'dinner')}
-              mealContainer={styles.mealContainer}
-              mealTitle={styles.mealTitle}
-              mealScrollView={styles.mealScrollView}
-              foodImage={styles.foodImage}
-              foodName={styles.foodName}
-              foodCalories={styles.foodCalories}
-              foodNutrient={styles.foodNutrient}
-              isFoodDeletable={true}
-              displayMealName={true}
-            />
-          )}
+
+          <View style={styles.statsContainer}>
+            <View style={styles.circularProgressContainer}>
+              <CircularProgress title="Calories" value={dailyNutrition.calories.toFixed(0)} maxValue={targetCalories} size={100} strokeWidth={10} color="#FFA726" duration={1500} />
+              <View style={styles.progressRow}>
+                <View style={styles.innerProgressItem}>
+                  <Ionicons name="restaurant-outline" size={18} color="#FFA726" />
+                  <Text style={styles.innerProgressText}>{totalCalories} Eaten</Text>
+                </View>
+                <View style={styles.innerProgressItem}>
+                  <Ionicons name="flame-outline" size={18} color="#FF5722" />
+                  <Text style={styles.innerProgressText}>{dailyNutrition.burnedCalories} Burned</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.barContainer}>
+              <ProgressBar value={dailyNutrition.carbs} maxValue={targetCarbs} customText="Carb" />
+              <ProgressBar value={dailyNutrition.protein} maxValue={targetProtein} customText="Protein" />
+              <ProgressBar value={dailyNutrition.fat} maxValue={targetFats} customText="Fat" />
+            </View>
+          </View>
+
+          <MealContainer
+            foods={selectedFoods}
+            onSwipeableOpen={handleSwipeableOpen}
+            onPress={handleFoodSelect}
+            mealContainer={styles.mealContainer}
+            mealTitle={styles.mealTitle}
+            mealScrollView={styles.mealScrollView}
+            foodName={styles.foodName}
+            foodCalories={styles.foodCalories}
+            foodNutrient={styles.foodNutrient}
+            foodImage={styles.foodImage}
+            isFoodDeletable={true}
+          />
+
           <View style={styles.footer}>
             <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('FoodSelection', { meal: selectedMeal, date: selectedDate.toISOString() })}>
               <Text style={styles.addButtonText}>Add Food</Text>
             </TouchableOpacity>
-            {filteredFoods.length > 0 && (
+            {selectedFoods[selectedMeal].length > 0 && (
               <Text style={styles.totalCaloriesText}>{`Total: ${totalCalories} Calories`}</Text>
             )}
           </View>

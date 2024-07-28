@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { debounce } from 'lodash';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BarcodeScanner from '../../components/BarcodeScanner/BarcodeScanner';
 import styles from './FoodSelectionScreenStyle';
-import { fetchFoodsFromUSDAAPI, fetchFoodsFromOpenFoodFactsAPI, getFoodImage, fetchRecentFoods } from '../../services/nutritionService';
+import { fetchFoodsFromUSDAAPI, fetchFoodsFromOpenFoodFactsAPI, getFoodImage, fetchRecentFoods, fetchFrequentFoods, fetchLikedFoods } from '../../services/nutritionService';
 import { addDocument } from '../../handlers/NutritionHandler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -136,10 +137,13 @@ const FoodSelectionScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [foods, setFoods] = useState([]);
   const [recentFoods, setRecentFoods] = useState([]);
+  const [frequentFoods, setFrequentFoods] = useState([]);
+  const [likedFoods, setLikedFoods] = useState([]);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showRecentFoods, setShowRecentFoods] = useState(true);
+  const [currentView, setCurrentView] = useState('recent'); // Default to recent
 
   useEffect(() => {
     const fetchRecentFoodsData = async () => {
@@ -151,15 +155,43 @@ const FoodSelectionScreen = () => {
         setError('Failed to fetch recent foods. Please try again later.');
       }
     };
-    fetchRecentFoodsData();
-  }, []);
+
+    const fetchFrequentFoodsData = async () => {
+      // Fetch frequent foods logic here
+      try {
+        const fetchedFrequentFoods = await fetchFrequentFoods();
+        setFrequentFoods(fetchedFrequentFoods);
+      } catch (err) {
+        console.error("Failed to fetch frequent foods:", err);
+        setError('Failed to fetch frequent foods. Please try again later.');
+      }
+    };
+
+    const fetchLikedFoodsData = async () => {
+      // Fetch liked foods logic here
+      try {
+        const fetchedLikedFoods = await fetchLikedFoods();
+        setLikedFoods(fetchedLikedFoods);
+      } catch (err) {
+        console.error("Failed to fetch liked foods:", err);
+        setError('Failed to fetch liked foods. Please try again later.');
+      }
+    };
+
+    if (currentView === 'recent') {
+      fetchRecentFoodsData();
+    } else if (currentView === 'frequent') {
+      fetchFrequentFoodsData();
+    } else if (currentView === 'liked') {
+      fetchLikedFoodsData();
+    }
+  }, [currentView]);
 
   const fetchFoods = useCallback(async (query) => {
     setLoading(true);
     try {
       const products = await fetchFoodsFromUSDAAPI(query);
       const sortedProducts = products.map(product => {
-        console.log("Sorted Products categories: ", sortedProducts)
         const name = product.description.toLowerCase();
         const queryLower = query.toLowerCase();
         const index = name.indexOf(queryLower);
@@ -239,7 +271,6 @@ const FoodSelectionScreen = () => {
 
     try {
       const products = await fetchFoodsFromOpenFoodFactsAPI(data);
-      console.log(products);
       if (products.length > 0) {
         const product = products[0];
         const food = {
@@ -297,21 +328,43 @@ const FoodSelectionScreen = () => {
       ) : (
         <>
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          <TextInput
-            style={styles.input}
-            placeholder="Search for food"
-            placeholderTextColor="#8E8E93"
-            value={searchQuery}
-            onChangeText={handleSearch}
-            onFocus={() => setShowRecentFoods(false)} // Hide recent foods when text input is focused
-            onBlur={() => setShowRecentFoods(true)}  // Optionally show recent foods when text input loses focus          
-            onEndEditing={handleSearchComplete}
-          />
-          <TouchableOpacity style={styles.scanButton} onPress={() => setScanning(true)}>
-            <Text style={styles.scanButtonText}>Scan Barcode</Text>
-          </TouchableOpacity>
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Search for food"
+              placeholderTextColor="#8E8E93"
+              value={searchQuery}
+              onChangeText={handleSearch}
+              onFocus={() => setShowRecentFoods(false)}
+              onBlur={() => setShowRecentFoods(true)}
+              onEndEditing={handleSearchComplete}
+            />
+            <TouchableOpacity onPress={() => setScanning(true)}>
+              <MaterialCommunityIcons name="barcode-scan" size={24} color="#8E8E93" style={styles.barcodeIcon} />
+            </TouchableOpacity>
+          </View>
           {loading ? <ActivityIndicator size="large" color="#008080" /> : null}
-          {showRecentFoods && recentFoods.length > 0 && (
+          <View style={styles.toggleButtonsContainer}>
+            <TouchableOpacity
+              style={[styles.toggleButton, currentView === 'frequent' && styles.activeToggleButton]}
+              onPress={() => setCurrentView('frequent')}
+            >
+              <Text style={styles.toggleButtonText}>Frequent</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toggleButton, currentView === 'recent' && styles.activeToggleButton]}
+              onPress={() => setCurrentView('recent')}
+            >
+              <Text style={styles.toggleButtonText}>Recent</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toggleButton, currentView === 'liked' && styles.activeToggleButton]}
+              onPress={() => setCurrentView('liked')}
+            >
+              <Text style={styles.toggleButtonText}>Liked</Text>
+            </TouchableOpacity>
+          </View>
+          {showRecentFoods && currentView === 'recent' && recentFoods.length > 0 && (
             <>
               <Text style={styles.recentSearchesTitle}>Recent Foods</Text>
               <FlatList
@@ -334,15 +387,28 @@ const FoodSelectionScreen = () => {
               />
             </>
           )}
-          <FlatList
-            data={foods}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            initialNumToRender={10}
-            maxToRenderPerBatch={10}
-            windowSize={5}
-            getItemLayout={getItemLayout}
-          />
+          {currentView === 'frequent' && (
+            <FlatList
+              data={frequentFoods}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              getItemLayout={getItemLayout}
+            />
+          )}
+          {currentView === 'liked' && (
+            <FlatList
+              data={likedFoods}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              getItemLayout={getItemLayout}
+            />
+          )}
         </>
       )}
     </View>

@@ -21,6 +21,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 30,
   },
+  stepCounterText: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    marginVertical: 10,
+  },
   recentWorkoutContainer: {
     flex: 1,
     marginRight: 10,
@@ -140,6 +146,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     color: '#fff',
+    alignSelf: 'center'
   },
   bestSetContainer: {
     backgroundColor: '#f7f7f7',
@@ -149,6 +156,7 @@ const styles = StyleSheet.create({
   bestSetText: {
     fontSize: 8,
     color: '#333',
+    alignSelf: 'center'
   },
   noWorkoutsContainer: {
     alignItems: 'center',

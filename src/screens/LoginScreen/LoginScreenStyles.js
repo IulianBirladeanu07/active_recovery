@@ -1,5 +1,3 @@
-// LoginScreenStyles.js
-
 import { StyleSheet, Dimensions } from 'react-native';
 
 const windowWidth = Dimensions.get('window').width;
@@ -21,7 +19,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fdf5ec', //4799ba
+    backgroundColor: '#fdf5ec',
     borderRadius: 10,
     padding: 10,
     marginVertical: 5,
@@ -47,18 +45,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
   },
+  forgotPasswordButton: {
+    marginTop: 10,
+  },
+  forgotPasswordButtonText: {
+    color: '#FFD700',
+    fontSize: 16,
+    textAlign: 'center',
+  },
   registerButton: {
-    backgroundColor: '#02111B',
-    padding: 10,
-    borderRadius: 10,
     marginTop: 20,
-    width: windowWidth - 40,
-    maxWidth: 400,
-    borderWidth: 1,
-    borderColor: '#e71d27',
   },
   registerButtonText: {
-    color: '#e71d27',
+    color: '#4799ba',
     fontWeight: 'bold',
     textAlign: 'center',
     fontSize: 16,
@@ -67,6 +66,9 @@ const styles = StyleSheet.create({
     color: '#FF6347',
     marginTop: 10,
     textAlign: 'center',
+  },
+  eyeIcon: {
+    marginLeft: 10,
   },
 });
 

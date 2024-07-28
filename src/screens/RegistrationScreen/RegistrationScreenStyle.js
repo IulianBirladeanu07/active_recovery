@@ -1,5 +1,3 @@
-// RegistrationScreenStyles.js
-
 import { StyleSheet, Dimensions } from 'react-native';
 
 const windowWidth = Dimensions.get('window').width;
@@ -21,7 +19,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fdf5ec', //4799ba
+    backgroundColor: '#fdf5ec',
     borderRadius: 10,
     padding: 10,
     marginVertical: 5,
@@ -51,6 +49,10 @@ const styles = StyleSheet.create({
     color: '#FF6347',
     marginTop: 10,
     textAlign: 'center',
+  },
+  passwordStrengthIndicator: {
+    marginLeft: 10,
+    fontSize: 16,
   },
 });
 

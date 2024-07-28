@@ -1,34 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { signUpWithEmailAndPassword } from '../../services/authService';
-import styles from './RegistrationScreenStyle'; // Import styles
+import styles from './RegistrationScreenStyle';
+import { Ionicons } from '@expo/vector-icons';
 
 const RegistrationScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmedPassword, setConfirmedPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigation = useNavigation();
-
-  const handleConfirmDate = (selectedDate) => {
-    setDateOfBirth(selectedDate.toISOString().split('T')[0]); // Format date as YYYY-MM-DD
-    setDatePickerVisibility(false);
-  };
-
-  const handleCancelDate = () => {
-    setDatePickerVisibility(false);
-  };
 
   const handleSignUp = async () => {
     try {
       setLoading(true);
-      if (!email || !password || !confirmedPassword || !fullName || !dateOfBirth) {
+      if (!email || !password || !confirmedPassword) {
         setError('Please fill out all fields.');
         setLoading(false);
         return;
@@ -43,27 +32,28 @@ const RegistrationScreen = () => {
         setLoading(false);
         return;
       }
-      if (password.length < 6) {
-        setError('Password must be at least 6 characters long.');
-        setLoading(false);
-        return;
-      }
       if (!isStrongPassword(password)) {
-        setError('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.');
+        setError('Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.');
         setLoading(false);
         return;
       }
-      if (!isValidDate(dateOfBirth)) {
-        setError('Please enter a valid date of birth (YYYY-MM-DD).');
-        setLoading(false);
-        return;
-      }
-      await signUpWithEmailAndPassword(email, password, fullName, dateOfBirth);
+      await signUpWithEmailAndPassword(email, password);
       setError(null);
-      navigation.navigate('Login');
+      Alert.alert(
+        'Registration Successful',
+        'A verification email has been sent. Please verify your email to continue.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login'),
+          },
+        ],
+        { cancelable: false }
+      );
     } catch (error) {
       console.error(error);
       setError('An error occurred during registration. Please try again.');
+      Alert.alert('Error', 'An error occurred during registration. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -74,29 +64,43 @@ const RegistrationScreen = () => {
     return emailRegex.test(email);
   };
 
-  const isValidDate = (dateString) => {
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(dateString)) return false;
-    const [year, month, day] = dateString.split('-');
-    const date = new Date(year, month - 1, day);
+  const isStrongPassword = (password) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
     return (
-      date.getFullYear() == year &&
-      date.getMonth() + 1 == month &&
-      date.getDate() == day
+      password.length >= minLength &&
+      hasUpperCase &&
+      hasLowerCase &&
+      hasNumber &&
+      hasSpecialChar
     );
   };
 
-  const isStrongPassword = (password) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+{};:<,.>?]).{8,}$/;
-    return passwordRegex.test(password);
-  };
-
-  const checkPasswordStrength = (password) => {
-    if (password.length === 0) return 'Weak';
-    if (password.length >= 10 && isStrongPassword(password)) return 'Strong';
-    if (isStrongPassword(password)) return 'Good';
+  const getPasswordStrength = (password) => {
+    if (password.length === 0) return '';
+    if (isStrongPassword(password)) return 'Strong';
+    if (password.length >= 6) return 'Good';
     return 'Weak';
   };
+
+  const getPasswordStrengthColor = (strength) => {
+    switch (strength) {
+      case 'Weak':
+        return 'red';
+      case 'Good':
+        return 'orange';
+      case 'Strong':
+        return 'green';
+      default:
+        return 'transparent';
+    }
+  };
+
+  const passwordStrength = getPasswordStrength(password);
 
   return (
     <View style={styles.container}>
@@ -118,8 +122,8 @@ const RegistrationScreen = () => {
           placeholder="Password"
           secureTextEntry={true}
         />
-        <Text style={[styles.passwordStrengthIndicator, { color: checkPasswordStrength(password) === 'Weak' ? 'red' : checkPasswordStrength(password) === 'Good' ? 'orange' : 'green' }]}>
-          {checkPasswordStrength(password)}
+        <Text style={{ color: getPasswordStrengthColor(passwordStrength), marginLeft: 10 }}>
+          {passwordStrength}
         </Text>
       </View>
       <View style={styles.inputContainer}>
@@ -128,28 +132,12 @@ const RegistrationScreen = () => {
           value={confirmedPassword}
           onChangeText={setConfirmedPassword}
           placeholder="Confirm Password"
-          secureTextEntry={true}
+          secureTextEntry={!showConfirmPassword}
         />
+        <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+          <Ionicons name={showConfirmPassword ? "eye-off" : "eye"} size={24} color="gray" />
+        </TouchableOpacity>
       </View>
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={fullName}
-          onChangeText={setFullName}
-          placeholder="Full Name"
-          autoCapitalize="words"
-        />
-      </View>
-      <TouchableOpacity style={styles.inputContainer} onPress={() => setDatePickerVisibility(true)}>
-        <Text style={styles.input}>{dateOfBirth ? dateOfBirth : 'Date of Birth'}</Text>
-      </TouchableOpacity>
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        display='spinner'
-        onConfirm={handleConfirmDate}
-        onCancel={handleCancelDate}
-      />
       {error && <Text style={styles.error}>{error}</Text>}
       <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled={loading}>
         {loading ? (

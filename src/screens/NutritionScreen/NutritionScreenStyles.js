@@ -9,44 +9,77 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#02111B',
   },
-  scrollContainer: {
-    paddingVertical: 5,
-    paddingHorizontal: 5,
-  },
   contentContainer: {
     width: '100%',
     flex: 1,
-    marginBottom: 100,
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 20,
-    alignSelf: 'center'
+    alignItems: 'center',
+    padding: 10,
+    marginBottom: 30,
   },
   dateNavigation: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   dateText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
+    marginHorizontal: 20,
+  },
+  statsContainer: {
+    backgroundColor: '#02202B',
+    padding: 20,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginBottom: 20,
   },
   circularProgressContainer: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  circularProgress: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  innerProgressContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    alignItems: 'center',
     width: '100%',
     marginTop: 20,
-    marginBottom: 20,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: -80,
+    paddingHorizontal: 0,
+  },
+  innerProgressItem: {
+    alignItems: 'center',
+  },
+  innerProgressText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    marginTop: 5,
+  },
+  progressBarContainer: {
+    width: '100%',
+    paddingHorizontal: 0,
+    marginTop: 10,
+  },
+  barContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center', // Center the content
+    width: '100%',
+    marginTop: 40,
   },
   mealSelector: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginVertical: 20,
   },
   mealButton: {
     flex: 1,
@@ -55,14 +88,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#005050',
     marginHorizontal: 5,
-    marginBottom: 10,
+    marginTop: 20,
   },
   selectedMealButton: {
     backgroundColor: '#008080',
   },
   mealButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
   },
   footer: {
     flexDirection: 'row',
@@ -70,6 +103,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     marginTop: 10,
+    paddingHorizontal: 10,
   },
   addButton: {
     flex: 1,
@@ -78,7 +112,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-    left: 5,
+    textAlign: 'left',
   },
   totalCaloriesText: {
     color: '#FFFFFF',
@@ -88,19 +122,19 @@ const styles = StyleSheet.create({
   },
   mealContainer: {
     flex: 1,
-    marginTop: 5,
+    width: '100%',
     backgroundColor: '#02202B',
     borderRadius: 10,
+    padding: 10,
+    marginVertical: 10,
   },
   mealTitle: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#FFFFFF',
     marginBottom: 10,
-    marginTop: 5,
-    left: 10,
   },
   mealScrollView: {
-    height: 150, // Fixed height to make the content scrollable within
+    height: 200, // Fixed height to make the content scrollable within
   },
   foodImage: {
     width: 30,

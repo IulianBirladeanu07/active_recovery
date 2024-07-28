@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons , Ionicons} from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import ApplicationCustomScreen from '../../components/ApplicationCustomScreen/ApplicationCustomScreen';
 import { styles } from './WorkoutScreenStyles';
@@ -15,7 +15,14 @@ const WorkoutScreen = () => {
   const handleStartWorkout = () => {
     navigation.replace('StartWorkout');
   };
+     
+  const handleProfilePress = () => {
+    navigation.navigate('Profile');
+  };
 
+  const handleSettingsPress = () => {
+    navigation.navigate('Settings');
+  };
   // Mock data for demonstration purposes
   const benchPressPr = { actual: 180, desired: 200 };
   const squatPr = { actual: 220, desired: 250 };
@@ -37,8 +44,10 @@ const WorkoutScreen = () => {
 
   return (
     <ApplicationCustomScreen
-      headerLeft={<MaterialCommunityIcons name="account" size={28} color="#fdf5ec" />}
-      headerRight={<MaterialCommunityIcons name="cog" size={28} color="#fdf5ec" />}
+      headerLeft={<Ionicons name="person-circle-outline" size={28} color="#fdf5ec" />}
+      headerRight={<Ionicons name="settings-outline" size={28} color="#fdf5ec" />}
+      onProfilePress={handleProfilePress}
+      onSettingsPress={handleSettingsPress}
     >
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerContainer}>

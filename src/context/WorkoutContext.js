@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
-import { countWorkoutsThisWeek, getLastWorkout, fetchTemplatesFromFirestore } from '../handlers/WorkoutHandler'
+import { countWorkoutsThisWeek, getLastWorkout, fetchTemplatesFromFirestore } from '../handlers/WorkoutHandler';
 import { getDocs, collection, db } from '../services/firebase';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
@@ -76,6 +76,12 @@ export const WorkoutProvider = ({ children }) => {
                 fetchData();
                 fetchWorkoutHistory();
                 fetchTemplates();
+            } else {
+                // Reset state when user logs out
+                setWorkoutsThisWeek(0);
+                setLastWorkout(null);
+                setWorkoutHistory([]);
+                setTemplates([]);
             }
         });
 

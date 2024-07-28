@@ -15,15 +15,14 @@ import styles from './HomeScreenStyles';
 import { WorkoutContext } from '../../context/WorkoutContext';
 
 const HomeScreen = () => {
-  const { breakfastFoods, lunchFoods, dinnerFoods, fetchWeeklyCalorieData } = useFoodContext();
-  const { workoutsThisWeek, lastWorkout } = useContext(WorkoutContext);
+  const { breakfastFoods = [], lunchFoods = [], dinnerFoods = [], fetchWeeklyCalorieData } = useFoodContext();
+  const { workoutsThisWeek = 0, lastWorkout = null, userSettings = {} } = useContext(WorkoutContext);
+  const { targetCalories = 2000 } = userSettings; // Default to 2000 if not provided
   const [selectedMeal, setSelectedMeal] = useState('breakfast'); // Default to breakfast
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dailyCalories, setDailyCalories] = useState([]);
-  const { userSettings } = useContext(WorkoutContext);
-  const { targetCalories } = userSettings;
-
+  
   const navigation = useNavigation();
   const route = useRoute();
 
@@ -32,7 +31,7 @@ const HomeScreen = () => {
   const fetchAndSetCalories = async () => {
     try {
       const caloriesData = await fetchWeeklyCalorieData(); // Assuming this function returns a promise
-      setDailyCalories(caloriesData);
+      setDailyCalories(caloriesData || []); // Ensure caloriesData is an array or an empty array
     } catch (error) {
       console.error('Failed to fetch calories data:', error);
       setDailyCalories([]); // Set to an empty array in case of an error
@@ -93,6 +92,7 @@ const HomeScreen = () => {
     const today = selectedDate.toISOString().split('T')[0]; // Format date to yyyy-mm-dd
 
     const filterFoodsByDate = (foods) => {
+      if (!foods) return [];
       return foods.filter(food => {
         const foodDate = new Date(food.date).toISOString().split('T')[0]; // Convert food date to yyyy-mm-dd
         return foodDate === today;

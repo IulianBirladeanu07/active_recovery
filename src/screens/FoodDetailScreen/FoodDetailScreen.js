@@ -9,7 +9,7 @@ import { useFoodContext } from '../../context/FoodContext';
 const FoodDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { food, meal, date, update, foodId } = route.params;
+  const { food, meal, date, addFood, update, foodId } = route.params;
   const { handleAddFood, handleUpdateFood } = useFoodContext();
 
   // Parse date string back to Date object
@@ -58,8 +58,12 @@ const FoodDetailScreen = () => {
       handleAddFood(foodDetails, meal, parsedDate.toISOString()); // Ensure date is passed as a string
     }
 
-    navigation.navigate('Nutrition');
-  }, [food, quantity, unit, update, navigation, meal, parsedDate, handleAddFood, handleUpdateFood, foodId, image]);
+    if (addFood) {
+      navigation.navigate('FoodSelection', { meal, date });
+    } else {
+      navigation.navigate('Nutrition');
+    }
+  }, [food, quantity, unit, update, navigation, meal, parsedDate, handleAddFood, handleUpdateFood, foodId, image, addFood]);
 
   return (
     <View style={styles.container}>
@@ -127,6 +131,7 @@ FoodDetailScreen.propTypes = {
       date: PropTypes.string.isRequired,
       update: PropTypes.bool,
       foodId: PropTypes.string,
+      addFood: PropTypes.bool,
     }).isRequired,
   }).isRequired,
   navigation: PropTypes.object.isRequired,

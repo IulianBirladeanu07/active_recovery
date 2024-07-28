@@ -6,14 +6,14 @@ import { Circle, Svg } from "react-native-svg";
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedText = Animated.createAnimatedComponent(TextInput);
 
-const CircularProgress = ({ title, value, maxValue, size = 100, strokeWidth = 10, color = "#333", trailColor = "#aaa", duration = 1400 }) => {
+const CircularProgress = ({ title, value, maxValue, size = 100, strokeWidth = 10, color = "#FF7043", trailColor = "#ffffff", duration = 1400 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * Math.PI * 2;
 
   const strokeOffset = useSharedValue(circumference);
 
   // Calculate the percentage for display purposes
-  const displayPercentage = ((value / maxValue) * 100).toFixed(0);
+  const displayValue = ((value / maxValue) * maxValue).toFixed(0);
 
   // Cap the percentage for animation to 100%
   const cappedPercentage = Math.min((value / maxValue) * 100, 100);
@@ -31,7 +31,7 @@ const CircularProgress = ({ title, value, maxValue, size = 100, strokeWidth = 10
 
   const animatedTextProps = useAnimatedProps(() => {
     return {
-      text: `${displayPercentage}%`,
+      text: `${displayValue}`,
     };
   });
 
@@ -41,7 +41,6 @@ const CircularProgress = ({ title, value, maxValue, size = 100, strokeWidth = 10
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
       <Svg height={size} width={size} viewBox={`0 0 ${size} ${size}`}>
         <Circle
           cx={size / 2}
@@ -73,8 +72,8 @@ const CircularProgress = ({ title, value, maxValue, size = 100, strokeWidth = 10
           editable={false}
           underlineColorAndroid="transparent"
         />
+        <Text style={styles.unitText}>KCAL LEFT</Text>
       </View>
-      <Text style={styles.actualValue}>{`${value} / ${maxValue}`}</Text>
     </View>
   );
 };
@@ -92,26 +91,16 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   text: {
-    color: "#FFFFFF",
+    color: "#ffffff",
     fontWeight: "bold",
     textAlign: "center",
-    position: "absolute",
-    justifyContent: "center",
-    alignItems: "center",
   },
-  title: {
-    marginBottom: 5,
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  actualValue: {
+  unitText: {
+    fontSize: 10,
+    color: "#BDBDBD",
+    textAlign: "center",
     marginTop: 5,
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#FFFFFF",
   },
 });
 
 export default CircularProgress;
- 

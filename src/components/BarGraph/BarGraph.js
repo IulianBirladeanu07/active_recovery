@@ -52,7 +52,7 @@ const BarGraph = ({ dailyCalories, targetCalories, colors }) => {
             </View>
           ))
         ) : (
-          <Text style={styles.placeholderText}>No data available</Text>
+          <Text style={styles.placeholderText}></Text>
         )}
         {renderMilestoneLines()}
       </View>
@@ -107,7 +107,6 @@ const styles = StyleSheet.create({
     color: '#aaa',
     fontSize: 12,
     textAlign: 'center',
-    marginTop: 20,
   },
   dottedLine: {
     position: 'absolute',

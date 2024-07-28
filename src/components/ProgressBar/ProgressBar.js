@@ -4,49 +4,62 @@ import { View, Text, StyleSheet } from 'react-native';
 const ProgressBar = ({ value, maxValue, customText }) => {
   const percentage = (value / maxValue) * 100;
   const fillWidth = `${percentage}%`;
-  const barColor = getColor(percentage);
+  const barColor = getColor(customText.toLowerCase());
 
   return (
-    <View style={styles.progressBarContainer}>
-      <View style={[styles.progressBarFill, { width: fillWidth, backgroundColor: barColor }]} />
-      <Text style={styles.progressBarText}>
-        {`${value.toFixed(0)} / ${maxValue} ${customText} (${percentage.toFixed(0)}%)`}
-      </Text>
+    <View style={styles.container}>
+      <Text style={styles.customText}>{customText}</Text>
+      <View style={styles.progressBarContainer}>
+        <View style={[styles.progressBarFill, { width: fillWidth, backgroundColor: barColor }]} />
+      </View>
+      <Text style={styles.label}>{`${value.toFixed(0)}g left`}</Text>
     </View>
   );
 };
 
-function getColor(percentage) {
-  if (percentage < 15) return '#e74c3c';
-  if (percentage < 60) return '#3498db';
-  return '#2ecc71';
+function getColor(type) {
+  switch (type) {
+    case 'carb':
+      return '#4caf50';
+    case 'protein':
+      return '#9c27b0';
+    case 'fat':
+      return '#2196f3';
+    default:
+      return '#3498db';
+  }
 }
 
 const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    marginHorizontal: 5,
+    flex: 1,
+  },
   progressBarContainer: {
     position: 'relative',
-    height: 29,
-    width: '100%',
+    height: 8,
+    width: '60%',
     backgroundColor: '#e0e0e0',
-    borderRadius: 7,
-    justifyContent: 'center',
+    borderRadius: 10,
     overflow: 'hidden',
+    marginBottom: 5,
   },
   progressBarFill: {
     position: 'absolute',
     height: '100%',
-    borderRadius: 7,
+    borderRadius: 10,
   },
-  progressBarText: {
-    position: 'absolute',
-    width: '100%',
-    textAlign: 'center',
+  label: {
     fontSize: 12,
+    color: '#fff',
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+    marginTop: 5,
+  },
+  customText: {
+    fontSize: 12,
+    color: '#fff',
+    marginTop: 2,
   },
 });
 

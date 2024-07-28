@@ -1,43 +1,61 @@
-import React from 'react';
-import { View, Text, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import FoodItem from './FoodItem';
 
-const MealContainer = ({ 
-  meal, 
-  foods, 
-  foodName, 
-  foodCalories, 
-  foodNutrient, 
-  foodImage, 
-  onSwipeableOpen, 
-  onPress, 
-  mealContainer, 
-  mealTitle, 
-  mealScrollView, 
+const MealContainer = ({
+  foods,
+  foodName,
+  foodCalories,
+  foodNutrient,
+  foodImage,
+  onSwipeableOpen,
+  onPress,
+  mealContainer,
+  mealTitle,
+  mealScrollView,
   isFoodDeletable, // New prop
-  displayMealName // New prop
-}) => (
-  <View style={mealContainer}>
-    {displayMealName && <Text style={mealTitle}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>}
-    <FlatList
-      data={foods}
-      renderItem={({ item }) => (
-        <FoodItem 
-          item={item}
-          meal={meal} 
-          onSwipeableOpen={onSwipeableOpen}
-          onPress={() => onPress(item, meal)} 
-          foodName={foodName}
-          foodCalories={foodCalories}
-          foodNutrient={foodNutrient}
-          foodImage={foodImage}
-          isFoodDeletable={isFoodDeletable} // Pass the prop to FoodItem
-        />
-      )}
-      keyExtractor={(item, index) => index.toString()}
-      style={mealScrollView}
-    />
-  </View>
-);
+}) => {
+  const [selectedMeal, setSelectedMeal] = useState('breakfast');
+
+  const toggleMealVisibility = (meal) => {
+    setSelectedMeal(meal);
+  };
+
+  const renderMealTitle = (meal) => (
+    <TouchableOpacity onPress={() => toggleMealVisibility(meal)}>
+      <Text style={[mealTitle, selectedMeal === meal && { fontWeight: 'bold', color: '#FFA726' }]}>
+        {meal.charAt(0).toUpperCase() + meal.slice(1)}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={mealContainer}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 }}>
+        {renderMealTitle('breakfast')}
+        {renderMealTitle('lunch')}
+        {renderMealTitle('dinner')}
+      </View>
+      <FlatList
+        data={foods[selectedMeal]}
+        renderItem={({ item }) => (
+          <FoodItem
+            item={item}
+            meal={selectedMeal}
+            onSwipeableOpen={onSwipeableOpen}
+            onPress={() => onPress(item, selectedMeal)}
+            foodName={foodName}
+            foodCalories={foodCalories}
+            foodNutrient={foodNutrient}
+            foodImage={foodImage}
+            isFoodDeletable={isFoodDeletable} // Pass the prop to FoodItem
+          />
+        )}
+        keyExtractor={(item, index) => index.toString()}
+        style={mealScrollView}
+      />
+    </View>
+  );
+};
 
 export default MealContainer;

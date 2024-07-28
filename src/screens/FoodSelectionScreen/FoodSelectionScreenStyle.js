@@ -1,3 +1,4 @@
+// src/screens/FoodSelectionScreenStyle.js
 import { StyleSheet, Dimensions } from 'react-native';
 import { RFPercentage, RFValue } from 'react-native-responsive-fontsize';
 
@@ -11,15 +12,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: RFValue(10),
     paddingTop: RFValue(20),
   },
-  input: {
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ccc',
-    padding: RFValue(10),
     borderRadius: 5,
-    color: '#fff',
     backgroundColor: '#02111B',
     marginBottom: RFValue(10),
     marginTop: RFValue(30),
+  },
+  input: {
+    flex: 1,
+    padding: RFValue(10),
+    color: '#fff',
+  },
+  barcodeIcon: {
+    padding: RFValue(10),
   },
   foodItem: {
     flexDirection: 'row',
@@ -92,6 +101,27 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
     marginLeft: 15,
+  },
+  toggleButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: RFValue(10),
+  },
+  toggleButton: {
+    flex: 1,
+    padding: RFValue(10),
+    marginHorizontal: RFValue(5),
+    backgroundColor: '#004D4D',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  activeToggleButton: {
+    backgroundColor: '#008080',
+  },
+  toggleButtonText: {
+    color: '#fff',
+    fontSize: RFValue(14),
+    fontWeight: 'bold',
   },
 });
 
