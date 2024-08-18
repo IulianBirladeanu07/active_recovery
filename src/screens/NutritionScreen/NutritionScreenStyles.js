@@ -75,28 +75,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 40,
   },
-  mealSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginVertical: 20,
-  },
-  mealButton: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: '#005050',
-    marginHorizontal: 5,
-    marginTop: 20,
-  },
-  selectedMealButton: {
-    backgroundColor: '#008080',
-  },
-  mealButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -137,8 +115,8 @@ const styles = StyleSheet.create({
     height: 200, // Fixed height to make the content scrollable within
   },
   foodImage: {
-    width: 30,
-    height: 30,
+    width: 40,
+    height: 40,
     marginRight: 10,
   },
   foodName: {

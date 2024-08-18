@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { db, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc, where } from '../services/firebase';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { db, doc, setDoc, deleteDoc, query, collection, where, orderBy, getDocs } from '../services/firebase';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 
@@ -15,161 +15,186 @@ export const FoodProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = firebase.auth().onAuthStateChanged(user => {
-      setCurrentUser(user);
+      if (user) {
+        setCurrentUser(user);
+      }
     });
 
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const fetchMeals = async () => {
-      if (!currentUser) return;
-
-      try {
-        console.log('Fetching meals from Firestore...');
-        const mealsQuery = query(collection(db, 'meals'), where('uid', '==', currentUser.uid), orderBy('timestamp', 'desc'));
-        const snapshot = await getDocs(mealsQuery);
-        const meals = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          date: new Date(doc.data().timestamp)
-        }));
-        console.log('Fetched meals:', meals);
-
-        const breakfast = meals.filter(meal => meal.meal === 'breakfast');
-        const lunch = meals.filter(meal => meal.meal === 'lunch');
-        const dinner = meals.filter(meal => meal.meal === 'dinner');
-
-        console.log('Breakfast foods:', breakfast);
-        console.log('Lunch foods:', lunch);
-        console.log('Dinner foods:', dinner);
-
-        setBreakfastFoods(breakfast);
-        setLunchFoods(lunch);
-        setDinnerFoods(dinner);
-      } catch (error) {
-        console.error('Error fetching meals from Firestore:', error);
-      }
-    };
-
-    fetchMeals();
+  const fetchMeals = useCallback(async (date) => {
+    if (!currentUser) return;
+  
+    // Use current date if no date is provided
+    const validDate = date instanceof Date ? date : new Date();
+  
+    const formattedDate = validDate.toISOString().split('T')[0]; // Get the selected date in 'YYYY-MM-DD' format
+  
+    try {
+      const meals = {
+        breakfast: [],
+        lunch: [],
+        dinner: [],
+      };
+  
+      const mealsRef = collection(db, 'meals');
+      const q = query(
+        mealsRef,
+        where('uid', '==', currentUser.uid),
+        where('date', '==', formattedDate), // Filter by the selected date
+        orderBy('timestamp', 'desc')
+      );
+  
+      const querySnapshot = await getDocs(q);
+  
+      querySnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const rawTimestamp = data.timestamp;
+  
+        if (rawTimestamp && rawTimestamp.seconds !== undefined) {
+          const timestamp = new Date(rawTimestamp.seconds * 1000);
+          const mealWithTimestamp = { id: doc.id, ...data, timestamp };
+  
+          switch (data.mealType) {
+            case 'breakfast':
+              meals.breakfast.push(mealWithTimestamp);
+              break;
+            case 'lunch':
+              meals.lunch.push(mealWithTimestamp);
+              break;
+            case 'dinner':
+              meals.dinner.push(mealWithTimestamp);
+              break;
+            default:
+              console.error(`Unknown meal type: ${data.mealType}`);
+          }
+        } else {
+          console.error(`Food item ${data.name || doc.id} has an invalid or missing timestamp.`);
+        }
+      });
+  
+      setBreakfastFoods(meals.breakfast);
+      setLunchFoods(meals.lunch);
+      setDinnerFoods(meals.dinner);
+  
+    } catch (error) {
+      console.error('Error fetching meals:', error);
+    }
   }, [currentUser]);
+  
 
-  const handleAddFood = async (foodDetails, meal, date) => {
+  const handleAddMeal = async (mealType, foods) => {
     if (!currentUser) return;
-  
-    // Convert the date string back to a Date object
-    const foodDate = new Date(date);
-  
-    const newFood = {
-      uid: currentUser.uid,
-      name: foodDetails.name,
-      calories: foodDetails.calories,
-      quantity: foodDetails.quantity,
-      protein: foodDetails.protein,
-      carbs: foodDetails.carbs,
-      fat: foodDetails.fat,
-      unit: foodDetails.unit,
-      image: foodDetails.image,
-      meal,
-      timestamp: foodDate.toISOString(), // Store the date in ISO format for Firestore
-    };
-  
+
+    const mealDate = new Date().toISOString().split('T')[0];
+    const foodTimestamp = firebase.firestore.Timestamp.now();
+
     try {
-      console.log('Adding new food to Firestore:', newFood);
-      const docRef = await addDoc(collection(db, 'meals'), newFood);
-      newFood.id = docRef.id; // Assign the Firestore document ID to the new food
-      newFood.date = foodDate; // Add the date field for local state
-  
-      console.log('New food added with ID:', newFood.id);
-  
-      // Update the state based on the meal type
-      if (meal === 'breakfast') {
-        setBreakfastFoods((prevFoods) => [...prevFoods, newFood]);
-      } else if (meal === 'lunch') {
-        setLunchFoods((prevFoods) => [...prevFoods, newFood]);
-      } else if (meal === 'dinner') {
-        setDinnerFoods((prevFoods) => [...prevFoods, newFood]);
+      const mealPromises = foods.map(async (foodDetails) => {
+        const mealDocumentId = `${mealDate}_${foodDetails.name}_${Math.random().toString(36).substring(7)}`;
+
+        const mealData = {
+          date: mealDate,
+          uid: currentUser.uid,
+          mealType,  // Specify the meal type here
+          ...foodDetails,
+          timestamp: foodTimestamp,
+        };
+
+        await setDoc(doc(db, 'meals', mealDocumentId), mealData);
+
+        return { ...mealData, id: mealDocumentId };
+      });
+
+      const addedMeals = await Promise.all(mealPromises);
+
+      switch (mealType) {
+        case 'breakfast':
+          setBreakfastFoods(prevFoods => [...prevFoods, ...addedMeals]);
+          break;
+        case 'lunch':
+          setLunchFoods(prevFoods => [...prevFoods, ...addedMeals]);
+          break;
+        case 'dinner':
+          setDinnerFoods(prevFoods => [...prevFoods, ...addedMeals]);
+          break;
+        default:
+          console.error('Invalid meal type');
       }
+
     } catch (error) {
-      console.error('Error adding food to Firestore:', error);
+      console.error('Error adding meal:', error);
     }
   };
 
-  const handleUpdateFood = async (updatedFood) => {
-    if (!currentUser || updatedFood.uid !== currentUser.uid) return;
-
-    try {
-      const foodRef = doc(db, 'meals', updatedFood.id);
-      console.log('Updating food in Firestore:', updatedFood);
-      await updateDoc(foodRef, updatedFood);
-
-      setBreakfastFoods((prevFoods) =>
-        prevFoods.map((food) => (food.id === updatedFood.id ? updatedFood : food))
-      );
-      setLunchFoods((prevFoods) =>
-        prevFoods.map((food) => (food.id === updatedFood.id ? updatedFood : food))
-      );
-      setDinnerFoods((prevFoods) =>
-        prevFoods.map((food) => (food.id === updatedFood.id ? updatedFood : food))
-      );
-    } catch (error) {
-      console.error('Error updating food in Firestore:', error);
-    }
-  };
-
-  const handleDeleteFood = async (id, meal) => {
+  const handleDeleteMeal = async (mealType, mealDocumentId) => {
     if (!currentUser) return;
 
     try {
-      await deleteDoc(doc(db, 'meals', id));
-      if (meal === 'breakfast') {
-        setBreakfastFoods((prevFoods) => prevFoods.filter(food => food.id !== id));
-      } else if (meal === 'lunch') {
-        setLunchFoods((prevFoods) => prevFoods.filter(food => food.id !== id));
-      } else if (meal === 'dinner') {
-        setDinnerFoods((prevFoods) => prevFoods.filter(food => food.id !== id));
+      await deleteDoc(doc(db, 'meals', mealDocumentId));
+
+      switch (mealType) {
+        case 'breakfast':
+          setBreakfastFoods(prevFoods => prevFoods.filter(food => food.id !== mealDocumentId));
+          break;
+        case 'lunch':
+          setLunchFoods(prevFoods => prevFoods.filter(food => food.id !== mealDocumentId));
+          break;
+        case 'dinner':
+          setDinnerFoods(prevFoods => prevFoods.filter(food => food.id !== mealDocumentId));
+          break;
+        default:
+          console.error('Invalid meal type');
       }
+
     } catch (error) {
-      console.error('Error deleting food from Firestore:', error);
+      console.error('Error deleting meal:', error);
     }
   };
 
   const fetchWeeklyCalorieData = async () => {
     if (!currentUser) return;
 
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const pastWeek = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), startOfDay.getDate() - 6);
+    const todayUTC = new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
+    const pastWeekUTC = new Date(Date.UTC(todayUTC.getFullYear(), todayUTC.getMonth(), todayUTC.getDate() - 6));
 
-    const mealsQuery = query(collection(db, 'meals'), where('uid', '==', currentUser.uid), where('timestamp', '>=', pastWeek.toISOString()), orderBy('timestamp', 'asc'));
+    try {
+      const mealsRef = collection(db, 'meals');
+      const mealsQuery = query(
+        mealsRef,
+        where('uid', '==', currentUser.uid),
+        where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(pastWeekUTC)),
+        orderBy('timestamp', 'asc')
+      );
 
-    const snapshot = await getDocs(mealsQuery);
+      const snapshot = await getDocs(mealsQuery);
+      const dailyCalories = Array(7).fill(0);
 
-    const weekMeals = snapshot.docs.map(doc => {
-      const data = doc.data();
-      const date = new Date(data.timestamp);
-      return { ...data, date };
-    });
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const timestamp = new Date(data.timestamp.seconds * 1000);
+        const dayIndex = Math.floor((timestamp - pastWeekUTC) / (1000 * 60 * 60 * 24));
 
-    const dailyCalories = Array(7).fill(0);
-    weekMeals.forEach(meal => {
-      const dayIndex = Math.floor((meal.date - pastWeek) / (1000 * 60 * 60 * 24));
-      if (dayIndex >= 0 && dayIndex < 7) {
-        const mealCalories = parseFloat(meal.calories);
-        if (!isNaN(mealCalories)) {
-          dailyCalories[dayIndex] += mealCalories;
-        } else {
-          console.log('Invalid calorie value:', meal.calories);
+        if (dayIndex >= 0 && dayIndex < 7) {
+          const mealCalories = parseFloat(data.calories);
+          if (!isNaN(mealCalories)) {
+            dailyCalories[dayIndex] += mealCalories;
+          } else {
+            console.log('Invalid calorie value:', data.calories);
+          }
         }
-      }
-    });
-    console.log('Final dailyCalories:', dailyCalories);
-    return dailyCalories;
+      });
+
+      return dailyCalories;
+
+    } catch (error) {
+      console.error('Error fetching weekly calories:', error);
+    }
   };
 
   return (
-    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddFood, handleUpdateFood, handleDeleteFood, fetchWeeklyCalorieData }}>
+    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddMeal, handleDeleteMeal, fetchMeals, fetchWeeklyCalorieData }}>
       {children}
     </FoodContext.Provider>
   );

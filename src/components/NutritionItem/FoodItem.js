@@ -1,8 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Animated } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
+import { getFoodImage, categoryImageMap } from '../../services/foodImageService'; // Import the image utility function
 
 const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage, onSwipeableOpen, onPress, isFoodDeletable }) => {
+  // Get the image source using the utility function
+  const imageSource = getFoodImage(item.name, item.category, categoryImageMap);
+
   const renderRightActions = (progress, dragX) => {
     if (!isFoodDeletable) {
       return null;
@@ -28,21 +33,23 @@ const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage,
 
     return (
       <Animated.View style={[styles.deleteButtonContainer, { opacity, transform: [{ translateX }, { scale }] }]}>
+        <TouchableOpacity onPress={() => onSwipeableOpen(item, meal)} style={styles.deleteButton}>
+          <Ionicons name="trash-outline" size={24} color="#fff" />
+        </TouchableOpacity>
       </Animated.View>
     );
   };
 
   return (
-    
     <Swipeable renderRightActions={renderRightActions} onSwipeableOpen={() => onSwipeableOpen(item, meal)}>
-      <TouchableOpacity onPress={onPress}>
+      <TouchableOpacity onPress={() => onPress(item)}>
         <View style={styles.foodItem}>
-          <Image source={item.image} style={foodImage} />
+          <Image source={imageSource} style={foodImage} resizeMode="contain" />
           <View style={styles.foodDetails}>
             <Text style={foodName}>{item.name}</Text>
             <Text style={foodNutrient}>{item.quantity} {item.unit}</Text>
           </View>
-          <Text style={foodCalories}>{item.calories}</Text>
+          <Text style={foodCalories}>{item.calories} kcal</Text>
         </View>
       </TouchableOpacity>
     </Swipeable>
@@ -54,8 +61,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#34495e',
   },
   foodDetails: {
     flex: 1,

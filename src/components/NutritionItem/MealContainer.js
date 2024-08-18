@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import FoodItem from './FoodItem';
 
@@ -13,16 +13,18 @@ const MealContainer = ({
   mealContainer,
   mealTitle,
   mealScrollView,
-  isFoodDeletable, // New prop
+  isFoodDeletable,
+  selectedMeal,
+  setSelectedMeal,
 }) => {
-  const [selectedMeal, setSelectedMeal] = useState('breakfast');
-
-  const toggleMealVisibility = (meal) => {
-    setSelectedMeal(meal);
-  };
+  // Filter the foods based on the selectedMeal type
+  const filteredFoods = foods.filter(food => food.mealType === selectedMeal);
 
   const renderMealTitle = (meal) => (
-    <TouchableOpacity onPress={() => toggleMealVisibility(meal)}>
+    <TouchableOpacity 
+      onPress={() => setSelectedMeal(meal)} 
+      style={{ paddingHorizontal: 10, paddingVertical: 5 }}
+    >
       <Text style={[mealTitle, selectedMeal === meal && { fontWeight: 'bold', color: '#FFA726' }]}>
         {meal.charAt(0).toUpperCase() + meal.slice(1)}
       </Text>
@@ -31,29 +33,40 @@ const MealContainer = ({
 
   return (
     <View style={mealContainer}>
+      {/* Meal selection */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 }}>
         {renderMealTitle('breakfast')}
         {renderMealTitle('lunch')}
         {renderMealTitle('dinner')}
       </View>
-      <FlatList
-        data={foods[selectedMeal]}
-        renderItem={({ item }) => (
-          <FoodItem
-            item={item}
-            meal={selectedMeal}
-            onSwipeableOpen={onSwipeableOpen}
-            onPress={() => onPress(item, selectedMeal)}
-            foodName={foodName}
-            foodCalories={foodCalories}
-            foodNutrient={foodNutrient}
-            foodImage={foodImage}
-            isFoodDeletable={isFoodDeletable} // Pass the prop to FoodItem
-          />
-        )}
-        keyExtractor={(item, index) => index.toString()}
-        style={mealScrollView}
-      />
+
+      {/* Food items or No foods message */}
+      {filteredFoods.length > 0 ? (
+        <FlatList
+          data={filteredFoods}
+          renderItem={({ item, index }) => (
+            <FoodItem
+              key={`${item.id}_${index}`} // Unique key combining id and index
+              item={item}
+              meal={selectedMeal}
+              onSwipeableOpen={onSwipeableOpen}
+              onPress={() => onPress(item, selectedMeal)}
+              foodName={foodName}
+              foodCalories={foodCalories}
+              foodNutrient={foodNutrient}
+              foodImage={foodImage}
+              isFoodDeletable={isFoodDeletable}
+            />
+          )}
+          keyExtractor={(item, index) => `${item.id}_${index}`} // Ensure unique keys
+          style={mealScrollView}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <Text style={{ textAlign: 'center', color: '#ccc', paddingVertical: 20 }}>
+          No foods added for {selectedMeal}
+        </Text>
+      )}
     </View>
   );
 };

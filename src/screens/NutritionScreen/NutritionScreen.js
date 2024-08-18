@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -9,55 +9,34 @@ import CircularProgress from '../../components/CircularProgress/CircularProgress
 import ProgressBar from '../../components/ProgressBar/ProgressBar';
 import MealContainer from '../../components/NutritionItem/MealContainer';
 import useDailyNutrition from '../../helpers/useDailyNutrtion';
-import styles from './NutritionScreenStyles';
+import styles from './NutritionScreenStyles'; 
 import { WorkoutContext } from '../../context/WorkoutContext';
 
 const NutritionScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { userSettings } = useContext(WorkoutContext);
-  const { breakfastFoods, lunchFoods, dinnerFoods, handleAddFood, handleDeleteFood } = useFoodContext();
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const { breakfastFoods, lunchFoods, dinnerFoods, handleDeleteMeal, fetchMeals } = useFoodContext();
+  
+  const [selectedDate, setSelectedDate] = useState(new Date(route.params?.date || new Date()));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState('breakfast');
 
-  const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate);
-  const { targetCalories, targetProtein, targetFats, targetCarbs } = userSettings;
-
+  // Fetch meals when the screen loads
   useEffect(() => {
-    if (route.params?.food && route.params?.meal && route.params?.date) {
-      const foodDate = new Date(route.params.date);
-      handleAddFood(route.params.food, route.params.meal, foodDate);
-      navigation.setParams({ food: null, meal: null, date: null });
+    fetchMeals(selectedDate);  // Fetch meals for the selected date
+  }, [fetchMeals, selectedDate]);
+
+  // Trigger fetching meals if 'refresh' parameter is true
+  useEffect(() => {
+    if (route.params?.refresh) {
+      fetchMeals(selectedDate);
+      // Clear the refresh parameter after fetching
+      navigation.setParams({ refresh: false });
     }
-  }, [route.params?.food, route.params?.meal, route.params?.date, handleAddFood, navigation]);
+  }, [route.params?.refresh, fetchMeals, navigation, selectedDate]);
 
-  const handleSettingsPress = () => {
-    navigation.navigate('Settings');
-  };
-
-  const handleProfilePress = () => {
-    navigation.navigate('Profile');
-  };
-
-  const calculateTotalCalories = (foods) => {
-    return foods.reduce((total, food) => total + Number(food.calories), 0);
-  };
-
-  const handleSwipeableOpen = (item, meal) => {
-    handleDeleteFood(item.id, meal, selectedDate);
-  };
-
-  const selectedFoods = {
-    breakfast: breakfastFoods.filter(food => new Date(food.date).toDateString() === selectedDate.toDateString()),
-    lunch: lunchFoods.filter(food => new Date(food.date).toDateString() === selectedDate.toDateString()),
-    dinner: dinnerFoods.filter(food => new Date(food.date).toDateString() === selectedDate.toDateString()),
-  };
-
-  const totalCalories = calculateTotalCalories(selectedFoods[selectedMeal]);
-  const remainingCalories = targetCalories - totalCalories;
-  console.log(remainingCalories)
-
+  // Handle date changes and fetch meals for the new date
   const handleDateChange = (event, date) => {
     setShowDatePicker(Platform.OS === 'ios');
     if (date) {
@@ -65,11 +44,36 @@ const NutritionScreen = () => {
     }
   };
 
-  const handleFoodSelect = useCallback((item, meal) => {
+  // Calculate total calories for all meals on the selected date
+  const totalCalories = useMemo(() => {
+    const allMeals = [...breakfastFoods, ...lunchFoods, ...dinnerFoods];
+    return allMeals.reduce((total, meal) => total + Number(meal.calories), 0);
+  }, [breakfastFoods, lunchFoods, dinnerFoods]);
+
+  // Filter meals based on the selected date and selected meal type
+  const filteredMeals = useMemo(() => {
+    const allMeals = [...breakfastFoods, ...lunchFoods, ...dinnerFoods];
+    return allMeals.filter(meal => 
+      new Date(meal.timestamp).toDateString() === selectedDate.toDateString() &&
+      meal.mealType === selectedMeal
+    );
+  }, [breakfastFoods, lunchFoods, dinnerFoods, selectedDate, selectedMeal]);
+
+  console.log('breakfasts: ', breakfastFoods);
+  console.log('lunch: ', lunchFoods);
+  console.log('dinners: ', dinnerFoods);
+  
+  console.log('filteredMeals: ', filteredMeals);
+
+  // Calculate daily nutrition based on all meals for the selected date
+  const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate);
+  const { targetCalories, targetProtein, targetFats, targetCarbs } = userSettings;
+
+  const handleFoodSelect = (item) => {
     const foodDetails = {
       ...item,
       product_name: item.name,
-      image: item.image,
+      image: item.image,  // This should now correctly pass the image
       nutriments: {
         'energy-kcal_100g': item.calories,
         'carbohydrates_100g': item.carbs,
@@ -78,22 +82,25 @@ const NutritionScreen = () => {
       },
       date: selectedDate.toISOString()
     };
-
+  
     navigation.navigate('FoodDetail', { 
       food: foodDetails, 
-      meal, 
+      meal: selectedMeal, 
       date: selectedDate.toISOString(), 
       update: true, 
       foodId: item.id 
     });
-  }, [navigation, selectedDate]);
+  };
+  const handleSwipeableOpen = (item) => {
+    handleDeleteMeal(selectedMeal, item.id);
+  };
 
   return (
     <ApplicationCustomScreen
       headerLeft={<Ionicons name="person-circle-outline" size={28} color="#fdf5ec" />}
       headerRight={<Ionicons name="settings-outline" size={28} color="#fdf5ec" />}
-      onProfilePress={handleProfilePress}
-      onSettingsPress={handleSettingsPress}
+      onProfilePress={() => navigation.navigate('Profile')}
+      onSettingsPress={() => navigation.navigate('Settings')}
     >
       <View style={styles.container}>
         <View style={styles.contentContainer}>
@@ -135,7 +142,9 @@ const NutritionScreen = () => {
           </View>
 
           <MealContainer
-            foods={selectedFoods}
+            foods={filteredMeals}
+            selectedMeal={selectedMeal}
+            setSelectedMeal={setSelectedMeal}
             onSwipeableOpen={handleSwipeableOpen}
             onPress={handleFoodSelect}
             mealContainer={styles.mealContainer}
@@ -152,7 +161,7 @@ const NutritionScreen = () => {
             <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('FoodSelection', { meal: selectedMeal, date: selectedDate.toISOString() })}>
               <Text style={styles.addButtonText}>Add Food</Text>
             </TouchableOpacity>
-            {selectedFoods[selectedMeal].length > 0 && (
+            {filteredMeals.length > 0 && (
               <Text style={styles.totalCaloriesText}>{`Total: ${totalCalories} Calories`}</Text>
             )}
           </View>

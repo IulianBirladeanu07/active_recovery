@@ -88,28 +88,28 @@ const HomeScreen = () => {
     return route.name === screenName;
   };
 
-  const getMealFoods = () => {
-    const today = selectedDate.toISOString().split('T')[0]; // Format date to yyyy-mm-dd
+  // const getMealFoods = () => {
+  //   const today = selectedDate.toISOString().split('T')[0]; // Format date to yyyy-mm-dd
 
-    const filterFoodsByDate = (foods) => {
-      if (!foods) return [];
-      return foods.filter(food => {
-        const foodDate = new Date(food.date).toISOString().split('T')[0]; // Convert food date to yyyy-mm-dd
-        return foodDate === today;
-      });
-    };
+  //   const filterFoodsByDate = (foods) => {
+  //     if (!foods) return [];
+  //     return foods.filter(food => {
+  //       const foodDate = new Date(food.date).toISOString().split('T')[0]; // Convert food date to yyyy-mm-dd
+  //       return foodDate === today;
+  //     });
+  //   };
 
-    switch (selectedMeal) {
-      case 'breakfast':
-        return filterFoodsByDate(breakfastFoods);
-      case 'lunch':
-        return filterFoodsByDate(lunchFoods);
-      case 'dinner':
-        return filterFoodsByDate(dinnerFoods);
-      default:
-        return [];
-    }
-  };
+  //   switch (selectedMeal) {
+  //     case 'breakfast':
+  //       return filterFoodsByDate(breakfastFoods);
+  //     case 'lunch':
+  //       return filterFoodsByDate(lunchFoods);
+  //     case 'dinner':
+  //       return filterFoodsByDate(dinnerFoods);
+  //     default:
+  //       return [];
+  //   }
+  // };
 
   const handleFoodSelect = useCallback((item, meal) => {
     const foodDetails = {
@@ -203,7 +203,7 @@ const HomeScreen = () => {
                   onSelect={handleMealSelect}
                   isVisible={dropdownVisible}
                 />
-                <MealContainer
+                {/* <MealContainer
                   meal={selectedMeal}
                   foods={getMealFoods()}
                   mealContainer={styles.mealContainer}
@@ -215,7 +215,7 @@ const HomeScreen = () => {
                   foodNutrient={styles.foodNutrient}
                   isFoodDeletable={false}
                   onPress={handleFoodSelect}
-                />
+                /> */}
               </View>
             </View>
 

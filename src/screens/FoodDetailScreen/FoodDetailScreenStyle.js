@@ -85,7 +85,7 @@ export default StyleSheet.create({
     color: '#000000',
   },
   addButton: {
-    backgroundColor: '#008080',
+    backgroundColor: '#FF5C00',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -96,4 +96,16 @@ export default StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  doneButton: {
+    backgroundColor: '#FFA726', // Or any color that suits your design
+    padding: 15,
+    borderRadius: 10,
+    margin: 10,
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },  
 });
