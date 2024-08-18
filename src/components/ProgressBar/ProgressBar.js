@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 const ProgressBar = ({ value, maxValue, customText }) => {
-  const percentage = (value / maxValue) * 100;
-  const fillWidth = `${percentage}%`;
+  const remainingValue = maxValue - value; // Calculate the remaining value
+  const remainingPercentage = (remainingValue / maxValue) * 100; // Calculate the percentage for the remaining value
+  const fillWidth = `${remainingPercentage}%`;
   const barColor = getColor(customText.toLowerCase());
 
   return (
@@ -12,7 +13,7 @@ const ProgressBar = ({ value, maxValue, customText }) => {
       <View style={styles.progressBarContainer}>
         <View style={[styles.progressBarFill, { width: fillWidth, backgroundColor: barColor }]} />
       </View>
-      <Text style={styles.label}>{`${value.toFixed(0)}g left`}</Text>
+      <Text style={styles.label}>{`${remainingValue.toFixed(0)}g left`}</Text>
     </View>
   );
 };

@@ -12,24 +12,81 @@ export const FoodProvider = ({ children }) => {
   const [breakfastFoods, setBreakfastFoods] = useState([]);
   const [lunchFoods, setLunchFoods] = useState([]);
   const [dinnerFoods, setDinnerFoods] = useState([]);
+  const [loading, setLoading] = useState(true);  // New state to track loading
 
   useEffect(() => {
     const unsubscribe = firebase.auth().onAuthStateChanged(user => {
       if (user) {
         setCurrentUser(user);
+        preloadMeals(user);  // Preload meals when the user is authenticated
       }
     });
 
     return () => unsubscribe();
   }, []);
 
+  const preloadMeals = useCallback(async (user) => {
+    if (!user) return;
+
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+
+    try {
+      const meals = {
+        breakfast: [],
+        lunch: [],
+        dinner: [],
+      };
+
+      const mealsRef = collection(db, 'meals');
+      const q = query(
+        mealsRef,
+        where('uid', '==', user.uid),
+        where('date', '==', formattedDate),
+        orderBy('timestamp', 'desc')
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      querySnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const timestamp = data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000) : null;
+
+        if (timestamp) {
+          const mealWithTimestamp = { id: doc.id, ...data, timestamp };
+
+          switch (data.mealType) {
+            case 'breakfast':
+              meals.breakfast.push(mealWithTimestamp);
+              break;
+            case 'lunch':
+              meals.lunch.push(mealWithTimestamp);
+              break;
+            case 'dinner':
+              meals.dinner.push(mealWithTimestamp);
+              break;
+            default:
+              console.error(`Unknown meal type: ${data.mealType}`);
+          }
+        }
+      });
+
+      setBreakfastFoods(meals.breakfast);
+      setLunchFoods(meals.lunch);
+      setDinnerFoods(meals.dinner);
+      setLoading(false);  // Set loading to false when data is preloaded
+
+    } catch (error) {
+      console.error('Error preloading meals:', error);
+      setLoading(false);
+    }
+  }, []);
+
   const fetchMeals = useCallback(async (date) => {
     if (!currentUser) return;
   
-    // Use current date if no date is provided
     const validDate = date instanceof Date ? date : new Date();
-  
-    const formattedDate = validDate.toISOString().split('T')[0]; // Get the selected date in 'YYYY-MM-DD' format
+    const formattedDate = validDate.toISOString().split('T')[0];
   
     try {
       const meals = {
@@ -42,7 +99,7 @@ export const FoodProvider = ({ children }) => {
       const q = query(
         mealsRef,
         where('uid', '==', currentUser.uid),
-        where('date', '==', formattedDate), // Filter by the selected date
+        where('date', '==', formattedDate),
         orderBy('timestamp', 'desc')
       );
   
@@ -50,10 +107,9 @@ export const FoodProvider = ({ children }) => {
   
       querySnapshot.docs.forEach(doc => {
         const data = doc.data();
-        const rawTimestamp = data.timestamp;
+        const timestamp = data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000) : null;
   
-        if (rawTimestamp && rawTimestamp.seconds !== undefined) {
-          const timestamp = new Date(rawTimestamp.seconds * 1000);
+        if (timestamp) {
           const mealWithTimestamp = { id: doc.id, ...data, timestamp };
   
           switch (data.mealType) {
@@ -69,8 +125,6 @@ export const FoodProvider = ({ children }) => {
             default:
               console.error(`Unknown meal type: ${data.mealType}`);
           }
-        } else {
-          console.error(`Food item ${data.name || doc.id} has an invalid or missing timestamp.`);
         }
       });
   
@@ -83,8 +137,7 @@ export const FoodProvider = ({ children }) => {
     }
   }, [currentUser]);
   
-
-  const handleAddMeal = async (mealType, foods) => {
+  const handleAddMeal = useCallback(async (mealType, foods) => {
     if (!currentUser) return;
 
     const mealDate = new Date().toISOString().split('T')[0];
@@ -97,7 +150,7 @@ export const FoodProvider = ({ children }) => {
         const mealData = {
           date: mealDate,
           uid: currentUser.uid,
-          mealType,  // Specify the meal type here
+          mealType,
           ...foodDetails,
           timestamp: foodTimestamp,
         };
@@ -126,9 +179,9 @@ export const FoodProvider = ({ children }) => {
     } catch (error) {
       console.error('Error adding meal:', error);
     }
-  };
+  }, [currentUser]);
 
-  const handleDeleteMeal = async (mealType, mealDocumentId) => {
+  const handleDeleteMeal = useCallback(async (mealType, mealDocumentId) => {
     if (!currentUser) return;
 
     try {
@@ -151,9 +204,9 @@ export const FoodProvider = ({ children }) => {
     } catch (error) {
       console.error('Error deleting meal:', error);
     }
-  };
+  }, [currentUser]);
 
-  const fetchWeeklyCalorieData = async () => {
+  const fetchWeeklyCalorieData = useCallback(async () => {
     if (!currentUser) return;
 
     const todayUTC = new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
@@ -191,10 +244,10 @@ export const FoodProvider = ({ children }) => {
     } catch (error) {
       console.error('Error fetching weekly calories:', error);
     }
-  };
+  }, [currentUser]);
 
   return (
-    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddMeal, handleDeleteMeal, fetchMeals, fetchWeeklyCalorieData }}>
+    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddMeal, handleDeleteMeal, fetchMeals, fetchWeeklyCalorieData, loading }}>
       {children}
     </FoodContext.Provider>
   );

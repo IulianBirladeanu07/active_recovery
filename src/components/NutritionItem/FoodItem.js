@@ -2,11 +2,16 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Animated } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { getFoodImage, categoryImageMap } from '../../services/foodImageService'; // Import the image utility function
+import { getFoodImage, categoryImageMap } from '../../services/foodImageService';
 
 const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage, onSwipeableOpen, onPress, isFoodDeletable }) => {
   // Get the image source using the utility function
   const imageSource = getFoodImage(item.name, item.category, categoryImageMap);
+
+  // Helper function to truncate text
+  const truncateText = (text, maxLength) => {
+    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+  };
 
   const renderRightActions = (progress, dragX) => {
     if (!isFoodDeletable) {
@@ -46,7 +51,13 @@ const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage,
         <View style={styles.foodItem}>
           <Image source={imageSource} style={foodImage} resizeMode="contain" />
           <View style={styles.foodDetails}>
-            <Text style={foodName}>{item.name}</Text>
+            <Text 
+              style={foodName} 
+              numberOfLines={1} 
+              ellipsizeMode="tail"
+            >
+              {truncateText(item.name, 15)} {/* Change 15 to the desired maximum length */}
+            </Text>
             <Text style={foodNutrient}>{item.quantity} {item.unit}</Text>
           </View>
           <Text style={foodCalories}>{item.calories} kcal</Text>

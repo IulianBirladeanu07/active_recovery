@@ -41,32 +41,34 @@ const MealContainer = ({
       </View>
 
       {/* Food items or No foods message */}
-      {filteredFoods.length > 0 ? (
-        <FlatList
-          data={filteredFoods}
-          renderItem={({ item, index }) => (
-            <FoodItem
-              key={`${item.id}_${index}`} // Unique key combining id and index
-              item={item}
-              meal={selectedMeal}
-              onSwipeableOpen={onSwipeableOpen}
-              onPress={() => onPress(item, selectedMeal)}
-              foodName={foodName}
-              foodCalories={foodCalories}
-              foodNutrient={foodNutrient}
-              foodImage={foodImage}
-              isFoodDeletable={isFoodDeletable}
-            />
-          )}
-          keyExtractor={(item, index) => `${item.id}_${index}`} // Ensure unique keys
-          style={mealScrollView}
-          showsVerticalScrollIndicator={false}
-        />
-      ) : (
-        <Text style={{ textAlign: 'center', color: '#ccc', paddingVertical: 20 }}>
-          No foods added for {selectedMeal}
-        </Text>
-      )}
+      <View style={{ flex: 1 }}>
+        {filteredFoods.length > 0 ? (
+          <FlatList
+            data={filteredFoods}
+            renderItem={({ item, index }) => (
+              <FoodItem
+                key={`${item.id}_${index}`} // Unique key combining id and index
+                item={item}
+                meal={selectedMeal}
+                onSwipeableOpen={onSwipeableOpen}
+                onPress={() => onPress(item, selectedMeal)}
+                foodName={foodName}
+                foodCalories={foodCalories}
+                foodNutrient={foodNutrient}
+                foodImage={foodImage}
+                isFoodDeletable={isFoodDeletable}
+              />
+            )}
+            keyExtractor={(item, index) => `${item.id}_${index}`} // Ensure unique keys
+            style={mealScrollView}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <Text style={{ textAlign: 'center', color: '#ccc', paddingVertical: 20 }}>
+            No foods added for {selectedMeal}
+          </Text>
+        )}
+      </View>
     </View>
   );
 };

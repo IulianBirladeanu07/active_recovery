@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
+import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -11,6 +11,7 @@ import MealContainer from '../../components/NutritionItem/MealContainer';
 import useDailyNutrition from '../../helpers/useDailyNutrtion';
 import styles from './NutritionScreenStyles'; 
 import { WorkoutContext } from '../../context/WorkoutContext';
+import debounce from 'lodash/debounce';
 
 const NutritionScreen = () => {
   const navigation = useNavigation();
@@ -22,19 +23,22 @@ const NutritionScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState('breakfast');
 
+  // Debounce fetchMeals to avoid excessive calls
+  const debounceFetchMeals = useCallback(debounce(fetchMeals, 300), [fetchMeals]);
+
   // Fetch meals when the screen loads
   useEffect(() => {
-    fetchMeals(selectedDate);  // Fetch meals for the selected date
-  }, [fetchMeals, selectedDate]);
+    debounceFetchMeals(selectedDate);  // Fetch meals for the selected date
+  }, [debounceFetchMeals, selectedDate]);
 
   // Trigger fetching meals if 'refresh' parameter is true
   useEffect(() => {
     if (route.params?.refresh) {
-      fetchMeals(selectedDate);
+      debounceFetchMeals(selectedDate);
       // Clear the refresh parameter after fetching
       navigation.setParams({ refresh: false });
     }
-  }, [route.params?.refresh, fetchMeals, navigation, selectedDate]);
+  }, [route.params?.refresh, debounceFetchMeals, navigation, selectedDate]);
 
   // Handle date changes and fetch meals for the new date
   const handleDateChange = (event, date) => {
@@ -46,29 +50,27 @@ const NutritionScreen = () => {
 
   // Calculate total calories for all meals on the selected date
   const totalCalories = useMemo(() => {
-    const allMeals = [...breakfastFoods, ...lunchFoods, ...dinnerFoods];
-    return allMeals.reduce((total, meal) => total + Number(meal.calories), 0);
+    return [...breakfastFoods, ...lunchFoods, ...dinnerFoods].reduce((total, meal) => total + Number(meal.calories), 0);
   }, [breakfastFoods, lunchFoods, dinnerFoods]);
 
+  // Calculate kcal left
+  const kcalLeft = Math.max(0, targetCalories - totalCalories);
   // Filter meals based on the selected date and selected meal type
   const filteredMeals = useMemo(() => {
-    const allMeals = [...breakfastFoods, ...lunchFoods, ...dinnerFoods];
-    return allMeals.filter(meal => 
+    return [...breakfastFoods, ...lunchFoods, ...dinnerFoods].filter(meal => 
       new Date(meal.timestamp).toDateString() === selectedDate.toDateString() &&
       meal.mealType === selectedMeal
     );
   }, [breakfastFoods, lunchFoods, dinnerFoods, selectedDate, selectedMeal]);
 
-  console.log('breakfasts: ', breakfastFoods);
-  console.log('lunch: ', lunchFoods);
-  console.log('dinners: ', dinnerFoods);
-  
-  console.log('filteredMeals: ', filteredMeals);
-
-  // Calculate daily nutrition based on all meals for the selected date
   const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate);
   const { targetCalories, targetProtein, targetFats, targetCarbs } = userSettings;
 
+  const remainingCalories = targetCalories - dailyNutrition.calories;
+  const remainingCarbs = targetCarbs - dailyNutrition.carbs;
+  const remainingProtein = targetProtein - dailyNutrition.protein
+  const remainingFats = targetFats - dailyNutrition.fat
+ 
   const handleFoodSelect = (item) => {
     const foodDetails = {
       ...item,
@@ -91,9 +93,10 @@ const NutritionScreen = () => {
       foodId: item.id 
     });
   };
-  const handleSwipeableOpen = (item) => {
+
+  const handleSwipeableOpen = useCallback((item) => {
     handleDeleteMeal(selectedMeal, item.id);
-  };
+  }, [selectedMeal, handleDeleteMeal]);
 
   return (
     <ApplicationCustomScreen
@@ -121,7 +124,7 @@ const NutritionScreen = () => {
 
           <View style={styles.statsContainer}>
             <View style={styles.circularProgressContainer}>
-              <CircularProgress title="Calories" value={dailyNutrition.calories.toFixed(0)} maxValue={targetCalories} size={100} strokeWidth={10} color="#FFA726" duration={1500} />
+              <CircularProgress title="Kcal Left" value={remainingCalories} maxValue={targetCalories} size={100} strokeWidth={10} color="#FFA726" duration={1500} />
               <View style={styles.progressRow}>
                 <View style={styles.innerProgressItem}>
                   <Ionicons name="restaurant-outline" size={18} color="#FFA726" />
@@ -135,9 +138,9 @@ const NutritionScreen = () => {
             </View>
 
             <View style={styles.barContainer}>
-              <ProgressBar value={dailyNutrition.carbs} maxValue={targetCarbs} customText="Carb" />
-              <ProgressBar value={dailyNutrition.protein} maxValue={targetProtein} customText="Protein" />
-              <ProgressBar value={dailyNutrition.fat} maxValue={targetFats} customText="Fat" />
+              <ProgressBar value={remainingCarbs} maxValue={targetCarbs} customText="Carb" />
+              <ProgressBar value={remainingProtein} maxValue={targetProtein} customText="Protein" />
+              <ProgressBar value={remainingFats} maxValue={targetFats} customText="Fat" />
             </View>
           </View>
 

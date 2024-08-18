@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   barContainer: {
     flexDirection: 'row',
-    justifyContent: 'center', // Center the content
+    justifyContent: 'center',
     width: '100%',
     marginTop: 40,
   },
@@ -105,6 +105,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginVertical: 10,
+    minHeight: 250,  // Set a minimum height to lock the size
   },
   mealTitle: {
     fontSize: 18,
@@ -112,11 +113,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   mealScrollView: {
-    height: 200, // Fixed height to make the content scrollable within
+    flex: 1,  // Ensure it takes the remaining space in the container
   },
   foodImage: {
-    width: 40,
-    height: 40,
+    width: 35,
+    height: 35,
     marginRight: 10,
   },
   foodName: {
@@ -132,6 +133,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'right',
+    top: 10,
   },
 });
 
