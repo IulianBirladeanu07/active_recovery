@@ -1,6 +1,6 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-import { db, collection, getDocs, getDoc, addDoc, query, where, orderBy, limit, doc, deleteDoc } from '../services/firebase';
+import { db, collection, getDocs, addDoc, query, where, orderBy, limit, doc, deleteDoc } from '../services/firebase';
 
 // Utility function to recursively remove undefined values from an object
 const removeUndefined = (obj) => {
@@ -17,11 +17,83 @@ const removeUndefined = (obj) => {
   }
 };
 
-/**
- * Adds or updates a document in the specified collection.
- * @param {string} collectionName - The name of the collection.
- * @param {object} data - The data to store in the document.
- */
+// Fetch Recently Added Foods
+export const fetchRecentFoods = async (queryText) => {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+    const uid = user.uid;
+
+    const foodQuery = query(
+      collection(db, 'recentFoods'),
+      where('uid', '==', uid),
+      orderBy('timestamp', 'desc'),
+      limit(10)
+    );
+
+    const querySnapshot = await getDocs(foodQuery);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error fetching recent foods:", error.message);
+    throw error;
+  }
+};
+
+// Fetch Usually Used Foods
+// Fetch Usually Used Foods
+export const fetchUsuallyUsedFoods = async (queryText) => {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+    const uid = user.uid;
+
+    const foodQuery = query(
+      collection(db, 'usuallyUsedFoods'),
+      where('uid', '==', uid),
+      orderBy('usageCount', 'desc'),
+      limit(10)
+    );
+
+    const querySnapshot = await getDocs(foodQuery);
+    const foods = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    console.log('Fetched Usually Used Foods:', foods); // Log the fetched foods
+    return foods; // This might be an empty array
+  } catch (error) {
+    console.error("Error fetching usually used foods:", error.message);
+    throw error;
+  }
+};
+
+// Fetch Liked Foods
+export const fetchLikedFoods = async (queryText) => {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+    const uid = user.uid;
+
+    const foodQuery = query(
+      collection(db, 'likedFoods'),
+      where('uid', '==', uid),
+      orderBy('timestamp', 'desc'),
+      limit(10)
+    );
+
+    const querySnapshot = await getDocs(foodQuery);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error fetching liked foods:", error.message);
+    throw error;
+  }
+};
+
+// Add or Update a Document
 export const addDocument = async (collectionName, data) => {
   try {
     const user = firebase.auth().currentUser;
@@ -29,16 +101,9 @@ export const addDocument = async (collectionName, data) => {
       throw new Error('User not authenticated.');
     }
     const uid = user.uid;
-
-    // Clean the data to remove undefined values
     const cleanedData = removeUndefined({ ...data, uid });
-
-    // Reference to the collection
     const collectionRef = collection(db, collectionName);
-    
-    // Add a new document with an auto-generated ID
     const docRef = await addDoc(collectionRef, cleanedData);
-
     return { id: docRef.id, ...cleanedData };
   } catch (error) {
     console.error(`Error adding document to ${collectionName}:`, error.message);
@@ -46,11 +111,7 @@ export const addDocument = async (collectionName, data) => {
   }
 };
 
-/**
- * Deletes a document from the specified collection.
- * @param {string} collectionName - The name of the collection.
- * @param {string} docId - The ID of the document to delete.
- */
+// Delete a Document
 export const deleteDocument = async (collectionName, docId) => {
   try {
     const user = firebase.auth().currentUser;
@@ -58,24 +119,14 @@ export const deleteDocument = async (collectionName, docId) => {
       throw new Error('User not authenticated.');
     }
     const uid = user.uid;
-
-    // Log the docId being passed
-    console.log(`Attempting to delete document with ID: ${docId} from collection: ${collectionName}`);
-
-    // Reference to the specific document
     const docRef = doc(collection(db, collectionName), docId);
     const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
-      console.log(`Document found: ${docId}, UID in document: ${docSnap.data().uid}`);
-      if (docSnap.data().uid === uid) {
-        await deleteDoc(docRef);
-        console.log(`Document with ID: ${docId} deleted successfully.`);
-      } else {
-        throw new Error('User not authorized to delete this document.');
-      }
+    if (docSnap.exists() && docSnap.data().uid === uid) {
+      await deleteDoc(docRef);
+      console.log(`Document with ID: ${docId} deleted successfully.`);
     } else {
-      throw new Error('Document not found.');
+      throw new Error('Document not found or user not authorized.');
     }
   } catch (error) {
     console.error(`Error deleting document from ${collectionName}:`, error.message);
@@ -83,54 +134,13 @@ export const deleteDocument = async (collectionName, docId) => {
   }
 };
 
-/**
- * Fetches documents from a specified collection with optional filters, ordering, and limits.
- * @param {string} collectionName - The name of the collection.
- * @param {array} filters - Optional filters for querying the documents.
- * @param {array} order - Optional ordering for the documents.
- * @returns {array} - Array of documents fetched.
- */
-export const fetchDocuments = async (collectionName, filters = [], order = null) => {
-  try {
-    const user = firebase.auth().currentUser;
-    if (!user) {
-      throw new Error('User not authenticated.');
-    }
-    const uid = user.uid;
-
-    // Reference to the collection
-    let q = collection(db, collectionName);
-
-    // Add uid filter to only get documents belonging to the authenticated user
-    const queryConstraints = [where('uid', '==', uid), ...filters.map(filter => where(...filter))];
-
-    // Apply ordering if specified
-    if (order) {
-      queryConstraints.push(orderBy(...order));
-    }
-
-    // Apply all constraints in one query call
-    q = query(q, ...queryConstraints);
-
-    // Execute the query and get the documents
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error(`Error fetching documents from ${collectionName}:`, error.message);
-    throw error;
-  }
-};
-
-/**
- * Fetches products from the 'products' collection with optional filters, ordering, and limits.
- * @param {array} filters - Optional filters for querying the products.
- * @param {array} order - Optional ordering for the products.
- * @param {number} limitCount - Optional limit for the number of products to fetch.
- * @returns {array} - Array of products fetched.
- */
 export const fetchProducts = async (filters = [], order = null, limitCount = null) => {
   try {
-    const queryConstraints = filters.map(filter => where(...filter));
+    const queryConstraints = [];
+    console.log('log')
+    filters.forEach(filter => {
+      queryConstraints.push(where(...filter));
+    });
 
     if (order) {
       queryConstraints.push(orderBy(...order));
@@ -147,5 +157,36 @@ export const fetchProducts = async (filters = [], order = null, limitCount = nul
   } catch (error) {
     console.error(`Error fetching products:`, error.message);
     throw error;
+  }
+};
+
+export const fetchFoodsSortedBy = async (sortBy, sortDirection = 'desc', query = '') => {
+  try {
+    // Reference to your foods collection
+    let foodsRef = firestore.collection('foods');
+    
+    // If there's a search query, filter the results by name or category
+    if (query) {
+      foodsRef = foodsRef
+        .where('Nume_Produs_lower', '>=', query.toLowerCase())
+        .where('Nume_Produs_lower', '<=', query.toLowerCase() + '\uf8ff');
+    }
+
+    // Apply sorting by the given field and direction
+    const foodDocs = await foodsRef
+      .orderBy(sortBy, sortDirection)
+      .limit(100) // Limit the number of results to avoid fetching too many
+      .get();
+
+    // Map through the documents and return the data
+    const fetchedFoods = foodDocs.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    return fetchedFoods;
+  } catch (error) {
+    console.error('Error fetching foods:', error);
+    throw new Error('Unable to fetch foods');
   }
 };

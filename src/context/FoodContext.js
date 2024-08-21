@@ -139,14 +139,15 @@ export const FoodProvider = ({ children }) => {
   
   const handleAddMeal = useCallback(async (mealType, foods) => {
     if (!currentUser) return;
-
+  
     const mealDate = new Date().toISOString().split('T')[0];
     const foodTimestamp = firebase.firestore.Timestamp.now();
-
+  
     try {
       const mealPromises = foods.map(async (foodDetails) => {
         const mealDocumentId = `${mealDate}_${foodDetails.name}_${Math.random().toString(36).substring(7)}`;
-
+  
+        // Prepare meal data for the meals collection
         const mealData = {
           date: mealDate,
           uid: currentUser.uid,
@@ -154,14 +155,24 @@ export const FoodProvider = ({ children }) => {
           ...foodDetails,
           timestamp: foodTimestamp,
         };
-
+  
+        // Add the meal data to the meals collection
         await setDoc(doc(db, 'meals', mealDocumentId), mealData);
-
+  
+        // Update the food's tracking information (lastAdded, numberOfTimesAdded, liked)
+        const foodRef = doc(db, 'foods', foodDetails.id);
+        await updateDoc(foodRef, {
+          lastAdded: foodTimestamp,
+          numberOfTimesAdded: firebase.firestore.FieldValue.increment(1),
+          ...(foodDetails.liked !== undefined && { liked: foodDetails.liked }),
+        });
+  
         return { ...mealData, id: mealDocumentId };
       });
-
+  
       const addedMeals = await Promise.all(mealPromises);
-
+  
+      // Update the state based on the meal type
       switch (mealType) {
         case 'breakfast':
           setBreakfastFoods(prevFoods => [...prevFoods, ...addedMeals]);
@@ -175,11 +186,12 @@ export const FoodProvider = ({ children }) => {
         default:
           console.error('Invalid meal type');
       }
-
+  
     } catch (error) {
       console.error('Error adding meal:', error);
     }
   }, [currentUser]);
+  
 
   const handleDeleteMeal = useCallback(async (mealType, mealDocumentId) => {
     if (!currentUser) return;

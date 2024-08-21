@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Image, Animated, Alert } from 'react-native';
 import { debounce } from 'lodash';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import styles from './FoodSelectionScreenStyle';
-import { fetchProducts, addDocument } from '../../handlers/NutritionHandler';
+import { fetchProducts, fetchRecentFoods, fetchUsuallyUsedFoods, fetchLikedFoods } from '../../handlers/NutritionHandler';
 import Fuse from 'fuse.js';
 import { getFoodImage } from '../../services/foodImageService';
-import { LinearGradient } from 'expo-linear-gradient';  // For adding gradients
-import { useFoodContext } from '../../context/FoodContext'; // Import the context
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFoodContext } from '../../context/FoodContext';
 import { categoryImageMap } from '../../services/foodImageService';
 
 const FoodItem = React.memo(({ item, onPress, isFirstItem, style }) => {
@@ -58,6 +58,7 @@ const FoodSelectionScreen = () => {
   const [loading, setLoading] = useState(false);
   const [selectedFoods, setSelectedFoods] = useState([]);
   const [message, setMessage] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('frequent');
 
   const fuse = useMemo(() => new Fuse(foods, {
     includeScore: true,
@@ -73,9 +74,11 @@ const FoodSelectionScreen = () => {
     }
   }, [route.params?.selectedFood]);
 
-  const fetchFoods = useCallback(async (query) => {
+  const fetchFoodsBySearch = useCallback(async (query) => {
+    console.log('Fetching Foods by Search with Query:', query);
     setLoading(true);
     setMessage('');
+
     try {
       const fetchedFoods = await fetchProducts(
         [
@@ -85,8 +88,13 @@ const FoodSelectionScreen = () => {
         ['Nume_Produs_lower', 'asc'],
         100
       );
+
+      console.log('Fetched Foods by Search:', fetchedFoods);
+
       if (fetchedFoods.length > 0) {
         setFoods(fetchedFoods);
+      } else {
+        setMessage('No foods found.');
       }
     } catch (err) {
       console.error("Failed to fetch foods:", err);
@@ -96,47 +104,94 @@ const FoodSelectionScreen = () => {
     }
   }, []);
 
-  const debouncedFetchFoods = useMemo(() => debounce(fetchFoods, 200), [fetchFoods]);
+  const fetchFoodsByCategory = useCallback(async () => {
+    console.log('Fetching Foods by Category:', selectedCategory);
+    setLoading(true);
+    setMessage('');
+
+    try {
+      let fetchedFoods;
+      switch (selectedCategory) {
+        case 'frequent':
+          fetchedFoods = await fetchRecentFoods();
+          break;
+        case 'recent':
+          fetchedFoods = await fetchUsuallyUsedFoods();
+          break;
+        case 'liked':
+          fetchedFoods = await fetchLikedFoods();
+          break;
+        default:
+          fetchedFoods = [];
+          break;
+      }
+
+      console.log('Fetched Foods by Category:', fetchedFoods);
+
+      if (fetchedFoods.length > 0) {
+        setFoods(fetchedFoods);
+      } else {
+        setMessage('No foods found.');
+      }
+    } catch (err) {
+      console.error("Failed to fetch foods:", err);
+      setMessage('Failed to fetch foods. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedCategory]);
+
+  const debouncedFetchFoodsBySearch = useMemo(() => debounce((query) => {
+    console.log('Debounced Fetch Foods by Search Called with Query:', query);
+    fetchFoodsBySearch(query);
+  }, 200), [fetchFoodsBySearch]);
 
   useEffect(() => {
     if (searchQuery) {
-      debouncedFetchFoods(searchQuery);
+      debouncedFetchFoodsBySearch(searchQuery);
+    } else {
+      // When search query is cleared, fetch foods by category
+      fetchFoodsByCategory();
     }
-  }, [searchQuery, debouncedFetchFoods]);
+  }, [searchQuery, debouncedFetchFoodsBySearch, fetchFoodsByCategory]);
 
   const handleSearch = useCallback((query) => {
+    console.log('Search Query Updated:', query);
     setSearchQuery(query);
-    setMessage('');
   }, []);
 
-  const handleNavigateToFoodDetail = (food, imageSource) => {
-    navigation.navigate('FoodDetail', { food, meal, imageSource }); // Pass imageSource explicitly
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    fetchFoodsByCategory();
   };
-  
+
+  const handleNavigateToFoodDetail = (food, imageSource) => {
+    navigation.navigate('FoodDetail', { food, meal, imageSource });
+  };
+
   const handleDone = async () => {
     if (selectedFoods.length === 0) {
       Alert.alert("No Foods Selected", "Please select at least one food item before proceeding.");
       return;
     }
-  
+
     try {
-      // Attach the correct image source to each selected food item
       const foodsWithImages = selectedFoods.map(food => ({
         ...food,
         image: getFoodImage(food.Nume_Produs, food.Categorie, categoryImageMap),
       }));
-  
-      await handleAddMeal(meal, foodsWithImages); // Pass the selected foods with images
+
+      await handleAddMeal(meal, foodsWithImages);
       navigation.navigate('Nutrition', { refresh: true });
     } catch (error) {
       console.error("Error details:", error);
       Alert.alert("Error", "Failed to save the meal data. Please try again.");
     }
   };
-  
-  const renderFoodItem = ({ item, index }) => {
-    const scaleValue = new Animated.Value(1);
 
+  const scaleValue = useRef(new Animated.Value(1)).current;
+
+  const renderFoodItem = ({ item, index }) => {
     if (index === 0) {
       Animated.spring(scaleValue, {
         toValue: 1.05,
@@ -160,20 +215,55 @@ const FoodSelectionScreen = () => {
     return results.length > 0 ? results : foods;
   }, [searchQuery, foods, fuse]);
 
+  const shouldShowNoFoodsMessage = !loading && (filteredFoodData.length === 0 && message === '');
+
   return (
     <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Search for foods"
-          placeholderTextColor="#aaa"
-          value={searchQuery}
-          onChangeText={handleSearch}
-          accessibilityLabel="Food search input"
-        />
-        <TouchableOpacity onPress={() => {}}>
-          <MaterialCommunityIcons name="barcode-scan" size={24} style={styles.barcodeIcon} />
-        </TouchableOpacity>
+      {/* Search Container */}
+      <View style={styles.overlayContainer}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Search for foods"
+            placeholderTextColor="#aaa"
+            value={searchQuery}
+            onChangeText={handleSearch}
+            accessibilityLabel="Food search input"
+          />
+          <TouchableOpacity onPress={() => {}}>
+            <MaterialCommunityIcons name="barcode-scan" size={24} style={styles.barcodeIcon} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Conditional Rendering for Category Buttons */}
+        {!searchQuery && (
+          <View style={styles.categoryContainer}>
+            <TouchableOpacity
+              style={[styles.categoryButton, selectedCategory === 'frequent' && styles.selectedCategoryButton]}
+              onPress={() => handleCategoryChange('frequent')}
+            >
+              <Text style={selectedCategory === 'frequent' ? styles.selectedCategoryButtonText : styles.categoryButtonText}>
+                FREQUENT
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.categoryButton, selectedCategory === 'recent' && styles.selectedCategoryButton]}
+              onPress={() => handleCategoryChange('recent')}
+            >
+              <Text style={selectedCategory === 'recent' ? styles.selectedCategoryButtonText : styles.categoryButtonText}>
+                RECENT
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.categoryButton, styles.likedCategoryButton, selectedCategory === 'liked' && styles.selectedCategoryButton]}
+              onPress={() => handleCategoryChange('liked')}
+            >
+              <Text style={selectedCategory === 'liked' ? styles.selectedCategoryButtonText : styles.categoryButtonText}>
+                LIKED
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {loading && (
@@ -182,18 +272,19 @@ const FoodSelectionScreen = () => {
         </View>
       )}
 
-      {message ? (
-        <Text style={styles.infoText}>{message}</Text>
-      ) : null}
+      {shouldShowNoFoodsMessage && (
+        <Text style={styles.infoText}>No foods found.</Text>
+      )}
 
-      <View style={{ flex: 1 }}>
+      <View style={styles.foodListContainer}>
         <FlatList
           data={filteredFoodData}
           renderItem={renderFoodItem}
           keyExtractor={useCallback((item) => item.id.toString(), [])}
-          ListEmptyComponent={() => (
-            <Text style={styles.infoText}>No foods found.</Text>
-          )}
+          ListEmptyComponent={() => {
+            // Don't render the empty component if we already have a message
+            return message ? null : <Text style={styles.infoText}>No foods found.</Text>;
+          }}
           initialNumToRender={10}
           maxToRenderPerBatch={10}
           windowSize={5}
