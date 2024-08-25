@@ -6,17 +6,19 @@ import { getFoodImage, categoryImageMap } from '../../services/foodImageService'
 
 const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage, onSwipeableOpen, onPress, isFoodDeletable }) => {
   // Get the image source using the utility function
-  const imageSource = getFoodImage(item.name, item.category, categoryImageMap);
+  const imageSource = item.image || getFoodImage(item.Nume_Produs, 'default', categoryImageMap);
+
+  // Direct use of item.Calorii assuming it's the total for the item
+  const calories = Math.round(item.Calorii);
 
   // Helper function to truncate text
   const truncateText = (text, maxLength) => {
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
 
+  // Swipeable actions
   const renderRightActions = (progress, dragX) => {
-    if (!isFoodDeletable) {
-      return null;
-    }
+    if (!isFoodDeletable) return null;
 
     const translateX = dragX.interpolate({
       inputRange: [-100, 0],
@@ -51,16 +53,12 @@ const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage,
         <View style={styles.foodItem}>
           <Image source={imageSource} style={foodImage} resizeMode="contain" />
           <View style={styles.foodDetails}>
-            <Text 
-              style={foodName} 
-              numberOfLines={1} 
-              ellipsizeMode="tail"
-            >
-              {truncateText(item.name, 15)} {/* Change 15 to the desired maximum length */}
+            <Text style={foodName} numberOfLines={1} ellipsizeMode="tail">
+              {truncateText(item.Nume_Produs, 15)} {/* Adjust max length as necessary */}
             </Text>
             <Text style={foodNutrient}>{item.quantity} {item.unit}</Text>
           </View>
-          <Text style={foodCalories}>{item.calories} kcal</Text>
+          <Text style={foodCalories}>{calories} kcal</Text>
         </View>
       </TouchableOpacity>
     </Swipeable>
@@ -71,7 +69,7 @@ const styles = StyleSheet.create({
   foodItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 5,
+    padding: 10,
   },
   foodDetails: {
     flex: 1,
@@ -88,6 +86,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff3b30',
     height: '100%',
     width: 80,
+  },
+  foodImage: {
+    width: 45,
+    height: 45,
+    borderRadius: 5,
   },
 });
 

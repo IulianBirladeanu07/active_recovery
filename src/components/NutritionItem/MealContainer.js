@@ -17,37 +17,26 @@ const MealContainer = ({
   selectedMeal,
   setSelectedMeal,
 }) => {
-  // Filter the foods based on the selectedMeal type
   const filteredFoods = foods.filter(food => food.mealType === selectedMeal);
 
-  const renderMealTitle = (meal) => (
-    <TouchableOpacity 
-      onPress={() => setSelectedMeal(meal)} 
-      style={{ paddingHorizontal: 10, paddingVertical: 5 }}
-    >
-      <Text style={[mealTitle, selectedMeal === meal && { fontWeight: 'bold', color: '#FFA726' }]}>
-        {meal.charAt(0).toUpperCase() + meal.slice(1)}
-      </Text>
-    </TouchableOpacity>
-  );
-
   return (
-    <View style={mealContainer}>
-      {/* Meal selection */}
+    <View style={[mealContainer, styles.paddingAdjustment]}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 }}>
-        {renderMealTitle('breakfast')}
-        {renderMealTitle('lunch')}
-        {renderMealTitle('dinner')}
+        {['breakfast', 'lunch', 'dinner'].map(meal => (
+          <TouchableOpacity key={meal} onPress={() => setSelectedMeal(meal)} style={{ paddingHorizontal: 10, paddingVertical: 5 }}>
+            <Text style={[mealTitle, selectedMeal === meal && { fontWeight: 'bold', color: '#FFA726' }]}>
+              {meal.charAt(0).toUpperCase() + meal.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
-
-      {/* Food items or No foods message */}
       <View style={{ flex: 1 }}>
         {filteredFoods.length > 0 ? (
           <FlatList
             data={filteredFoods}
             renderItem={({ item, index }) => (
               <FoodItem
-                key={`${item.id}_${index}`} // Unique key combining id and index
+                key={`${item.Nume_Produs}_${index}`}
                 item={item}
                 meal={selectedMeal}
                 onSwipeableOpen={onSwipeableOpen}
@@ -59,7 +48,7 @@ const MealContainer = ({
                 isFoodDeletable={isFoodDeletable}
               />
             )}
-            keyExtractor={(item, index) => `${item.id}_${index}`} // Ensure unique keys
+            keyExtractor={(item, index) => `${item.Nume_Produs}_${index}`}
             style={mealScrollView}
             showsVerticalScrollIndicator={false}
           />
@@ -71,6 +60,13 @@ const MealContainer = ({
       </View>
     </View>
   );
+};
+
+const styles = {
+  paddingAdjustment: {
+    paddingHorizontal: 16, // Adjust these values as needed
+    paddingVertical: 12,
+  },
 };
 
 export default MealContainer;

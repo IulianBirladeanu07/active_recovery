@@ -1,24 +1,9 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-import { db, collection, getDocs, addDoc, query, where, orderBy, limit, doc, deleteDoc } from '../services/firebase';
+import { db, collection, getDocs, query, where, orderBy, limit } from '../services/firebase';
 
-// Utility function to recursively remove undefined values from an object
-const removeUndefined = (obj) => {
-  if (Array.isArray(obj)) {
-    return obj.map(removeUndefined).filter(item => item !== undefined);
-  } else if (obj !== null && typeof obj === 'object') {
-    return Object.fromEntries(
-      Object.entries(obj)
-        .map(([k, v]) => [k, removeUndefined(v)])
-        .filter(([_, v]) => v !== undefined)
-    );
-  } else {
-    return obj;
-  }
-};
-
-// Fetch Recently Added Foods
-export const fetchRecentFoods = async (queryText) => {
+// Fetch Recent Meals
+export const fetchRecentFoods = async () => {
   try {
     const user = firebase.auth().currentUser;
     if (!user) {
@@ -26,24 +11,26 @@ export const fetchRecentFoods = async (queryText) => {
     }
     const uid = user.uid;
 
-    const foodQuery = query(
-      collection(db, 'recentFoods'),
+    const mealQuery = query(
+      collection(db, 'meals'),
       where('uid', '==', uid),
       orderBy('timestamp', 'desc'),
-      limit(10)
+      limit(10) // Fetch most recent 10 meals
     );
 
-    const querySnapshot = await getDocs(foodQuery);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const querySnapshot = await getDocs(mealQuery);
+    const meals = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    return meals;
   } catch (error) {
-    console.error("Error fetching recent foods:", error.message);
+    console.error("Error fetching recent meals:", error.message);
     throw error;
   }
 };
 
-// Fetch Usually Used Foods
-// Fetch Usually Used Foods
-export const fetchUsuallyUsedFoods = async (queryText) => {
+
+// Fetch Frequent Foods
+export const fetchFrequentFoods = async (limitCount = 10) => {
   try {
     const user = firebase.auth().currentUser;
     if (!user) {
@@ -51,93 +38,44 @@ export const fetchUsuallyUsedFoods = async (queryText) => {
     }
     const uid = user.uid;
 
-    const foodQuery = query(
-      collection(db, 'usuallyUsedFoods'),
+    // Query to fetch meals and calculate the frequency of each food
+    const mealQuery = query(
+      collection(db, 'meals'),
       where('uid', '==', uid),
       orderBy('usageCount', 'desc'),
-      limit(10)
+      limit(limitCount)
     );
 
-    const querySnapshot = await getDocs(foodQuery);
-    const foods = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const querySnapshot = await getDocs(mealQuery);
+    const foodUsageCount = {};
 
-    console.log('Fetched Usually Used Foods:', foods); // Log the fetched foods
-    return foods; // This might be an empty array
+    querySnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.foodDetails) {
+        const { name, usageCount } = data.foodDetails;
+
+        if (!foodUsageCount[name]) {
+          foodUsageCount[name] = { ...data.foodDetails, usageCount: 0 };
+        }
+
+        foodUsageCount[name].usageCount += (usageCount || 0);
+      }
+    });
+
+    // Convert object to array and sort by usageCount
+    const frequentFoods = Object.values(foodUsageCount).sort((a, b) => b.usageCount - a.usageCount);
+    
+    return frequentFoods;
   } catch (error) {
-    console.error("Error fetching usually used foods:", error.message);
+    console.error("Error fetching frequent foods:", error.message);
     throw error;
   }
 };
 
-// Fetch Liked Foods
-export const fetchLikedFoods = async (queryText) => {
-  try {
-    const user = firebase.auth().currentUser;
-    if (!user) {
-      throw new Error('User not authenticated.');
-    }
-    const uid = user.uid;
-
-    const foodQuery = query(
-      collection(db, 'likedFoods'),
-      where('uid', '==', uid),
-      orderBy('timestamp', 'desc'),
-      limit(10)
-    );
-
-    const querySnapshot = await getDocs(foodQuery);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error("Error fetching liked foods:", error.message);
-    throw error;
-  }
-};
-
-// Add or Update a Document
-export const addDocument = async (collectionName, data) => {
-  try {
-    const user = firebase.auth().currentUser;
-    if (!user) {
-      throw new Error('User not authenticated.');
-    }
-    const uid = user.uid;
-    const cleanedData = removeUndefined({ ...data, uid });
-    const collectionRef = collection(db, collectionName);
-    const docRef = await addDoc(collectionRef, cleanedData);
-    return { id: docRef.id, ...cleanedData };
-  } catch (error) {
-    console.error(`Error adding document to ${collectionName}:`, error.message);
-    throw error;
-  }
-};
-
-// Delete a Document
-export const deleteDocument = async (collectionName, docId) => {
-  try {
-    const user = firebase.auth().currentUser;
-    if (!user) {
-      throw new Error('User not authenticated.');
-    }
-    const uid = user.uid;
-    const docRef = doc(collection(db, collectionName), docId);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists() && docSnap.data().uid === uid) {
-      await deleteDoc(docRef);
-      console.log(`Document with ID: ${docId} deleted successfully.`);
-    } else {
-      throw new Error('Document not found or user not authorized.');
-    }
-  } catch (error) {
-    console.error(`Error deleting document from ${collectionName}:`, error.message);
-    throw error;
-  }
-};
-
+// Fetch Products
 export const fetchProducts = async (filters = [], order = null, limitCount = null) => {
   try {
     const queryConstraints = [];
-    console.log('log')
     filters.forEach(filter => {
       queryConstraints.push(where(...filter));
     });
@@ -160,33 +98,50 @@ export const fetchProducts = async (filters = [], order = null, limitCount = nul
   }
 };
 
-export const fetchFoodsSortedBy = async (sortBy, sortDirection = 'desc', query = '') => {
+export const fetchUsuallyUsedFoods = async () => {
   try {
-    // Reference to your foods collection
-    let foodsRef = firestore.collection('foods');
-    
-    // If there's a search query, filter the results by name or category
-    if (query) {
-      foodsRef = foodsRef
-        .where('Nume_Produs_lower', '>=', query.toLowerCase())
-        .where('Nume_Produs_lower', '<=', query.toLowerCase() + '\uf8ff');
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
     }
+    const uid = user.uid;
 
-    // Apply sorting by the given field and direction
-    const foodDocs = await foodsRef
-      .orderBy(sortBy, sortDirection)
-      .limit(100) // Limit the number of results to avoid fetching too many
-      .get();
+    const mealQuery = query(
+      collection(db, 'meals'),
+      where('uid', '==', uid),
+      orderBy('usageCount', 'desc'),
+      limit(10) // Adjust limit as needed
+    );
 
-    // Map through the documents and return the data
-    const fetchedFoods = foodDocs.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const querySnapshot = await getDocs(mealQuery);
+    const foodUsageCount = {};
 
-    return fetchedFoods;
+    querySnapshot.forEach(doc => {
+      const data = doc.data();
+
+      // Check if the food details are correctly formatted
+      if (data.Nume_Produs) {
+        const { Nume_Produs, usageCount = 0 } = data;
+        
+        // Initialize the food in the usage count object if it doesn't exist
+        if (!foodUsageCount[Nume_Produs]) {
+          foodUsageCount[Nume_Produs] = { ...data, usageCount: 0 };
+        }
+
+        // Accumulate the usage count
+        foodUsageCount[Nume_Produs].usageCount += usageCount;
+      } else {
+        console.warn('Food details not found in document:', data);
+      }
+    });
+
+    console.log('Food Usage Count:', foodUsageCount);
+
+    // Sort foods by usage count in descending order
+    const frequentFoods = Object.values(foodUsageCount).sort((a, b) => b.usageCount - a.usageCount);
+    return frequentFoods;
   } catch (error) {
-    console.error('Error fetching foods:', error);
-    throw new Error('Unable to fetch foods');
+    console.error("Error fetching usually used foods:", error.message);
+    throw error;
   }
 };

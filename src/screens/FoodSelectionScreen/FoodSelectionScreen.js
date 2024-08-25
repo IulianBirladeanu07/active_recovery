@@ -1,51 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Image, Animated, Alert } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { debounce } from 'lodash';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import styles from './FoodSelectionScreenStyle';
-import { fetchProducts, fetchRecentFoods, fetchUsuallyUsedFoods, fetchLikedFoods } from '../../handlers/NutritionHandler';
-import Fuse from 'fuse.js';
-import { getFoodImage } from '../../services/foodImageService';
 import { LinearGradient } from 'expo-linear-gradient';
+import styles from './FoodSelectionScreenStyle';
+import { fetchProducts, fetchRecentFoods, fetchUsuallyUsedFoods } from '../../handlers/NutritionHandler';
+import Fuse from 'fuse.js';
+import { getFoodImage, categoryImageMap } from '../../services/foodImageService';
 import { useFoodContext } from '../../context/FoodContext';
-import { categoryImageMap } from '../../services/foodImageService';
-
-const FoodItem = React.memo(({ item, onPress, isFirstItem, style }) => {
-  const imageSource = getFoodImage(item.Nume_Produs, item.Categorie, categoryImageMap);
-
-  return (
-    <TouchableOpacity onPress={() => onPress(item, imageSource)} accessibilityLabel={`Select ${item.Nume_Produs}`}>
-      <Animated.View style={[styles.foodItem, isFirstItem && styles.firstFoodItem, style]}>
-        <Image 
-          source={imageSource} 
-          style={styles.foodImage} 
-          defaultSource={require('../../assets/almond.png')} 
-          resizeMode="contain"
-          onError={(error) => console.log('Image load error: ', error.nativeEvent.error)}
-        />
-        <View style={styles.foodDetails}>
-          <Text style={styles.foodName}>{item.Nume_Produs || 'Unknown'}</Text>
-          <Text style={styles.foodNutrient}>Calories: {item.Calorii ? `${item.Calorii} cals` : 'N/A'}</Text>
-          <View style={styles.macroContainer}>
-            <View style={styles.macroBox}>
-              <Text style={styles.macroLabel}>Protein</Text>
-              <Text style={styles.macroValue}>{item.Proteine || 'N/A'}</Text>
-            </View>
-            <View style={styles.macroBox}>
-              <Text style={styles.macroLabel}>Carbs</Text>
-              <Text style={styles.macroValue}>{item.Carbohidrati || 'N/A'}</Text>
-            </View>
-            <View style={styles.macroBox}>
-              <Text style={styles.macroLabel}>Fats</Text>
-              <Text style={styles.macroValue}>{item.Grasimi || 'N/A'}</Text>
-            </View>
-          </View>
-        </View>
-      </Animated.View>
-    </TouchableOpacity>
-  );
-});
+import FoodItem from '../../components/NutritionItem/FoodItem';
+import FoodSearchItem from '../../components/NutritionItem/FoodSearchItem';
 
 const FoodSelectionScreen = () => {
   const navigation = useNavigation();
@@ -54,28 +19,59 @@ const FoodSelectionScreen = () => {
   const { handleAddMeal } = useFoodContext();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [foods, setFoods] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [categoryFoods, setCategoryFoods] = useState([]);
+  const [recentMeals, setRecentMeals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedFoods, setSelectedFoods] = useState([]);
   const [message, setMessage] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('frequent');
+  const [isSearching, setIsSearching] = useState(false);
 
-  const fuse = useMemo(() => new Fuse(foods, {
+  const MealItem = ({ meal }) => (
+    <View style={styles.mealItem}>
+      <Text style={styles.mealTitle}>{meal.date} - {meal.mealType}</Text>
+      {meal.foods && meal.foods.length > 0 ? (
+        meal.foods.map((food, index) => (
+          <View key={food.id || index} style={styles.mealFood}>
+            <Text>{food.name}</Text>
+          </View>
+        ))
+      ) : (
+        <Text>No foods available for this meal.</Text>
+      )}
+    </View>
+  );
+  // Memoized fuse instance to optimize search performance
+  const fuse = useMemo(() => new Fuse(categoryFoods, {
     includeScore: true,
     keys: ['Nume_Produs', 'Categorie'],
     threshold: 0.3,
     distance: 200,
     minMatchCharLength: 2,
-  }), [foods]);
+  }), [categoryFoods]);
 
   useEffect(() => {
     if (route.params?.selectedFood) {
-      setSelectedFoods(prev => [...prev, route.params.selectedFood]);
+        setSelectedFoods(prevFoods => {
+            const existingFoodIndex = prevFoods.findIndex(food => food.Nume_Produs === route.params.selectedFood.Nume_Produs);
+            
+            if (existingFoodIndex !== -1) {
+                // Food already exists, update quantity
+                const updatedFoods = [...prevFoods];
+                updatedFoods[existingFoodIndex].quantity += route.params.selectedFood.quantity;
+                return updatedFoods;
+            } else {
+                // Food doesn't exist, add new entry
+                return [...prevFoods, route.params.selectedFood];
+            }
+        });
     }
-  }, [route.params?.selectedFood]);
-
+}, [route.params?.selectedFood]);
+  
   const fetchFoodsBySearch = useCallback(async (query) => {
-    console.log('Fetching Foods by Search with Query:', query);
+    if (!query) return;
+
     setLoading(true);
     setMessage('');
 
@@ -89,11 +85,10 @@ const FoodSelectionScreen = () => {
         100
       );
 
-      console.log('Fetched Foods by Search:', fetchedFoods);
-
       if (fetchedFoods.length > 0) {
-        setFoods(fetchedFoods);
+        setSearchResults(fetchedFoods);
       } else {
+        setSearchResults([]); // Ensure no stale data remains
         setMessage('No foods found.');
       }
     } catch (err) {
@@ -105,33 +100,22 @@ const FoodSelectionScreen = () => {
   }, []);
 
   const fetchFoodsByCategory = useCallback(async () => {
-    console.log('Fetching Foods by Category:', selectedCategory);
     setLoading(true);
     setMessage('');
 
     try {
-      let fetchedFoods;
-      switch (selectedCategory) {
-        case 'frequent':
-          fetchedFoods = await fetchRecentFoods();
-          break;
-        case 'recent':
-          fetchedFoods = await fetchUsuallyUsedFoods();
-          break;
-        case 'liked':
-          fetchedFoods = await fetchLikedFoods();
-          break;
-        default:
-          fetchedFoods = [];
-          break;
-      }
-
-      console.log('Fetched Foods by Category:', fetchedFoods);
-
-      if (fetchedFoods.length > 0) {
-        setFoods(fetchedFoods);
+      if (selectedCategory === 'frequent') {
+        const fetchedFoods = await fetchUsuallyUsedFoods();
+        setCategoryFoods(fetchedFoods);
+        setMessage(fetchedFoods.length > 0 ? '' : 'No foods found.');
+      } else if (selectedCategory === 'recent') {
+        const fetchedMeals = await fetchRecentFoods();
+        setRecentMeals(fetchedMeals);
+        setMessage(fetchedMeals.length > 0 ? '' : 'No meals found.');
       } else {
-        setMessage('No foods found.');
+        setCategoryFoods([]);
+        setRecentMeals([]);
+        setMessage('Invalid category selected.');
       }
     } catch (err) {
       console.error("Failed to fetch foods:", err);
@@ -142,31 +126,39 @@ const FoodSelectionScreen = () => {
   }, [selectedCategory]);
 
   const debouncedFetchFoodsBySearch = useMemo(() => debounce((query) => {
-    console.log('Debounced Fetch Foods by Search Called with Query:', query);
     fetchFoodsBySearch(query);
-  }, 200), [fetchFoodsBySearch]);
+  }, 300), [fetchFoodsBySearch]);
 
   useEffect(() => {
     if (searchQuery) {
+      setIsSearching(true);
       debouncedFetchFoodsBySearch(searchQuery);
     } else {
-      // When search query is cleared, fetch foods by category
-      fetchFoodsByCategory();
+      setIsSearching(false);
+      setSearchResults([]); // Clear search results when query is cleared
+      fetchFoodsByCategory(); // Fetch the appropriate category when the search query is cleared
     }
   }, [searchQuery, debouncedFetchFoodsBySearch, fetchFoodsByCategory]);
 
   const handleSearch = useCallback((query) => {
-    console.log('Search Query Updated:', query);
     setSearchQuery(query);
-  }, []);
+
+    // Perform client-side fuzzy search
+    if (query && !isSearching) {
+      const results = fuse.search(query).map(result => result.item);
+      setSearchResults(results.length > 0 ? results : []);
+    }
+  }, [fuse, isSearching]);
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
-    fetchFoodsByCategory();
+    setSearchQuery(''); // Clear the search query when changing categories
+    setIsSearching(false); // Ensure we're not in search mode
+    fetchFoodsByCategory(); // Fetch category foods when changing categories
   };
 
-  const handleNavigateToFoodDetail = (food, imageSource) => {
-    navigation.navigate('FoodDetail', { food, meal, imageSource });
+  const handleNavigateToFoodDetail = (food) => {
+    navigation.navigate('FoodDetail', { food, meal });
   };
 
   const handleDone = async () => {
@@ -189,37 +181,38 @@ const FoodSelectionScreen = () => {
     }
   };
 
-  const scaleValue = useRef(new Animated.Value(1)).current;
+  const renderFoodSearchItem = ({ item }) => (
+    <FoodSearchItem
+      item={item}
+      onPress={handleNavigateToFoodDetail}
+      foodNameStyle={styles.foodName}
+      foodCaloriesStyle={styles.foodNutrient}
+      foodNutrientStyle={styles.foodNutrient}
+      foodImageStyle={styles.foodImage}
+      macroContainerStyle={styles.macroContainer}
+      macroBoxStyle={styles.macroBox}
+      macroLabelStyle={styles.macroLabel}
+      macroValueStyle={styles.macroValue}
+    />
+  );
 
-  const renderFoodItem = ({ item, index }) => {
-    if (index === 0) {
-      Animated.spring(scaleValue, {
-        toValue: 1.05,
-        friction: 2,
-        useNativeDriver: true,
-      }).start();
-    }
+  const renderFrequentFoodItem = ({ item }) => (
+    <FoodItem
+      item={item}
+      onPress={handleNavigateToFoodDetail}
+      foodName={styles.foodName}
+      foodCalories={styles.foodCalories}
+      foodNutrient={styles.foodNutrient}
+      foodImage={styles.foodImage}
+    />
+  );
 
-    return (
-      <FoodItem
-        item={item}
-        onPress={handleNavigateToFoodDetail}
-        isFirstItem={index === 0}
-        style={{ transform: [{ scale: scaleValue }] }}
-      />
-    );
-  };
-
-  const filteredFoodData = useMemo(() => {
-    const results = fuse.search(searchQuery).map(result => result.item);
-    return results.length > 0 ? results : foods;
-  }, [searchQuery, foods, fuse]);
-
-  const shouldShowNoFoodsMessage = !loading && (filteredFoodData.length === 0 && message === '');
+  const renderMealItem = ({ item }) => (
+    <MealItem meal={item} />
+  );
 
   return (
     <View style={styles.container}>
-      {/* Search Container */}
       <View style={styles.overlayContainer}>
         <View style={styles.searchContainer}>
           <TextInput
@@ -230,12 +223,11 @@ const FoodSelectionScreen = () => {
             onChangeText={handleSearch}
             accessibilityLabel="Food search input"
           />
-          <TouchableOpacity onPress={() => {}}>
+          <TouchableOpacity>
             <MaterialCommunityIcons name="barcode-scan" size={24} style={styles.barcodeIcon} />
           </TouchableOpacity>
         </View>
 
-        {/* Conditional Rendering for Category Buttons */}
         {!searchQuery && (
           <View style={styles.categoryContainer}>
             <TouchableOpacity
@@ -254,14 +246,6 @@ const FoodSelectionScreen = () => {
                 RECENT
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.categoryButton, styles.likedCategoryButton, selectedCategory === 'liked' && styles.selectedCategoryButton]}
-              onPress={() => handleCategoryChange('liked')}
-            >
-              <Text style={selectedCategory === 'liked' ? styles.selectedCategoryButtonText : styles.categoryButtonText}>
-                LIKED
-              </Text>
-            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -272,25 +256,59 @@ const FoodSelectionScreen = () => {
         </View>
       )}
 
-      {shouldShowNoFoodsMessage && (
-        <Text style={styles.infoText}>No foods found.</Text>
+      {!isSearching && selectedCategory === 'frequent' && (
+        <View style={styles.foodListContainer}>
+          <FlatList
+            data={categoryFoods}
+            renderItem={renderFrequentFoodItem}
+            keyExtractor={item => item.id ? item.id.toString() : `${item.Nume_Produs}-${item.Categorie}-${Math.random()}`}
+            ListEmptyComponent={() => (
+              <Text style={styles.infoText}>No foods found.</Text>
+            )}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
+            contentContainerStyle={{ paddingBottom: 150 }}
+          />
+        </View>
       )}
 
-      <View style={styles.foodListContainer}>
-        <FlatList
-          data={filteredFoodData}
-          renderItem={renderFoodItem}
-          keyExtractor={useCallback((item) => item.id.toString(), [])}
-          ListEmptyComponent={() => {
-            // Don't render the empty component if we already have a message
-            return message ? null : <Text style={styles.infoText}>No foods found.</Text>;
-          }}
-          initialNumToRender={10}
-          maxToRenderPerBatch={10}
-          windowSize={5}
-          removeClippedSubviews={true}
-        />
-      </View>
+      {!isSearching && selectedCategory === 'recent' && (
+        <View style={styles.foodListContainer}>
+          <FlatList
+            data={recentMeals}
+            renderItem={renderMealItem}
+            keyExtractor={item => item.id ? item.id.toString() : `${item.date}-${item.mealType}-${Math.random()}`}
+            ListEmptyComponent={() => (
+              <Text style={styles.infoText}>No meals found.</Text>
+            )}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
+            contentContainerStyle={{ paddingBottom: 150 }}
+          />
+        </View>
+      )}
+
+      {isSearching && (
+        <View style={styles.foodListContainer}>
+          <FlatList
+            data={searchResults}
+            renderItem={renderFoodSearchItem}
+            keyExtractor={item => item.id ? item.id.toString() : `${item.Nume_Produs}-${item.Categorie}-${Math.random()}`}
+            ListEmptyComponent={() => (
+              <Text style={styles.infoText}>No foods found.</Text>
+            )}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
+            contentContainerStyle={{ paddingBottom: 150 }}
+          />
+        </View>
+      )}
 
       <LinearGradient
         colors={['transparent', '#02111B']}
@@ -298,15 +316,17 @@ const FoodSelectionScreen = () => {
       />
 
       {selectedFoods.length > 0 && (
-        <TouchableOpacity
-          style={styles.doneButton}
-          onPress={handleDone}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.doneButtonText}>
-            Done ({selectedFoods.length} {selectedFoods.length > 1 ? 'items' : 'item'})
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.doneButtonContainer}>
+          <TouchableOpacity
+            style={styles.doneButton}
+            onPress={handleDone}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.doneButtonText}>
+              Done ({selectedFoods.length} {selectedFoods.length > 1 ? 'items' : 'item'})
+            </Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );

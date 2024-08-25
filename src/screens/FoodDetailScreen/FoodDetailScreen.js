@@ -2,19 +2,20 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import styles from './FoodDetailScreenStyle';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { useFoodContext } from '../../context/FoodContext';
 
 const FoodDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { food, meal, update, foodId, imageSource } = route.params;
+  const { food, meal, update, foodId } = route.params;
+  const { updateMealInDatabase } = useFoodContext();
 
-  const [quantity, setQuantity] = useState(100); // Default quantity is 100 grams
-  const [unit, setUnit] = useState('grams');
+  const [quantity, setQuantity] = useState(food.quantity || 100); // Default quantity is 100 grams
+  const [unit, setUnit] = useState(food.unit || 'grams');
   const [showMore, setShowMore] = useState(false);
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  // Use the image passed from FoodSelectionScreen or default image
-  const image = imageSource || require('../../assets/almond.png');
+  const image = food.image || require('../../assets/almond.png');
 
   const unitConversion = {
     grams: 1,
@@ -23,63 +24,61 @@ const FoodDetailScreen = () => {
 
   const units = ['grams', 'ounces'];
 
-  const extractCalories = (caloriesString) => {
-    if (typeof caloriesString === 'string') {
-      const match = caloriesString.match(/(\d+)\s*kCal/i);  // Regex to extract the number followed by 'kCal'
-      if (match && match[1]) {
-        return parseFloat(match[1]);
-      }
-    } else if (typeof caloriesString === 'number') {
-      return caloriesString;
-    }
-    return 0; // Default to 0 if no match found
+  const calculateNutrientPer100g = (nutrientValue, currentQuantity) => {
+    return currentQuantity ? nutrientValue / (currentQuantity / 100) : 0;
   };
 
-  const calculateNutrientValue = useCallback((nutrientPer100g) => {
-    const quantityInGrams = unit === 'grams' ? quantity : quantity / unitConversion.ounces;
-    const nutrientValue = (parseFloat(nutrientPer100g) || 0) * (quantityInGrams / 100);
-    return nutrientValue.toFixed(2);
-  }, [quantity, unit]);
+  const calculateNutrientValue = useCallback(
+    (nutrientPer100g) => {
+      const quantityInGrams = unit === 'grams' ? quantity : quantity / unitConversion.ounces;
+      return Math.round(nutrientPer100g * (quantityInGrams / 100));
+    },
+    [quantity, unit]
+  );
 
-  const handleAddFood = () => {
+  const handleUpdateFood = async () => {
     if (quantity <= 0 || isNaN(quantity)) {
-      Alert.alert("Invalid Quantity", "Please enter a valid quantity greater than 0.");
+      Alert.alert('Invalid Quantity', 'Please enter a valid quantity greater than 0.');
       return;
     }
 
-    const foodDetails = {
-      id: foodId || food.id,
-      name: food.Nume_Produs || 'Unknown',
-      calories: calculateNutrientValue(extractCalories(food.Calorii)),
-      carbs: calculateNutrientValue(food.Carbohidrati),
-      fat: calculateNutrientValue(food.Grasimi),
-      protein: calculateNutrientValue(food.Proteine),
-      fiber: calculateNutrientValue(food.Fibre),
-      sugar: calculateNutrientValue(food.Zaharuri),
-      sodium: calculateNutrientValue(food.Sare),
-      saturatedFat: calculateNutrientValue(food.Grasimi_Saturate),
+    // Recalculate the nutrients based on the new quantity
+    const updatedFoodDetails = {
+      ...food,
+      Calorii: calculateNutrientValue(calculateNutrientPer100g(food.Calorii, food.quantity)),
+      Carbohidrati: calculateNutrientValue(calculateNutrientPer100g(food.Carbohidrati, food.quantity)),
+      Grasimi: calculateNutrientValue(calculateNutrientPer100g(food.Grasimi, food.quantity)),
+      Proteine: calculateNutrientValue(calculateNutrientPer100g(food.Proteine, food.quantity)),
+      Fibre: calculateNutrientValue(calculateNutrientPer100g(food.Fibre, food.quantity)),
+      Zaharuri: calculateNutrientValue(calculateNutrientPer100g(food.Zaharuri, food.quantity)),
+      Sare: calculateNutrientValue(calculateNutrientPer100g(food.Sare, food.quantity)),
+      Grasimi_Saturate: calculateNutrientValue(calculateNutrientPer100g(food.Grasimi_Saturate, food.quantity)),
       quantity,
       unit,
-      image,  // Attach the image
     };
 
-    navigation.navigate('FoodSelection', { selectedFood: foodDetails, meal });
+    if (update) {
+      await updateMealInDatabase(meal, foodId, updatedFoodDetails);
+      navigation.navigate('Nutrition', { refresh: true });
+    } else {
+      navigation.navigate('FoodSelection', { selectedFood: updatedFoodDetails, meal });
+    }
   };
 
   return (
     <View style={styles.container}>
       <Image source={image} style={styles.foodImage} />
       <Text style={styles.foodName}>{food.Nume_Produs || 'Unknown'}</Text>
-      <Text style={styles.foodNutrient}>Calories: {calculateNutrientValue(extractCalories(food.Calorii))} kcal</Text>
-      <Text style={styles.foodNutrient}>Protein: {calculateNutrientValue(food.Proteine)} g</Text>
-      <Text style={styles.foodNutrient}>Carbs: {calculateNutrientValue(food.Carbohidrati)} g</Text>
-      <Text style={styles.foodNutrient}>Fat: {calculateNutrientValue(food.Grasimi)} g</Text>
+      <Text style={styles.foodNutrient}>Calories: {calculateNutrientValue(calculateNutrientPer100g(food.Calorii, food.quantity))} kcal</Text>
+      <Text style={styles.foodNutrient}>Protein: {calculateNutrientValue(calculateNutrientPer100g(food.Proteine, food.quantity))} g</Text>
+      <Text style={styles.foodNutrient}>Carbs: {calculateNutrientValue(calculateNutrientPer100g(food.Carbohidrati, food.quantity))} g</Text>
+      <Text style={styles.foodNutrient}>Fat: {calculateNutrientValue(calculateNutrientPer100g(food.Grasimi, food.quantity))} g</Text>
       {showMore && (
         <>
-          <Text style={styles.foodNutrient}>Fiber: {calculateNutrientValue(food.Fibre)} g</Text>
-          <Text style={styles.foodNutrient}>Sugar: {calculateNutrientValue(food.Zaharuri)} g</Text>
-          <Text style={styles.foodNutrient}>Sodium: {calculateNutrientValue(food.Sare)} mg</Text>
-          <Text style={styles.foodNutrient}>Saturated Fat: {calculateNutrientValue(food.Grasimi_Saturate)} g</Text>
+          <Text style={styles.foodNutrient}>Fiber: {calculateNutrientValue(calculateNutrientPer100g(food.Fibre, food.quantity))} g</Text>
+          <Text style={styles.foodNutrient}>Sugar: {calculateNutrientValue(calculateNutrientPer100g(food.Zaharuri, food.quantity))} g</Text>
+          <Text style={styles.foodNutrient}>Sodium: {calculateNutrientValue(calculateNutrientPer100g(food.Sare, food.quantity))} mg</Text>
+          <Text style={styles.foodNutrient}>Saturated Fat: {calculateNutrientValue(calculateNutrientPer100g(food.Grasimi_Saturate, food.quantity))} g</Text>
         </>
       )}
       <TouchableOpacity onPress={() => setShowMore(!showMore)}>
@@ -116,7 +115,7 @@ const FoodDetailScreen = () => {
           )}
         </View>
       </View>
-      <TouchableOpacity style={styles.addButton} onPress={handleAddFood}>
+      <TouchableOpacity style={styles.addButton} onPress={handleUpdateFood}>
         <Text style={styles.addButtonText}>{update ? 'Update Food' : 'Add Food'}</Text>
       </TouchableOpacity>
     </View>

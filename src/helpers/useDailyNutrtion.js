@@ -1,36 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import firebase from 'firebase/compat/app';
 
 const useDailyNutrition = (breakfastFoods, lunchFoods, dinnerFoods, selectedDate) => {
-  const [dailyNutrition, setDailyNutrition] = useState({
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0,
-  });
-
-  useEffect(() => {
-    const calculateTotalNutrition = () => {
-      const allFoods = [...breakfastFoods, ...lunchFoods, ...dinnerFoods].filter(
-        (food) => new Date(food.date).toDateString() === selectedDate.toDateString()
+  const calculateTotalNutrition = useMemo(() => {
+    const allFoods = [...breakfastFoods, ...lunchFoods, ...dinnerFoods].filter((food) => {
+      const foodDate = new Date(
+        food.timestamp instanceof firebase.firestore.Timestamp
+          ? food.timestamp.toDate()
+          : food.timestamp
       );
-      const totalCalories = allFoods.reduce((total, food) => total + Number(food.calories), 0);
-      const totalProtein = allFoods.reduce((total, food) => total + Number(food.protein), 0);
-      const totalCarbs = allFoods.reduce((total, food) => total + Number(food.carbs), 0);
-      const totalFat = allFoods.reduce((total, food) => total + Number(food.fat), 0);
+      return foodDate.toDateString() === selectedDate.toDateString();
+    });
 
-      return {
-        calories: totalCalories,
-        protein: totalProtein,
-        carbs: totalCarbs,
-        fat: totalFat,
-      };
+    const totalCalories = allFoods.reduce(
+      (total, food) => total + Number(food.Calorii),
+      0
+    );
+    const totalProtein = allFoods.reduce(
+      (total, food) => total + Number(food.Proteine),
+      0
+    );
+    const totalCarbs = allFoods.reduce(
+      (total, food) => total + Number(food.Carbohidrati),
+      0
+    );
+    const totalFat = allFoods.reduce(
+      (total, food) => total + Number(food.Grasimi),
+      0
+    );
+
+    return {
+      calories: totalCalories,
+      protein: totalProtein,
+      carbs: totalCarbs,
+      fat: totalFat,
     };
-
-    const totalNutrition = calculateTotalNutrition();
-    setDailyNutrition(totalNutrition);
   }, [breakfastFoods, lunchFoods, dinnerFoods, selectedDate]);
 
-  return dailyNutrition;
+  return calculateTotalNutrition;
 };
 
 export default useDailyNutrition;
