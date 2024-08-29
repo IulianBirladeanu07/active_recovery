@@ -32,25 +32,37 @@ export const FoodProvider = ({ children }) => {
     const formattedDate = today.toISOString().split('T')[0];
 
     try {
-      const mealTypes = ['breakfast', 'lunch', 'dinner'];
-      const mealDocs = mealTypes.map(mealType => doc(db, 'meals', `${formattedDate}_${mealType}_${user.uid}`));
-      const mealSnapshots = await Promise.all(mealDocs.map(docRef => getDoc(docRef)));
-
       const meals = {
         breakfast: [],
         lunch: [],
         dinner: [],
       };
 
-      mealSnapshots.forEach((mealDocSnap, index) => {
+      const mealTypes = ['breakfast', 'lunch', 'dinner'];
+
+      for (const mealType of mealTypes) {
+        const mealDocRef = doc(db, 'meals', `${formattedDate}_${mealType}_${user.uid}`);
+        const mealDocSnap = await getDoc(mealDocRef);
+
         if (mealDocSnap.exists()) {
-          const mealType = mealTypes[index];
           const data = mealDocSnap.data();
           const foodsWithTimestamp = data.foods.map(food => ({ ...food, timestamp: data.timestamp }));
 
-          meals[mealType] = foodsWithTimestamp;
+          switch (mealType) {
+            case 'breakfast':
+              meals.breakfast = foodsWithTimestamp;
+              break;
+            case 'lunch':
+              meals.lunch = foodsWithTimestamp;
+              break;
+            case 'dinner':
+              meals.dinner = foodsWithTimestamp;
+              break;
+            default:
+              console.error(`Unknown meal type: ${mealType}`);
+          }
         }
-      });
+      }
 
       setBreakfastFoods(meals.breakfast);
       setLunchFoods(meals.lunch);
@@ -70,103 +82,105 @@ export const FoodProvider = ({ children }) => {
     const formattedDate = validDate.toISOString().split('T')[0];
 
     try {
-      const mealTypes = ['breakfast', 'lunch', 'dinner'];
-      const mealDocs = mealTypes.map(mealType => doc(db, 'meals', `${formattedDate}_${mealType}_${currentUser.uid}`));
-      const mealSnapshots = await Promise.all(mealDocs.map(docRef => getDoc(docRef)));
+        const meals = {
+            breakfast: [],
+            lunch: [],
+            dinner: [],
+        };
 
-      const meals = {
-        breakfast: [],
-        lunch: [],
-        dinner: [],
-      };
+        const mealTypes = ['breakfast', 'lunch', 'dinner'];
 
-      mealSnapshots.forEach((mealDocSnap, index) => {
-        if (mealDocSnap.exists()) {
-          const mealType = mealTypes[index];
-          const data = mealDocSnap.data();
-          const foodsWithTimestamp = data.foods.map(food => ({ ...food, mealType: mealType, timestamp: data.timestamp }));
+        for (const mealType of mealTypes) {
+            const mealDocRef = doc(db, 'meals', `${formattedDate}_${mealType}_${currentUser.uid}`);
+            const mealDocSnap = await getDoc(mealDocRef);
 
-          meals[mealType] = foodsWithTimestamp;
+            if (mealDocSnap.exists()) {
+                const data = mealDocSnap.data();
+                console.log(`Data for ${mealType}:`, data);  // Log data to verify its correctness
+                const foodsWithTimestamp = data.foods.map(food => ({ ...food, mealType: mealType, timestamp: data.timestamp }));
+
+                switch (mealType) {
+                    case 'breakfast':
+                        meals.breakfast = foodsWithTimestamp;
+                        break;
+                    case 'lunch':
+                        meals.lunch = foodsWithTimestamp;
+                        break;
+                    case 'dinner':
+                        meals.dinner = foodsWithTimestamp;
+                        break;
+                    default:
+                        console.error(`Unknown meal type: ${mealType}`);
+                }
+            }
         }
-      });
 
-      setBreakfastFoods(meals.breakfast);
-      setLunchFoods(meals.lunch);
-      setDinnerFoods(meals.dinner);
+        setBreakfastFoods(meals.breakfast);
+        setLunchFoods(meals.lunch);
+        setDinnerFoods(meals.dinner);
 
     } catch (error) {
-      console.error('Error fetching meals:', error);
+        console.error('Error fetching meals:', error);
     }
-  }, [currentUser]);
+}, [currentUser]);
 
-  const handleAddMeal = useCallback(async (mealType, foods) => {
-    if (!currentUser) return;
-  
-    const mealDate = new Date().toISOString().split('T')[0];
-    const foodTimestamp = firebase.firestore.Timestamp.now();
-  
-    try {
+
+const handleAddMeal = useCallback(async (mealType, foods) => {
+  if (!currentUser) return;
+
+  const mealDate = new Date().toISOString().split('T')[0];
+  const foodTimestamp = firebase.firestore.Timestamp.now();
+
+  try {
       const mealDocRef = doc(db, 'meals', `${mealDate}_${mealType}_${currentUser.uid}`);
       const mealDocSnap = await getDoc(mealDocRef);
-  
+
       let existingMealData = { foods: [], date: mealDate, uid: currentUser.uid, mealType, timestamp: foodTimestamp };
-  
+
       if (mealDocSnap.exists()) {
-        existingMealData = mealDocSnap.data();
+          existingMealData = mealDocSnap.data();
+
+          // Ensure the timestamp has the correct structure before trying to access it
+          if (!existingMealData.timestamp || !existingMealData.timestamp.seconds) {
+              existingMealData.timestamp = foodTimestamp;
+          }
       }
-  
-      const consolidatedFoods = foods.map(newFood => {
-        const existingFood = existingMealData.foods.find(item => item.Nume_Produs === newFood.Nume_Produs);
-        
-        if (existingFood) {
-          // Update quantity and recalculate macros based on the new quantity
-          const totalQuantity = existingFood.quantity + newFood.quantity;
-  
-          const updatedFood = {
-            ...existingFood,
-            quantity: totalQuantity,
-            Calorii: Math.round((existingFood.Calorii / existingFood.quantity) * totalQuantity),
-            Carbohidrati: Math.round((existingFood.Carbohidrati / existingFood.quantity) * totalQuantity),
-            Grasimi: Math.round((existingFood.Grasimi / existingFood.quantity) * totalQuantity),
-            Proteine: Math.round((existingFood.Proteine / existingFood.quantity) * totalQuantity),
-            Fibre: Math.round((existingFood.Fibre / existingFood.quantity) * totalQuantity),
-            Zaharuri: Math.round((existingFood.Zaharuri / existingFood.quantity) * totalQuantity),
-            Sare: Math.round((existingFood.Sare / existingFood.quantity) * totalQuantity),
-            Grasimi_Saturate: Math.round((existingFood.Grasimi_Saturate / existingFood.quantity) * totalQuantity),
-          };
-  
-          return updatedFood;
-        } else {
-          return newFood;
-        }
-      });
-  
+
+      const consolidatedFoods = foods.reduce((acc, food) => {
+          const existingFood = acc.find(item => item.Nume_Produs === food.Nume_Produs);
+          if (existingFood) {
+              existingFood.quantity += food.quantity;
+          } else {
+              acc.push({ ...food, quantity: food.quantity || 1 });
+          }
+          return acc;
+      }, existingMealData.foods);
+
       await setDoc(mealDocRef, {
-        ...existingMealData,
-        foods: consolidatedFoods,
-        timestamp: foodTimestamp,
+          ...existingMealData,
+          foods: consolidatedFoods,
+          timestamp: foodTimestamp, // Update the timestamp for the latest modification
       });
-  
-      // Update the context state based on the meal type
+
       switch (mealType) {
-        case 'breakfast':
-          setBreakfastFoods(consolidatedFoods);
-          break;
-        case 'lunch':
-          setLunchFoods(consolidatedFoods);
-          break;
-        case 'dinner':
-          setDinnerFoods(consolidatedFoods);
-          break;
-        default:
-          console.error('Invalid meal type');
+          case 'breakfast':
+              setBreakfastFoods(consolidatedFoods);
+              break;
+          case 'lunch':
+              setLunchFoods(consolidatedFoods);
+              break;
+          case 'dinner':
+              setDinnerFoods(consolidatedFoods);
+              break;
+          default:
+              console.error('Invalid meal type');
       }
-  
-    } catch (error) {
+
+  } catch (error) {
       console.error('Error adding meal:', error);
-    }
-  }, [currentUser]);
-  
+  }
+}, [currentUser]);
+
 
   const handleDeleteMeal = useCallback(async (mealType, foodId) => {
     if (!currentUser) return;
@@ -246,44 +260,8 @@ export const FoodProvider = ({ children }) => {
     }
   }, [currentUser]);
 
-  const updateMealInDatabase = async (mealType, foodId, updatedFoodDetails) => {
-    if (!currentUser) return;
-  
-    const mealDate = new Date().toISOString().split('T')[0];
-  
-    try {
-      const mealDocRef = doc(db, 'meals', `${mealDate}_${mealType}_${currentUser.uid}`);
-      const mealDocSnap = await getDoc(mealDocRef);
-  
-      if (mealDocSnap.exists()) {
-        const mealData = mealDocSnap.data();
-        const updatedFoods = mealData.foods.map(food =>
-          food.id === foodId ? { ...updatedFoodDetails, id: foodId } : food
-        );
-  
-        await updateDoc(mealDocRef, { foods: updatedFoods });
-  
-        switch (mealType) {
-          case 'breakfast':
-            setBreakfastFoods(updatedFoods);
-            break;
-          case 'lunch':
-            setLunchFoods(updatedFoods);
-            break;
-          case 'dinner':
-            setDinnerFoods(updatedFoods);
-            break;
-          default:
-            console.error('Invalid meal type');
-        }
-      }
-    } catch (error) {
-      console.error('Error updating food in the database:', error);
-    }
-  };
-  
   return (
-    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddMeal, handleDeleteMeal, fetchMeals, fetchWeeklyCalorieData, loading, updateMealInDatabase }}>
+    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddMeal, handleDeleteMeal, fetchMeals, fetchWeeklyCalorieData, loading }}>
       {children}
     </FoodContext.Provider>
   );
