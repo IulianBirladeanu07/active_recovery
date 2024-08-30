@@ -5,11 +5,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import styles from './FoodSelectionScreenStyle';
-import { fetchProducts, fetchRecentFoods, fetchUsuallyUsedFoods } from '../../handlers/NutritionHandler';
+import { fetchFrequentFoods, fetchProducts, fetchRecentMeals, fetchUsuallyUsedFoods } from '../../handlers/NutritionHandler';
 import Fuse from 'fuse.js';
 import { getFoodImage, categoryImageMap } from '../../services/foodImageService';
 import { useFoodContext } from '../../context/FoodContext';
 import FoodItem from '../../components/NutritionItem/FoodItem';
+import MealItem from '../../components/NutritionItem/MealItem';
 import FoodSearchItem from '../../components/NutritionItem/FoodSearchItem';
 
 const FoodSelectionScreen = () => {
@@ -28,21 +29,7 @@ const FoodSelectionScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState('frequent');
   const [isSearching, setIsSearching] = useState(false);
 
-  const MealItem = ({ meal }) => (
-    <View style={styles.mealItem}>
-      <Text style={styles.mealTitle}>{meal.date} - {meal.mealType}</Text>
-      {meal.foods && meal.foods.length > 0 ? (
-        meal.foods.map((food, index) => (
-          <View key={food.id || index} style={styles.mealFood}>
-            <Text>{food.name}</Text>
-          </View>
-        ))
-      ) : (
-        <Text>No foods available for this meal.</Text>
-      )}
-    </View>
-  );
-  // Memoized fuse instance to optimize search performance
+    // Memoized fuse instance to optimize search performance
   const fuse = useMemo(() => new Fuse(categoryFoods, {
     includeScore: true,
     keys: ['Nume_Produs', 'Categorie'],
@@ -105,11 +92,12 @@ const FoodSelectionScreen = () => {
 
     try {
       if (selectedCategory === 'frequent') {
-        const fetchedFoods = await fetchUsuallyUsedFoods();
+        const fetchedFoods = await fetchFrequentFoods();
         setCategoryFoods(fetchedFoods);
         setMessage(fetchedFoods.length > 0 ? '' : 'No foods found.');
       } else if (selectedCategory === 'recent') {
-        const fetchedMeals = await fetchRecentFoods();
+        const fetchedMeals = await fetchRecentMeals();
+        console.log('meals',fetchedMeals)
         setRecentMeals(fetchedMeals);
         setMessage(fetchedMeals.length > 0 ? '' : 'No meals found.');
       } else {
@@ -215,14 +203,17 @@ const FoodSelectionScreen = () => {
     <View style={styles.container}>
       <View style={styles.overlayContainer}>
         <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Search for foods"
-            placeholderTextColor="#aaa"
-            value={searchQuery}
-            onChangeText={handleSearch}
-            accessibilityLabel="Food search input"
-          />
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="magnify" size={24} style={styles.searchIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Search for foods"
+              placeholderTextColor="#aaa"
+              value={searchQuery}
+              onChangeText={handleSearch}
+              accessibilityLabel="Food search input"
+            />
+          </View>
           <TouchableOpacity>
             <MaterialCommunityIcons name="barcode-scan" size={24} style={styles.barcodeIcon} />
           </TouchableOpacity>

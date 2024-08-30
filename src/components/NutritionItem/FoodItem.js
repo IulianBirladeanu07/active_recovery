@@ -56,7 +56,7 @@ const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage,
           <Image source={imageSource} style={foodImage} resizeMode="contain" />
           <View style={styles.foodDetails}>
             <Text style={foodName} numberOfLines={1} ellipsizeMode="tail">
-              {truncateText(item.Nume_Produs, 15)}
+              {truncateText(item.Nume_Produs, 20)}
             </Text>
             <Text style={foodNutrient}>{item.quantity} {item.unit}</Text>
           </View>

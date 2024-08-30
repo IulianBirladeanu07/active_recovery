@@ -1,25 +1,45 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-import { db, collection, getDocs, query, where, orderBy, limit } from '../services/firebase';
+import { db, collection, getDocs, query, where, orderBy, limit, getDoc, doc } from '../services/firebase';
 
-// Fetch Recent Meals
-export const fetchRecentFoods = async () => {
+export const fetchRecentMeals = async () => {
   try {
     const user = firebase.auth().currentUser;
     if (!user) {
       throw new Error('User not authenticated.');
     }
     const uid = user.uid;
+    console.log('here')
 
+    // Fetch most recent 10 meals
     const mealQuery = query(
       collection(db, 'meals'),
       where('uid', '==', uid),
       orderBy('timestamp', 'desc'),
-      limit(10) // Fetch most recent 10 meals
+      limit(10)
     );
 
-    const querySnapshot = await getDocs(mealQuery);
-    const meals = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const mealQuerySnapshot = await getDocs(mealQuery);
+    const mealDocs = mealQuerySnapshot.docs;
+    console.log(mealDocs)
+    // Process each meal document
+    const meals = mealDocs.map(docSnapshot => {
+      const mealData = { id: docSnapshot.id, ...docSnapshot.data() };
+
+      // Ensure 'foods' is always an array
+      const foods = Array.isArray(mealData.foods) ? mealData.foods : [];
+
+      console.log(foods)
+
+      // Summarize the meal
+      const totalCalories = foods.reduce((total, food) => total + (food.calories || 0), 0);
+
+      return {
+        ...mealData,
+        foods, // Include food details
+        totalCalories // Include total calories
+      };
+    });
 
     return meals;
   } catch (error) {
@@ -28,8 +48,6 @@ export const fetchRecentFoods = async () => {
   }
 };
 
-
-// Fetch Frequent Foods
 export const fetchFrequentFoods = async (limitCount = 10) => {
   try {
     const user = firebase.auth().currentUser;
@@ -38,33 +56,32 @@ export const fetchFrequentFoods = async (limitCount = 10) => {
     }
     const uid = user.uid;
 
-    // Query to fetch meals and calculate the frequency of each food
+    // Query to fetch meals
     const mealQuery = query(
       collection(db, 'meals'),
-      where('uid', '==', uid),
-      orderBy('usageCount', 'desc'),
-      limit(limitCount)
+      where('uid', '==', uid)
     );
 
     const querySnapshot = await getDocs(mealQuery);
     const foodUsageCount = {};
 
+    // Aggregate usage counts from each meal document
     querySnapshot.docs.forEach(doc => {
       const data = doc.data();
-      if (data.foodDetails) {
-        const { name, usageCount } = data.foodDetails;
-
-        if (!foodUsageCount[name]) {
-          foodUsageCount[name] = { ...data.foodDetails, usageCount: 0 };
+      const foods = data.foods || [];
+      foods.forEach(food => {
+        if (!foodUsageCount[food.id]) {
+          foodUsageCount[food.id] = { ...food, usageCount: 0 };
         }
-
-        foodUsageCount[name].usageCount += (usageCount || 0);
-      }
+        foodUsageCount[food.id].usageCount += (food.usageCount || 0);
+      });
     });
 
     // Convert object to array and sort by usageCount
-    const frequentFoods = Object.values(foodUsageCount).sort((a, b) => b.usageCount - a.usageCount);
-    
+    const frequentFoods = Object.values(foodUsageCount)
+      .sort((a, b) => b.usageCount - a.usageCount)
+      .slice(0, limitCount); // Limit results
+
     return frequentFoods;
   } catch (error) {
     console.error("Error fetching frequent foods:", error.message);

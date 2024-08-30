@@ -39,16 +39,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
   },
-  circularProgress: {
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  innerProgressContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginTop: 20,
-  },
   progressRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -63,11 +53,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     marginTop: 5,
-  },
-  progressBarContainer: {
-    width: '100%',
-    paddingHorizontal: 0,
-    marginTop: 10,
   },
   barContainer: {
     flexDirection: 'row',
@@ -99,13 +84,12 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   mealContainer: {
-    flex: 1,
     width: '100%',
     backgroundColor: '#02202B',
     borderRadius: 10,
     padding: 10,
     marginVertical: 10,
-    minHeight: 250,  // Set a minimum height to lock the size
+    height: 250, // Fixed height
   },
   mealTitle: {
     fontSize: 18,
@@ -113,7 +97,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   mealScrollView: {
-    flex: 1,  // Ensure it takes the remaining space in the container
+    flexGrow: 1, // Ensure ScrollView content container grows to fill space
   },
   foodImage: {
     width: 35,

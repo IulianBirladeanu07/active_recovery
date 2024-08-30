@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ApplicationCustomScreen from '../../components/ApplicationCustomScreen/ApplicationCustomScreen';
-import { useFoodContext } from '../../context/FoodContext'; // Make sure context is imported
+import { useFoodContext } from '../../context/FoodContext';
 import CircularProgress from '../../components/CircularProgress/CircularProgress';
 import ProgressBar from '../../components/ProgressBar/ProgressBar';
 import MealContainer from '../../components/NutritionItem/MealContainer';
 import useDailyNutrition from '../../helpers/useDailyNutrtion';
-import styles from './NutritionScreenStyles'; 
+import styles from './NutritionScreenStyles';
 import { WorkoutContext } from '../../context/WorkoutContext';
 import debounce from 'lodash/debounce';
 
@@ -17,7 +17,7 @@ const NutritionScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { userSettings } = useContext(WorkoutContext);
-  const { breakfastFoods, lunchFoods, dinnerFoods, handleDeleteMeal, fetchMeals, updateFoods } = useFoodContext(); // Use context functions
+  const { breakfastFoods, lunchFoods, dinnerFoods, handleDeleteMeal, fetchMeals, updateFoods } = useFoodContext();
 
   const [selectedDate, setSelectedDate] = useState(new Date(route.params?.date || new Date()));
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -29,13 +29,7 @@ const NutritionScreen = () => {
     });
   
     return unsubscribe;
-  }, [navigation, selectedDate, fetchMeals]);  
-
-  useEffect(() => {
-    console.log('Breakfast Foods:', breakfastFoods);
-    console.log('Lunch Foods:', lunchFoods);
-    console.log('Dinner Foods:', dinnerFoods);
-  }, [breakfastFoods, lunchFoods, dinnerFoods]);
+  }, [navigation, selectedDate, fetchMeals]);
 
   const debounceFetchMeals = useCallback(debounce(async (date) => {
     try {
@@ -70,7 +64,7 @@ const NutritionScreen = () => {
   const remainingCalories = useMemo(() => targetCalories - dailyNutrition.calories, [targetCalories, dailyNutrition.calories]);
   const remainingCarbs = useMemo(() => targetCarbs - dailyNutrition.carbs, [targetCarbs, dailyNutrition.carbs]);
   const remainingProtein = useMemo(() => targetProtein - dailyNutrition.protein, [targetProtein, dailyNutrition.protein]);
-  const remainingFats = useMemo(() => targetFats - dailyNutrition.fats, [targetFats, dailyNutrition.fats]);
+  const remainingFats = useMemo(() => targetFats - dailyNutrition.fat, [targetFats, dailyNutrition.fat]);
 
   const handleFoodSelect = (item) => {
     const foodDetails = {
@@ -122,14 +116,6 @@ const NutritionScreen = () => {
     }
   }, [breakfastFoods, lunchFoods, dinnerFoods, handleDeleteMeal, updateFoods]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      fetchMeals(selectedDate).catch(error => console.error('Failed to refetch meals:', error));
-    });
-
-    return unsubscribe;
-  }, [navigation, selectedDate, fetchMeals]);
-
   const combinedFoods = useMemo(() => {
     switch (selectedMeal) {
       case 'breakfast':
@@ -142,8 +128,6 @@ const NutritionScreen = () => {
         return [];
     }
   }, [selectedMeal, breakfastFoods, lunchFoods, dinnerFoods]);
-
-  console.log('Combined foods:', combinedFoods);
 
   return (
     <ApplicationCustomScreen

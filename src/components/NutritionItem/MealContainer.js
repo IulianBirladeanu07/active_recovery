@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ScrollView } from 'react-native';
 import FoodItem from './FoodItem';
 
 const MealContainer = ({
@@ -17,55 +17,41 @@ const MealContainer = ({
   selectedMeal,
   setSelectedMeal,
 }) => {
-  // Filter foods based on the selected meal type
   const filteredFoods = foods.filter(food => food.mealType === selectedMeal);
 
-  console.log('Selected meal:', selectedMeal); // Debugging line
-  console.log('Filtered foods:', filteredFoods); // Debugging line
-
   return (
-    <View style={[mealContainer, styles.paddingAdjustment]}>
-      <View style={styles.mealSelector}>
+    <View style={[mealContainer, styles.container]}>
+      <View style={styles.mealButtonsContainer}>
         {['breakfast', 'lunch', 'dinner'].map(meal => (
-          <TouchableOpacity
-            key={meal}
-            onPress={() => {
-              console.log('Meal button pressed:', meal); // Debugging line
-              setSelectedMeal(meal);
-            }}
+          <TouchableOpacity 
+            key={meal} 
+            onPress={() => setSelectedMeal(meal)} 
             style={styles.mealButton}
           >
-            <Text style={[
-              mealTitle, 
-              selectedMeal === meal && styles.selectedMealTitle
-            ]}>
+            <Text style={[mealTitle, selectedMeal === meal && styles.selectedMealText]}>
               {meal.charAt(0).toUpperCase() + meal.slice(1)}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
-      <View style={styles.foodListContainer}>
+      <View style={styles.listContainer}>
         {filteredFoods.length > 0 ? (
-          <FlatList
-            data={filteredFoods}
-            renderItem={({ item }) => (
+          <ScrollView contentContainerStyle={mealScrollView}>
+            {filteredFoods.map((item, index) => (
               <FoodItem
-                key={item.id} // Use a unique key
+                key={`${item.Nume_Produs}_${index}`}
                 item={item}
                 meal={selectedMeal}
                 onSwipeableOpen={onSwipeableOpen}
-                onPress={() => onPress(item)}
+                onPress={() => onPress(item, selectedMeal)}
                 foodName={foodName}
                 foodCalories={foodCalories}
                 foodNutrient={foodNutrient}
                 foodImage={foodImage}
                 isFoodDeletable={isFoodDeletable}
               />
-            )}
-            keyExtractor={item => item.id} // Ensure the key is unique
-            style={mealScrollView}
-            showsVerticalScrollIndicator={false}
-          />
+            ))}
+          </ScrollView>
         ) : (
           <Text style={styles.noFoodsText}>
             No foods added for {selectedMeal}
@@ -77,11 +63,15 @@ const MealContainer = ({
 };
 
 const styles = StyleSheet.create({
-  paddingAdjustment: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  container: {
+    width: '100%',
+    backgroundColor: '#02202B',
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 10,
+    height: 250, // Fixed height
   },
-  mealSelector: {
+  mealButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 10,
@@ -90,12 +80,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
-  selectedMealTitle: {
+  selectedMealText: {
     fontWeight: 'bold',
     color: '#FFA726',
   },
-  foodListContainer: {
-    flex: 1,
+  listContainer: {
+    flex: 1, // Ensure it takes up available space
   },
   noFoodsText: {
     textAlign: 'center',

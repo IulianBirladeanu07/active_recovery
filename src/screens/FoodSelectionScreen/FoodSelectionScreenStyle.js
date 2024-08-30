@@ -21,18 +21,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     marginBottom: 15,
     marginTop: 50,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     height: 45,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   input: {
     flex: 1,
-    paddingVertical: 10,
-    color: '#000',
+    paddingVertical: 0,
+    paddingHorizontal: 10,
     fontSize: RFValue(14),
+    color: '#000',
+  },
+  searchIcon: {
+    color: '#aaa',
+    marginRight: 10,
   },
   barcodeIcon: {
-    color: '#000000',
-    padding: 5,
+    color: '#000',
+    padding: 10,
   },
   categoryContainer: {
     flexDirection: 'row',
@@ -43,7 +53,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 10,
     marginHorizontal: 5,
     backgroundColor: 'transparent',
     minWidth: '30%', // Ensure each button has a minimum width
@@ -59,9 +68,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     fontWeight: 'bold',
     textAlign: 'center',
-    paddingBottom: 5, // Space between text and underline
-    alignSelf: 'center',
-    width: '100%', // Ensure the underline takes up the entire button width
+    paddingBottom: 5,
     borderBottomWidth: 2,
     borderBottomColor: '#FFA726',
   },
@@ -83,10 +90,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   foodImage: {
-    width: 45,
-    height: 45,
+    width: 35,
+    height: 35,
     marginRight: 15,
     borderRadius: 5,
+  },
+  foodCalories: {
+    fontSize: RFValue(16),
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'right',
   },
   foodDetails: {
     flex: 1,
@@ -101,13 +114,6 @@ const styles = StyleSheet.create({
     fontSize: RFValue(12),
     color: '#CCCCCC',
     marginBottom: 5,
-  },
-  foodCalories: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'right',
-    top: 10,
   },
   macroContainer: {
     flexDirection: 'row',
