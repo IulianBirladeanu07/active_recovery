@@ -2,11 +2,13 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import styles from './FoodDetailScreenStyle';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { useFoodContext } from '../../context/FoodContext';
 
 const FoodDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { food, meal, update, foodId, imageSource } = route.params;
+  const { updateMealInDatabase } = useFoodContext();
 
   const [quantity, setQuantity] = useState(100); // Default quantity is 100 grams
   const [unit, setUnit] = useState('grams');
@@ -40,13 +42,18 @@ const FoodDetailScreen = () => {
     return nutrientValue;
   }, [quantity, unit]);
 
-  const handleAddFood = () => {
+  const generateRandomHexId = (length = 8) => {
+    return [...Array(length)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+  };
+
+  const handleAddFood = async () => {
     if (quantity <= 0 || isNaN(quantity)) {
       Alert.alert("Invalid Quantity", "Please enter a valid quantity greater than 0.");
       return;
     }
   
     const updatedFoodDetails = {
+      id: foodId || generateRandomHexId(), // Use random hexadecimal ID if not updating
       Nume_Produs: food.Nume_Produs || 'Unknown',
       Calorii: calculateNutrientValue(extractCalories(food.Calorii)),
       Carbohidrati: calculateNutrientValue(food.Carbohidrati),
@@ -58,17 +65,23 @@ const FoodDetailScreen = () => {
       Grasimi_Saturate: calculateNutrientValue(food.Grasimi_Saturate),
       quantity,
       unit,
-      image,
+      image: imageSource || require('../../assets/almond.png'), // Ensure the image source is correctly set
     };
   
-    if (update) {
-      // Notify NutritionScreen to update the food item
-      navigation.navigate('Nutrition', { updatedFood: updatedFoodDetails, meal });
-    } else {
-      navigation.navigate('FoodSelection', { selectedFood: updatedFoodDetails, meal });
+    try {
+      if (update) {
+        // Update the food item in the database
+        await updateMealInDatabase(meal, foodId, updatedFoodDetails);
+        navigation.navigate('Nutrition', { refresh: true, meal }); // Navigate to Nutrition after updating
+      } else {
+        // Add a new food item and navigate to the FoodSelection screen
+        navigation.navigate('FoodSelection', { selectedFood: updatedFoodDetails, meal });
+      }
+    } catch (error) {
+      Alert.alert("Update Failed", "There was an error updating the food item.");
+      console.error('Update failed:', error);
     }
   };
-  
 
   return (
     <View style={styles.container}>

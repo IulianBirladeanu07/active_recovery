@@ -5,18 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { getFoodImage, categoryImageMap } from '../../services/foodImageService';
 
 const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage, onSwipeableOpen, onPress, isFoodDeletable }) => {
-  // Get the image source using the utility function
   const imageSource = item.image || getFoodImage(item.Nume_Produs, 'default', categoryImageMap);
-
-  // Direct use of item.Calorii assuming it's the total for the item
   const calories = Math.round(item.Calorii);
 
-  // Helper function to truncate text
-  const truncateText = (text, maxLength) => {
-    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
-  };
+  const truncateText = (text, maxLength) => text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 
-  // Swipeable actions
   const renderRightActions = (progress, dragX) => {
     if (!isFoodDeletable) return null;
 
@@ -40,7 +33,10 @@ const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage,
 
     return (
       <Animated.View style={[styles.deleteButtonContainer, { opacity, transform: [{ translateX }, { scale }] }]}>
-        <TouchableOpacity onPress={() => onSwipeableOpen(item, meal)} style={styles.deleteButton}>
+        <TouchableOpacity onPress={() => {
+          console.log('Swiping open item:', item); // Debugging line
+          onSwipeableOpen(item);
+        }} style={styles.deleteButton}>
           <Ionicons name="trash-outline" size={24} color="#fff" />
         </TouchableOpacity>
       </Animated.View>
@@ -48,13 +44,19 @@ const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage,
   };
 
   return (
-    <Swipeable renderRightActions={renderRightActions} onSwipeableOpen={() => onSwipeableOpen(item, meal)}>
-      <TouchableOpacity onPress={() => onPress(item)}>
+    <Swipeable renderRightActions={renderRightActions} onSwipeableOpen={() => {
+      console.log('Swiped open item:', item); // Debugging line
+      onSwipeableOpen(item);
+    }}>
+      <TouchableOpacity onPress={() => {
+        console.log('Pressed item:', item); // Debugging line
+        onPress(item);
+      }}>
         <View style={styles.foodItem}>
           <Image source={imageSource} style={foodImage} resizeMode="contain" />
           <View style={styles.foodDetails}>
             <Text style={foodName} numberOfLines={1} ellipsizeMode="tail">
-              {truncateText(item.Nume_Produs, 15)} {/* Adjust max length as necessary */}
+              {truncateText(item.Nume_Produs, 15)}
             </Text>
             <Text style={foodNutrient}>{item.quantity} {item.unit}</Text>
           </View>
