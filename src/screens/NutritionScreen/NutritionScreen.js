@@ -40,6 +40,13 @@ const NutritionScreen = () => {
     return unsubscribe;
   }, [navigation, selectedDate, fetchMeals]);
 
+  useEffect(() => {
+    if (!selectedDate || isNaN(new Date(selectedDate))) {
+        console.warn('Invalid selectedDate');
+        // tratează eroarea aici
+    }
+}, [selectedDate]);
+
   const debounceFetchMeals = useCallback(debounce(async (date) => {
     try {
       await fetchMeals(date);
@@ -227,12 +234,16 @@ const NutritionScreen = () => {
           />
 
           <View style={styles.footer}>
-            <TouchableOpacity 
-              style={styles.addButton} 
-              onPress={() => navigation.navigate('FoodSelection', { meal: selectedMeal, selectedDate })}
-            >
-              <Text style={styles.addButtonText}>Add Food</Text>
-            </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => {
+              const selectedDateString = selectedDate.toISOString(); // Convertim data într-un string ISO
+              navigation.navigate('FoodSelection', { meal: selectedMeal, selectedDate: selectedDateString });
+            }}
+          >
+            <Text style={styles.addButtonText}>Add Food</Text>
+          </TouchableOpacity>
+
             <Text style={styles.totalCaloriesText}>{`Total: ${dailyNutrition.calories.toFixed(0)} Calories`}</Text>
           </View>
         </View>

@@ -18,7 +18,6 @@ const FoodSelectionScreen = () => {
   const route = useRoute();
   const { meal, selectedDate } = route.params;
   
-  console.log('meal: ', selectedDate)
   const { handleAddMeal } = useFoodContext();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -148,7 +147,7 @@ const FoodSelectionScreen = () => {
   };
 
   const handleNavigateToFoodDetail = (food) => {
-    navigation.navigate('FoodDetail', { food, meal, selectedDate });
+    navigation.navigate('FoodDetail', { food, meal, selectedDate: selectedDate.toISOString() });
   };
 
   const handleDone = async () => {
