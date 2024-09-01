@@ -13,17 +13,18 @@ export const FoodProvider = ({ children }) => {
   const [lunchFoods, setLunchFoods] = useState([]);
   const [dinnerFoods, setDinnerFoods] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date());  // New state for selected date
 
   useEffect(() => {
     const unsubscribe = firebase.auth().onAuthStateChanged(user => {
       if (user) {
         setCurrentUser(user);
-        preloadMeals(user);
+        preloadMeals(user, selectedDate);  // Pass selectedDate to preloadMeals
       }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [selectedDate]);  // Add selectedDate as a dependency
 
   const updateFoods = (mealType, updatedFoods) => {
     switch (mealType) {
@@ -41,11 +42,11 @@ export const FoodProvider = ({ children }) => {
     }
   };
 
-  const preloadMeals = useCallback(async (user) => {
+  const preloadMeals = useCallback(async (user, date) => {
     if (!user) return;
 
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
+    const validDate = date instanceof Date ? date : new Date();
+    const formattedDate = validDate.toISOString().split('T')[0];
 
     try {
       const meals = {
@@ -121,10 +122,10 @@ export const FoodProvider = ({ children }) => {
     }
   }, [currentUser]);
 
-  const handleAddMeal = useCallback(async (mealType, foods) => {
+  const handleAddMeal = useCallback(async (mealType, foods, selectedDate) => {
     if (!currentUser) return;
 
-    const mealDate = new Date().toISOString().split('T')[0];
+    const mealDate = selectedDate.toISOString().split('T')[0];  // Use selectedDate instead of new Date()
     const foodTimestamp = firebase.firestore.Timestamp.now();
 
     try {
@@ -162,13 +163,13 @@ export const FoodProvider = ({ children }) => {
     } catch (error) {
       console.error('Error adding meal:', error);
     }
-  }, [currentUser]);
+  }, [currentUser, selectedDate]);
 
   const handleDeleteMeal = useCallback(async (mealType, foodId) => {
     if (!currentUser) return;
 
     try {
-      const mealDate = new Date().toISOString().split('T')[0];
+      const mealDate = selectedDate.toISOString().split('T')[0];  // Use selectedDate instead of new Date()
       const mealDocRef = doc(db, 'meals', `${mealDate}_${mealType}_${currentUser.uid}`);
       const mealDocSnap = await getDoc(mealDocRef);
 
@@ -190,12 +191,12 @@ export const FoodProvider = ({ children }) => {
     } catch (error) {
       console.error('Error deleting meal:', error);
     }
-  }, [currentUser]);
+  }, [currentUser, selectedDate]);
 
   const updateMealInDatabase = async (mealType, foodId, updatedFoodDetails) => {
     if (!currentUser) return;
 
-    const mealDate = new Date().toISOString().split('T')[0];
+    const mealDate = selectedDate.toISOString().split('T')[0];  // Use selectedDate instead of new Date()
 
     try {
       const mealDocRef = doc(db, 'meals', `${mealDate}_${mealType}_${currentUser.uid}`);
@@ -256,8 +257,65 @@ export const FoodProvider = ({ children }) => {
     }
   }, [currentUser]);
 
+  const addMultipleFoods = async (mealType, foods) => {
+    if (!currentUser) return;
+
+    const mealDate = selectedDate.toISOString().split('T')[0];  // Use selectedDate instead of new Date()
+    const foodTimestamp = firebase.firestore.Timestamp.now();
+
+    try {
+      const mealDocRef = doc(db, 'meals', `${mealDate}_${mealType}_${currentUser.uid}`);
+      const mealDocSnap = await getDoc(mealDocRef);
+
+      let existingMealData = { foods: [], date: mealDate, uid: currentUser.uid, mealType, timestamp: foodTimestamp };
+
+      if (mealDocSnap.exists()) {
+        existingMealData = mealDocSnap.data();
+        if (!existingMealData.timestamp || !existingMealData.timestamp.seconds) {
+          existingMealData.timestamp = foodTimestamp;
+        }
+      }
+
+      const consolidatedFoods = foods.reduce((acc, food) => {
+        const existingFood = acc.find(item => item.id === food.id);
+        if (existingFood) {
+          existingFood.quantity += food.quantity;
+          existingFood.usageCount = (existingFood.usageCount || 0) + 1;
+        } else {
+          acc.push({ ...food, quantity: food.quantity || 1, usageCount: 1 });
+        }
+        return acc;
+      }, existingMealData.foods);
+
+      await setDoc(mealDocRef, {
+        ...existingMealData,
+        foods: consolidatedFoods,
+        timestamp: foodTimestamp,
+      });
+
+      updateFoods(mealType, consolidatedFoods);
+
+    } catch (error) {
+      console.error('Error adding multiple foods:', error);
+    }
+  };
+
   return (
-    <FoodContext.Provider value={{ breakfastFoods, lunchFoods, dinnerFoods, handleAddMeal, handleDeleteMeal, fetchMeals, fetchWeeklyCalorieData, loading, updateMealInDatabase, updateFoods }}>
+    <FoodContext.Provider value={{
+      breakfastFoods,
+      lunchFoods,
+      dinnerFoods,
+      handleAddMeal,
+      handleDeleteMeal,
+      fetchMeals,
+      fetchWeeklyCalorieData,
+      loading,
+      updateMealInDatabase,
+      updateFoods,
+      addMultipleFoods,
+      selectedDate,   // Expose selectedDate
+      setSelectedDate // Expose function to update selectedDate
+    }}>
       {children}
     </FoodContext.Provider>
   );

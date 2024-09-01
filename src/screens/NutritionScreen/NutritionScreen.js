@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -9,17 +9,26 @@ import CircularProgress from '../../components/CircularProgress/CircularProgress
 import ProgressBar from '../../components/ProgressBar/ProgressBar';
 import MealContainer from '../../components/NutritionItem/MealContainer';
 import useDailyNutrition from '../../helpers/useDailyNutrtion';
-import styles from './NutritionScreenStyles';
 import { WorkoutContext } from '../../context/WorkoutContext';
 import debounce from 'lodash/debounce';
+import styles from './NutritionScreenStyles';
 
 const NutritionScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { userSettings } = useContext(WorkoutContext);
-  const { breakfastFoods, lunchFoods, dinnerFoods, handleDeleteMeal, fetchMeals, updateFoods } = useFoodContext();
 
-  const [selectedDate, setSelectedDate] = useState(new Date(route.params?.date || new Date()));
+  const {
+    breakfastFoods,
+    lunchFoods,
+    dinnerFoods,
+    handleDeleteMeal,
+    fetchMeals,
+    updateFoods,
+    selectedDate,  // Use selectedDate from context
+    setSelectedDate  // Use setSelectedDate from context
+  } = useFoodContext();
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState('breakfast');
 
@@ -27,7 +36,7 @@ const NutritionScreen = () => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchMeals(selectedDate).catch(error => console.error('Failed to refetch meals:', error));
     });
-  
+
     return unsubscribe;
   }, [navigation, selectedDate, fetchMeals]);
 
@@ -57,14 +66,17 @@ const NutritionScreen = () => {
     }
   };
 
-  const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods, selectedDate);
-
+  const dailyNutrition = useDailyNutrition(breakfastFoods, lunchFoods, dinnerFoods);
+  
   const { targetCalories, targetProtein, targetFats, targetCarbs } = userSettings;
 
   const remainingCalories = useMemo(() => targetCalories - dailyNutrition.calories, [targetCalories, dailyNutrition.calories]);
   const remainingCarbs = useMemo(() => targetCarbs - dailyNutrition.carbs, [targetCarbs, dailyNutrition.carbs]);
   const remainingProtein = useMemo(() => targetProtein - dailyNutrition.protein, [targetProtein, dailyNutrition.protein]);
   const remainingFats = useMemo(() => targetFats - dailyNutrition.fat, [targetFats, dailyNutrition.fat]);
+
+  console.log(remainingProtein)
+
 
   const handleFoodSelect = (item) => {
     const foodDetails = {
@@ -85,10 +97,10 @@ const NutritionScreen = () => {
 
   const handleSwipeableOpen = useCallback(async (item) => {
     console.log('Swiped open item:', item);
-  
+
     const mealType = item.mealType;
     let updatedFoods;
-  
+
     try {
       await handleDeleteMeal(mealType, item.id);
 
@@ -109,7 +121,7 @@ const NutritionScreen = () => {
           console.error('Unknown meal type:', mealType);
           return;
       }
-  
+
       console.log(`Updated ${mealType} foods list after swipe.`);
     } catch (error) {
       console.error('Failed to handle swipeable open:', error);
@@ -155,7 +167,15 @@ const NutritionScreen = () => {
 
           <View style={styles.statsContainer}>
             <View style={styles.circularProgressContainer}>
-              <CircularProgress title="Kcal Left" value={remainingCalories} maxValue={targetCalories} size={100} strokeWidth={10} color="#FFA726" duration={1500} />
+                <CircularProgress 
+                  title="Kcal Left" 
+                  value={dailyNutrition.calories} 
+                  maxValue={targetCalories} 
+                  size={100} 
+                  strokeWidth={10} 
+                  color="#FFA726" 
+                  duration={1500} 
+                />
               <View style={styles.progressRow}>
                 <View style={styles.innerProgressItem}>
                   <Ionicons name="restaurant-outline" size={18} color="#FFA726" />
@@ -169,9 +189,24 @@ const NutritionScreen = () => {
             </View>
 
             <View style={styles.barContainer}>
-              <ProgressBar value={remainingCarbs} maxValue={targetCarbs} customText="Carb" />
-              <ProgressBar value={remainingProtein} maxValue={targetProtein} customText="Protein" />
-              <ProgressBar value={remainingFats} maxValue={targetFats} customText="Fat" />
+            <ProgressBar
+        value={dailyNutrition.carbs}
+        maxValue={targetCarbs}
+        customText="Carb"
+        color="#4caf50" // Carb color
+      />
+      <ProgressBar
+        value={dailyNutrition.protein}
+        maxValue={targetProtein}
+        customText="Protein"
+        color="#9c27b0" // Protein color
+      />
+      <ProgressBar
+        value={dailyNutrition.fat}
+        maxValue={targetFats}
+        customText="Fat"
+        color="#2196f3" // Fat color
+      />
             </View>
           </View>
 
@@ -192,7 +227,10 @@ const NutritionScreen = () => {
           />
 
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('FoodSelection', { meal: selectedMeal, date: selectedDate.toISOString() })}>
+            <TouchableOpacity 
+              style={styles.addButton} 
+              onPress={() => navigation.navigate('FoodSelection', { meal: selectedMeal, selectedDate })}
+            >
               <Text style={styles.addButtonText}>Add Food</Text>
             </TouchableOpacity>
             <Text style={styles.totalCaloriesText}>{`Total: ${dailyNutrition.calories.toFixed(0)} Calories`}</Text>

@@ -2,10 +2,15 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 const ProgressBar = ({ value, maxValue, customText }) => {
-  const consumedValue = maxValue - value; // Calculate consumed value instead of remaining value
-  const consumedPercentage = Math.min((consumedValue / maxValue) * 100, 100); // Calculate consumed percentage (cap at 100%)
-  const fillWidth = `${consumedPercentage}%`; // Set fill width based on the consumed percentage
-  const barColor = getColor(customText.toLowerCase());
+  const isOverconsumed = value > maxValue;
+  const absoluteValue = isOverconsumed ? value - maxValue : maxValue - value;
+  const consumedPercentage = isOverconsumed
+    ? 100 // Fill the bar completely if overconsumed
+    : Math.min((value / maxValue) * 100, 100); // Calculate percentage based on the value
+
+  const fillWidth = `${consumedPercentage}%`;
+  const barColor = isOverconsumed ? '#FF7043' : getColor(customText.toLowerCase());
+  const displayText = isOverconsumed ? 'g over' : 'g left';
 
   return (
     <View style={styles.container}>
@@ -13,8 +18,7 @@ const ProgressBar = ({ value, maxValue, customText }) => {
       <View style={styles.progressBarContainer}>
         <View style={[styles.progressBarFill, { width: fillWidth, backgroundColor: barColor }]} />
       </View>
-      {/* Display the remaining value */}
-      <Text style={styles.label}>{`${value.toFixed(0)}g left`}</Text>
+      <Text style={styles.label}>{`${absoluteValue.toFixed(0)} ${displayText}`}</Text>
     </View>
   );
 };
@@ -51,6 +55,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: '100%',
     borderRadius: 10,
+    left: 0,
   },
   label: {
     fontSize: 12,

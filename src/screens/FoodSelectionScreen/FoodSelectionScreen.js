@@ -16,7 +16,9 @@ import FoodSearchItem from '../../components/NutritionItem/FoodSearchItem';
 const FoodSelectionScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { meal } = route.params;
+  const { meal, selectedDate } = route.params;
+  
+  console.log('meal: ', selectedDate)
   const { handleAddMeal } = useFoodContext();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,7 +98,7 @@ const FoodSelectionScreen = () => {
         setCategoryFoods(fetchedFoods);
         setMessage(fetchedFoods.length > 0 ? '' : 'No foods found.');
       } else if (selectedCategory === 'recent') {
-        const fetchedMeals = await fetchRecentMeals();
+        const fetchedMeals = await fetchRecentMeals(meal);
         console.log('meals',fetchedMeals)
         setRecentMeals(fetchedMeals);
         setMessage(fetchedMeals.length > 0 ? '' : 'No meals found.');
@@ -146,7 +148,7 @@ const FoodSelectionScreen = () => {
   };
 
   const handleNavigateToFoodDetail = (food) => {
-    navigation.navigate('FoodDetail', { food, meal });
+    navigation.navigate('FoodDetail', { food, meal, selectedDate });
   };
 
   const handleDone = async () => {
@@ -161,7 +163,7 @@ const FoodSelectionScreen = () => {
         image: getFoodImage(food.Nume_Produs, food.Categorie, categoryImageMap),
       }));
 
-      await handleAddMeal(meal, foodsWithImages);
+      await handleAddMeal(meal, foodsWithImages, selectedDate);
       navigation.navigate('Nutrition', { refresh: true });
     } catch (error) {
       console.error("Error details:", error);

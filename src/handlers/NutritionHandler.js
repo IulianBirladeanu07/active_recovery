@@ -2,26 +2,28 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import { db, collection, getDocs, query, where, orderBy, limit, getDoc, doc } from '../services/firebase';
 
-export const fetchRecentMeals = async () => {
+export const fetchRecentMeals = async (mealType) => {
   try {
     const user = firebase.auth().currentUser;
     if (!user) {
       throw new Error('User not authenticated.');
     }
     const uid = user.uid;
-    console.log('here')
+    console.log('Fetching recent meals for type:', mealType);
 
-    // Fetch most recent 10 meals
+    // Fetch most recent 10 meals of the specified type
     const mealQuery = query(
       collection(db, 'meals'),
       where('uid', '==', uid),
+      where('mealType', '==', mealType), // Filter by meal type
       orderBy('timestamp', 'desc'),
       limit(10)
     );
 
     const mealQuerySnapshot = await getDocs(mealQuery);
     const mealDocs = mealQuerySnapshot.docs;
-    console.log(mealDocs)
+    console.log('Fetched meal documents:', mealDocs);
+
     // Process each meal document
     const meals = mealDocs.map(docSnapshot => {
       const mealData = { id: docSnapshot.id, ...docSnapshot.data() };
@@ -29,7 +31,7 @@ export const fetchRecentMeals = async () => {
       // Ensure 'foods' is always an array
       const foods = Array.isArray(mealData.foods) ? mealData.foods : [];
 
-      console.log(foods)
+      console.log('Foods in meal:', foods);
 
       // Summarize the meal
       const totalCalories = foods.reduce((total, food) => total + (food.calories || 0), 0);
@@ -47,6 +49,7 @@ export const fetchRecentMeals = async () => {
     throw error;
   }
 };
+
 
 export const fetchFrequentFoods = async (limitCount = 10) => {
   try {
