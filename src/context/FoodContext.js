@@ -125,7 +125,7 @@ export const FoodProvider = ({ children }) => {
   const handleAddMeal = useCallback(async (mealType, foods, selectedDate) => {
     if (!currentUser) return;
 
-    const mealDate = selectedDate.toISOString().split('T')[0];  // Use selectedDate instead of new Date()
+    const mealDate = selectedDate.split('T')[0];  // Use selectedDate instead of new Date()
     const foodTimestamp = firebase.firestore.Timestamp.now();
 
     try {

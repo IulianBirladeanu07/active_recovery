@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   overlayContainer: {
-    marginBottom: 20,
+    marginBottom: 15,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -19,15 +19,15 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
-    marginBottom: 15,
     marginTop: 50,
     paddingHorizontal: 15,
-    height: 45,
+    height: 50,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    
   },
   input: {
     flex: 1,
@@ -46,22 +46,43 @@ const styles = StyleSheet.create({
   },
   categoryContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-between', // Adjust to 'space-around' or 'space-evenly' if needed
     marginBottom: 15,
+    marginTop: 15,
   },
   categoryButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 12,
+    justifyContent: 'center',
+    paddingVertical: 10,
     marginHorizontal: 5,
+    borderRadius: 12, // Increased border radius for a more rounded look
+    borderWidth: 2,
+    borderColor: '#CCCCCC', // Default border color
     backgroundColor: 'transparent',
-    minWidth: '30%', // Ensure each button has a minimum width
+    backgroundColor: '#1E2A33', // Slight background color for unselected state
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   categoryButtonText: {
     color: '#FFFFFF',
     fontSize: RFValue(14),
     fontWeight: 'bold',
     textAlign: 'center',
+    letterSpacing: 0.5, // Added letter spacing for a polished look
+  },
+  selectedCategoryButton: {
+    borderColor: '#FFA726', // Highlight border color for the selected category
+    backgroundColor: '#03323C', // Darker background for selected state
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 6,
+    transform: [{ scale: 1.05 }], // Slight scaling effect for the selected state
   },
   selectedCategoryButtonText: {
     color: '#FFA726',
@@ -72,14 +93,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: '#FFA726',
   },
-  foodListWrapper: {
-    flex: 1,
-  },
   foodListContainer: {
     padding: 5,
     backgroundColor: '#02222B',
     borderRadius: 10,
     marginVertical: 10,
+    
   },
   foodItem: {
     flexDirection: 'row',
@@ -140,12 +159,6 @@ const styles = StyleSheet.create({
   firstFoodItem: {
     padding: 15,
     borderRadius: 10,
-  },
-  mealItem: {
-    padding: 15,
-    borderRadius: 10,
-    backgroundColor: '#02202B',
-    marginVertical: 10,
   },
   mealTitle: {
     fontSize: RFValue(16),

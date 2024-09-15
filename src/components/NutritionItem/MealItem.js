@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, FlatList } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { getFoodImage, categoryImageMap } from '../../services/foodImageService';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 const MealItem = ({ meal }) => {
     const [expanded, setExpanded] = useState(false);
@@ -28,14 +28,14 @@ const MealItem = ({ meal }) => {
     );
 
     const combinedImage = meal.foods.length > 0 ? (
-        <View style={[styles.combinedImageContainer, meal.foods.length === 1 && styles.singleImageContainer]}>
+        <View style={styles.combinedImageContainer}>
             {meal.foods.slice(0, 2).map((food, index) => {
                 const imageSource = getFoodImage(food.Nume_Produs, food.Categorie, categoryImageMap);
                 return (
                     <Image
                         key={food.id || index}
                         source={imageSource}
-                        style={[styles.foodImage, meal.foods.length === 1 ? { marginLeft: 0 } : { left: index * 25 }]}
+                        style={[styles.foodImage, { marginLeft: index > 0 ? -10 : 0 }]} // Adjust margin for overlapping effect
                         resizeMode="cover"
                     />
                 );
@@ -85,39 +85,37 @@ const MealItem = ({ meal }) => {
 
 const styles = StyleSheet.create({
     mealItem: {
-        padding: 20,
+        padding: 15,
         borderRadius: 10,
-        backgroundColor: '#02303C',
-        marginVertical: 8,
+        backgroundColor: '#02202B',
+        marginVertical: 10,
         position: 'relative',
+        elevation: 3, // Add elevation for better shadow effect
     },
     headerRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 8,
+        marginBottom: 12,
     },
     mealTitle: {
-        fontSize: RFValue(14),
+        fontSize: RFValue(16),
         color: '#FFFFFF',
         fontWeight: 'bold',
         flex: 1,
     },
     combinedImageContainer: {
         flexDirection: 'row',
-        width: 50,
-        height: 30,
-        position: 'relative',
-    },
-    singleImageContainer: {
+        alignItems: 'center',
         justifyContent: 'flex-end',
-        alignItems: 'flex-end',
+        width: 60,
+        height: 35,
+        overflow: 'hidden', // Ensure images do not overflow container
     },
     foodImage: {
         width: 30,
         height: 30,
         borderRadius: 5,
-        position: 'absolute',
     },
     noFoodsText: {
         fontSize: RFValue(12),
@@ -127,45 +125,48 @@ const styles = StyleSheet.create({
     foodItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: 4,
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
     },
     foodName: {
-        fontSize: RFValue(12),
+        fontSize: RFValue(14),
         color: '#FFFFFF',
         flex: 1,
     },
     foodQuantity: {
-        fontSize: RFValue(12),
+        fontSize: RFValue(14),
         color: '#FFFFFF',
         marginLeft: 8,
     },
     errorContainer: {
-        padding: 10,
+        padding: 12,
         borderRadius: 8,
         backgroundColor: '#FF0000',
-        marginVertical: 8,
+        marginVertical: 10,
     },
     errorText: {
-        fontSize: RFValue(12),
+        fontSize: RFValue(14),
         color: '#FFFFFF',
         textAlign: 'center',
     },
     foodList: {
-        maxHeight: 60,
+        maxHeight: 100, // Adjust max height to show more items if needed
     },
     footerRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginTop: 10, // Increased space above "Show less"
+        marginTop: 15, // Increase space above "Show less"
     },
     expandText: {
-        fontSize: RFValue(12),
+        fontSize: RFValue(14),
         color: '#FFA726',
         marginRight: 10,
+        fontWeight: 'bold', // Make text stand out
     },
     totalCaloriesFooter: {
-        fontSize: RFValue(12),
+        fontSize: RFValue(14),
         fontWeight: 'bold',
         color: '#FFA726',
     },

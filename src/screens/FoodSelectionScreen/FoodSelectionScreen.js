@@ -147,7 +147,7 @@ const FoodSelectionScreen = () => {
   };
 
   const handleNavigateToFoodDetail = (food) => {
-    navigation.navigate('FoodDetail', { food, meal, selectedDate: selectedDate.toISOString() });
+    navigation.navigate('FoodDetail', { food, meal, selectedDate: selectedDate });
   };
 
   const handleDone = async () => {
@@ -219,26 +219,42 @@ const FoodSelectionScreen = () => {
             <MaterialCommunityIcons name="barcode-scan" size={24} style={styles.barcodeIcon} />
           </TouchableOpacity>
         </View>
+      
+       {!searchQuery && (
+        <View style={styles.categoryContainer}>
+          <TouchableOpacity
+            style={[styles.categoryButton, selectedCategory === 'frequent' && styles.selectedCategoryButton]}
+            onPress={() => handleCategoryChange('frequent')}
+          >
+            <MaterialCommunityIcons 
+              name="repeat" // You can choose other icons from MaterialCommunityIcons
+              size={24} 
+              color={selectedCategory === 'frequent' ? '#FFA726' : '#FFFFFF'} 
+            />
+          </TouchableOpacity>
 
-        {!searchQuery && (
-          <View style={styles.categoryContainer}>
-            <TouchableOpacity
-              style={[styles.categoryButton, selectedCategory === 'frequent' && styles.selectedCategoryButton]}
-              onPress={() => handleCategoryChange('frequent')}
-            >
-              <Text style={selectedCategory === 'frequent' ? styles.selectedCategoryButtonText : styles.categoryButtonText}>
-                FREQUENT
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.categoryButton, selectedCategory === 'recent' && styles.selectedCategoryButton]}
-              onPress={() => handleCategoryChange('recent')}
-            >
-              <Text style={selectedCategory === 'recent' ? styles.selectedCategoryButtonText : styles.categoryButtonText}>
-                RECENT
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[styles.categoryButton, selectedCategory === 'recent' && styles.selectedCategoryButton]}
+            onPress={() => handleCategoryChange('recent')}
+          >
+            <MaterialCommunityIcons 
+              name="history" // History icon for recent meals
+              size={24} 
+              color={selectedCategory === 'recent' ? '#FFA726' : '#FFFFFF'} 
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.categoryButton, selectedCategory === 'favorite' && styles.selectedCategoryButton]}
+            onPress={() => handleCategoryChange('favorite')}
+          >
+            <MaterialCommunityIcons 
+              name="heart" // Heart icon for favorite foods
+              size={24} 
+              color={selectedCategory === 'favorite' ? '#FFA726' : '#FFFFFF'} 
+            />
+          </TouchableOpacity>
+        </View>
         )}
       </View>
 
@@ -302,10 +318,10 @@ const FoodSelectionScreen = () => {
         </View>
       )}
 
-      <LinearGradient
+      {/* <LinearGradient
         colors={['transparent', '#02111B']}
         style={styles.gradient}
-      />
+      /> */}
 
       {selectedFoods.length > 0 && (
         <View style={styles.doneButtonContainer}>

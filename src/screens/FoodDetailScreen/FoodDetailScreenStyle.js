@@ -6,12 +6,17 @@ export default StyleSheet.create({
     padding: 16,
     backgroundColor: '#02111B',
   },
+  combinedImageContainer: {
+    justifyContent: 'center', // Center the images horizontally
+    alignItems: 'center', // Align images vertically in the middle
+    marginBottom: 16,
+    marginTop: 100,
+  },
   foodImage: {
     width: 60,
     height: 60,
-    alignSelf: 'center',
-    marginBottom: 16,
-    marginTop: 100,
+    borderRadius: 30, // To make the images circular, if desired
+    marginHorizontal: 8, // Add some spacing between the images
   },
   foodName: {
     fontSize: 24,
