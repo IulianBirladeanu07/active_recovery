@@ -112,5 +112,10 @@ export default StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  likeButtonText: {
+    fontSize: 18,
+    color: '#ff5a5f',
+    marginTop: 10,
   },  
 });

@@ -7,7 +7,6 @@ const MealContainer = ({
   foodName,
   foodCalories,
   foodNutrient,
-  foodImage,
   onSwipeableOpen,
   onPress,
   mealContainer,
@@ -47,7 +46,6 @@ const MealContainer = ({
                 foodName={foodName}
                 foodCalories={foodCalories}
                 foodNutrient={foodNutrient}
-                foodImage={foodImage}
                 isFoodDeletable={isFoodDeletable}
               />
             ))}
@@ -74,7 +72,6 @@ const styles = StyleSheet.create({
   mealButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 10,
   },
   mealButton: {
     paddingHorizontal: 10,

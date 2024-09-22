@@ -40,22 +40,8 @@ const FoodSelectionScreen = () => {
   }), [categoryFoods]);
 
   useEffect(() => {
-    if (route.params?.selectedFood) {
-        setSelectedFoods(prevFoods => {
-            const existingFoodIndex = prevFoods.findIndex(food => food.Nume_Produs === route.params.selectedFood.Nume_Produs);
-            
-            if (existingFoodIndex !== -1) {
-                // Food already exists, update quantity
-                const updatedFoods = [...prevFoods];
-                updatedFoods[existingFoodIndex].quantity += route.params.selectedFood.quantity;
-                return updatedFoods;
-            } else {
-                // Food doesn't exist, add new entry
-                return [...prevFoods, route.params.selectedFood];
-            }
-        });
-    }
-}, [route.params?.selectedFood]);
+    console.log('selected: ', selectedFoods)
+}, [selectedFoods]);
   
   const fetchFoodsBySearch = useCallback(async (query) => {
     if (!query) return;
@@ -150,6 +136,19 @@ const FoodSelectionScreen = () => {
     navigation.navigate('FoodDetail', { food, meal, selectedDate: selectedDate });
   };
 
+  const handlePlusPress = (item) => {
+    setSelectedFoods((prevSelectedFoods) => {
+      // Check if the item is already selected
+      if (prevSelectedFoods.some(food => food.id === item.id)) {
+        // Return the previous state if the item is already selected
+        return prevSelectedFoods;
+      }
+  
+      // Add the new item to the selectedFoods array
+      return [...prevSelectedFoods, item];
+    });
+  };  
+  
   const handleDone = async () => {
     if (selectedFoods.length === 0) {
       Alert.alert("No Foods Selected", "Please select at least one food item before proceeding.");
@@ -157,15 +156,10 @@ const FoodSelectionScreen = () => {
     }
 
     try {
-      const foodsWithImages = selectedFoods.map(food => ({
-        ...food,
-        image: getFoodImage(food.Nume_Produs, food.Categorie, categoryImageMap),
-      }));
-
-      await handleAddMeal(meal, foodsWithImages, selectedDate);
+      await handleAddMeal(meal, selectedFoods, selectedDate);
       navigation.navigate('Nutrition', { refresh: true });
     } catch (error) {
-      console.error("Error details:", error);
+      console.error("zError details:", error);
       Alert.alert("Error", "Failed to save the meal data. Please try again.");
     }
   };
@@ -189,10 +183,12 @@ const FoodSelectionScreen = () => {
     <FoodItem
       item={item}
       onPress={handleNavigateToFoodDetail}
+      onPlusPress={handlePlusPress}  // Add this line
       foodName={styles.foodName}
       foodCalories={styles.foodCalories}
       foodNutrient={styles.foodNutrient}
       foodImage={styles.foodImage}
+      showPlusButton={true}
     />
   );
 
@@ -249,7 +245,7 @@ const FoodSelectionScreen = () => {
             onPress={() => handleCategoryChange('favorite')}
           >
             <MaterialCommunityIcons 
-              name="heart" // Heart icon for favorite foods
+              name="muffin"
               size={24} 
               color={selectedCategory === 'favorite' ? '#FFA726' : '#FFFFFF'} 
             />
@@ -277,7 +273,7 @@ const FoodSelectionScreen = () => {
             maxToRenderPerBatch={10}
             windowSize={5}
             removeClippedSubviews={true}
-            contentContainerStyle={{ paddingBottom: 150 }}
+            contentContainerStyle={{ paddingBottom: 10 }}
           />
         </View>
       )}
@@ -295,7 +291,7 @@ const FoodSelectionScreen = () => {
             maxToRenderPerBatch={10}
             windowSize={5}
             removeClippedSubviews={true}
-            contentContainerStyle={{ paddingBottom: 150 }}
+            contentContainerStyle={{ paddingBottom: 10 }}
           />
         </View>
       )}
@@ -313,15 +309,10 @@ const FoodSelectionScreen = () => {
             maxToRenderPerBatch={10}
             windowSize={5}
             removeClippedSubviews={true}
-            contentContainerStyle={{ paddingBottom: 150 }}
+            contentContainerStyle={{ paddingBottom: 10 }}
           />
         </View>
       )}
-
-      {/* <LinearGradient
-        colors={['transparent', '#02111B']}
-        style={styles.gradient}
-      /> */}
 
       {selectedFoods.length > 0 && (
         <View style={styles.doneButtonContainer}>

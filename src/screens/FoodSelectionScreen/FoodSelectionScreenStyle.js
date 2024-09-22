@@ -3,10 +3,35 @@ import { RFValue } from 'react-native-responsive-fontsize';
 
 const { width, height } = Dimensions.get('window');
 
+// Centralized color palette for reusability
+const colors = {
+  background: '#02111B',
+  borderColor: '#CCCCCC',
+  primaryText: '#FFFFFF',
+  accent: '#FFA726',
+  shadow: '#000',
+  unselectedBackground: '#1E2A33',
+  selectedBackground: '#03323C',
+  inputBackground: '#FFFFFF',
+  foodItemBackground: '#02202B',
+  foodListBackground: '#02222B',
+  nutrientText: '#CCCCCC',
+  macroBoxBackground: '#02111B',
+};
+
+// Centralized shadow and elevation style
+const shadowStyle = {
+  shadowColor: colors.shadow,
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.3,
+  shadowRadius: 6,
+  elevation: 4,
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#02111B',
+    backgroundColor: colors.background,
     padding: 10,
   },
   overlayContainer: {
@@ -16,18 +41,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: colors.borderColor,
     borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.inputBackground,
     marginTop: 50,
     paddingHorizontal: 15,
-    height: 50,
+    height: RFValue(50),
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    
   },
   input: {
     flex: 1,
@@ -46,7 +70,7 @@ const styles = StyleSheet.create({
   },
   categoryContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // Adjust to 'space-around' or 'space-evenly' if needed
+    justifyContent: 'space-between',
     marginBottom: 15,
     marginTop: 15,
   },
@@ -56,68 +80,64 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     marginHorizontal: 5,
-    borderRadius: 12, // Increased border radius for a more rounded look
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#CCCCCC', // Default border color
-    backgroundColor: 'transparent',
-    backgroundColor: '#1E2A33', // Slight background color for unselected state
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    borderColor: colors.borderColor,
+    backgroundColor: colors.unselectedBackground,
+    ...shadowStyle, // Apply centralized shadow
   },
   categoryButtonText: {
-    color: '#FFFFFF',
+    color: colors.primaryText,
     fontSize: RFValue(14),
     fontWeight: 'bold',
     textAlign: 'center',
-    letterSpacing: 0.5, // Added letter spacing for a polished look
+    letterSpacing: 0.5,
   },
   selectedCategoryButton: {
-    borderColor: '#FFA726', // Highlight border color for the selected category
-    backgroundColor: '#03323C', // Darker background for selected state
-    shadowColor: '#000',
+    borderColor: colors.accent,
+    backgroundColor: colors.selectedBackground,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
     elevation: 6,
-    transform: [{ scale: 1.05 }], // Slight scaling effect for the selected state
+    transform: [{ scale: 1.05 }],
   },
   selectedCategoryButtonText: {
-    color: '#FFA726',
+    color: colors.accent,
     fontSize: RFValue(14),
     fontWeight: 'bold',
     textAlign: 'center',
     paddingBottom: 5,
     borderBottomWidth: 2,
-    borderBottomColor: '#FFA726',
+    borderBottomColor: colors.accent,
   },
   foodListContainer: {
-    padding: 5,
-    backgroundColor: '#02222B',
+    flex: 1,
+    paddingHorizontal: 10,
+    backgroundColor: colors.foodListBackground,
     borderRadius: 10,
     marginVertical: 10,
-    
+    marginBottom: 20,
+    paddingBottom: 30,
   },
   foodItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 8,
     padding: 10,
-    backgroundColor: '#02202B',
+    backgroundColor: colors.foodItemBackground,
     borderRadius: 10,
   },
   foodImage: {
-    width: 35,
-    height: 35,
+    width: RFValue(35),
+    height: RFValue(35),
     marginRight: 15,
     borderRadius: 5,
   },
   foodCalories: {
-    fontSize: RFValue(16),
+    fontSize: RFValue(14),
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.primaryText,
     textAlign: 'right',
   },
   foodDetails: {
@@ -126,12 +146,12 @@ const styles = StyleSheet.create({
   foodName: {
     fontWeight: 'bold',
     fontSize: RFValue(16),
-    color: '#FFFFFF',
+    color: colors.primaryText,
     marginBottom: 5,
   },
   foodNutrient: {
     fontSize: RFValue(12),
-    color: '#CCCCCC',
+    color: colors.nutrientText,
     marginBottom: 5,
   },
   macroContainer: {
@@ -140,7 +160,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   macroBox: {
-    backgroundColor: '#02111B',
+    backgroundColor: colors.macroBoxBackground,
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 5,
@@ -149,11 +169,11 @@ const styles = StyleSheet.create({
   },
   macroLabel: {
     fontSize: RFValue(10),
-    color: '#CCCCCC',
+    color: colors.nutrientText,
   },
   macroValue: {
     fontSize: RFValue(12),
-    color: '#FFFFFF',
+    color: colors.primaryText,
     fontWeight: 'bold',
   },
   firstFoodItem: {
@@ -162,7 +182,7 @@ const styles = StyleSheet.create({
   },
   mealTitle: {
     fontSize: RFValue(16),
-    color: '#FFFFFF',
+    color: colors.primaryText,
     fontWeight: 'bold',
     marginBottom: 10,
   },
@@ -172,18 +192,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   infoText: {
-    color: '#FFFFFF',
+    color: colors.primaryText,
     fontSize: RFValue(14),
     textAlign: 'center',
     marginTop: 10,
   },
   showMoreText: {
-    color: '#FFA726',
+    color: colors.accent,
     textAlign: 'center',
     marginTop: 10,
     fontSize: RFValue(14),
   },
   loadingOverlay: {
+    ...shadowStyle,
     position: 'absolute',
     top: 0,
     bottom: 0,
@@ -208,17 +229,17 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1000, // Ensure it's on top of other components
+    zIndex: 1000,
   },
   doneButton: {
-    backgroundColor: '#FFA726',
+    backgroundColor: colors.accent,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: 'center',
   },
   doneButtonText: {
-    color: '#FFFFFF',
+    color: colors.primaryText,
     fontSize: RFValue(16),
     fontWeight: 'bold',
   },

@@ -124,47 +124,66 @@ export const FoodProvider = ({ children }) => {
 
   const handleAddMeal = useCallback(async (mealType, foods, selectedDate) => {
     if (!currentUser) return;
-
-    const mealDate = selectedDate.split('T')[0];  // Use selectedDate instead of new Date()
+  
+    const mealDate = selectedDate.split('T')[0];  // Use selectedDate as a string
     const foodTimestamp = firebase.firestore.Timestamp.now();
-
+  
     try {
       const mealDocRef = doc(db, 'meals', `${mealDate}_${mealType}_${currentUser.uid}`);
       const mealDocSnap = await getDoc(mealDocRef);
-
+  
       let existingMealData = { foods: [], date: mealDate, uid: currentUser.uid, mealType, timestamp: foodTimestamp };
-
+  
       if (mealDocSnap.exists()) {
         existingMealData = mealDocSnap.data();
         if (!existingMealData.timestamp || !existingMealData.timestamp.seconds) {
           existingMealData.timestamp = foodTimestamp;
         }
       }
-
+  
+      console.log("Incoming Foods:", foods);
+      console.log("Existing Meal Data Foods:", existingMealData.foods);
+  
+      // Consolidate incoming foods with existing meal data
       const consolidatedFoods = foods.reduce((acc, food) => {
-        const existingFood = acc.find(item => item.id === food.id);
-        if (existingFood) {
-          existingFood.quantity += food.quantity;
-          existingFood.usageCount = (existingFood.usageCount || 0) + 1;
+        const existingFoodIndex = acc.findIndex(item => item.id === food.id);
+        if (existingFoodIndex !== -1) {
+          // Update specific nutrient properties by adding values
+          acc[existingFoodIndex] = {
+            ...acc[existingFoodIndex], // Keep existing properties
+            Calorii: (acc[existingFoodIndex].Calorii || 0) + (food.Calorii || 0), // Add Calorii
+            Carbohidrati: (acc[existingFoodIndex].Carbohidrati || 0) + (food.Carbohidrati || 0), // Add Carbohidrati
+            Grasimi: (acc[existingFoodIndex].Grasimi || 0) + (food.Grasimi || 0), // Add Grasimi
+            Proteine: (acc[existingFoodIndex].Proteine || 0) + (food.Proteine || 0), // Add Proteine
+            Fibre: (acc[existingFoodIndex].Fibre || 0) + (food.Fibre || 0), // Add Fibre
+            Zaharuri: (acc[existingFoodIndex].Zaharuri || 0) + (food.Zaharuri || 0), // Add Zaharuri
+            Sare: (acc[existingFoodIndex].Sare || 0) + (food.Sare || 0), // Add Sare
+            Grasimi_Saturate: (acc[existingFoodIndex].Grasimi_Saturate || 0) + (food.Grasimi_Saturate || 0), // Add Grasimi Saturate
+            usageCount: (acc[existingFoodIndex].usageCount || 0) + 1 // Increment usageCount
+          };
         } else {
+          // Add new food item
           acc.push({ ...food, quantity: food.quantity || 1, usageCount: 1 });
         }
         return acc;
-      }, existingMealData.foods);
-
+      }, existingMealData.foods || []);
+  
+      console.log("Consolidated Foods:", consolidatedFoods);
+  
       await setDoc(mealDocRef, {
         ...existingMealData,
         foods: consolidatedFoods,
         timestamp: foodTimestamp,
       });
-
+  
+      console.log(`Meal ${mealType} updated successfully.`);
       updateFoods(mealType, consolidatedFoods);
-
+  
     } catch (error) {
       console.error('Error adding meal:', error);
     }
-  }, [currentUser, selectedDate]);
-
+  }, [currentUser, selectedDate, updateFoods]);
+  
   const handleDeleteMeal = useCallback(async (mealType, foodId) => {
     if (!currentUser) return;
 
@@ -194,26 +213,86 @@ export const FoodProvider = ({ children }) => {
   }, [currentUser, selectedDate]);
 
   const updateMealInDatabase = async (mealType, foodId, updatedFoodDetails) => {
-    if (!currentUser) return;
-
+    if (!currentUser) {
+      console.log('No current user logged in.');
+      return;
+    }
+  
     const mealDate = selectedDate.toISOString().split('T')[0];  // Use selectedDate instead of new Date()
-
+    console.log(`Updating meal for date: ${mealDate}, type: ${mealType}, user: ${currentUser.uid}`);
+  
     try {
       const mealDocRef = doc(db, 'meals', `${mealDate}_${mealType}_${currentUser.uid}`);
+      console.log(`Document reference created: ${mealDocRef.path}`);
+  
       const mealDocSnap = await getDoc(mealDocRef);
-
+      console.log('Fetched meal document snapshot:', mealDocSnap.exists());
+  
       if (mealDocSnap.exists()) {
         const mealData = mealDocSnap.data();
+        console.log('Current meal data:', mealData);
+  
         const updatedFoods = mealData.foods.map(food =>
           food.id === foodId ? { ...updatedFoodDetails, id: foodId, usageCount: food.usageCount || 1 } : food
         );
-
+        console.log('Updated foods list:', updatedFoods);
+  
         await updateDoc(mealDocRef, { foods: updatedFoods });
-
+        console.log('Document updated successfully.');
+  
         updateFoods(mealType, updatedFoods);
+        console.log('Foods updated in state.');
+      } else {
+        console.log('Meal document does not exist.');
       }
     } catch (error) {
       console.error('Error updating food in the database:', error);
+    }
+  };
+  
+
+  const handlePlusPress = async (item) => {
+    if (!currentUser) return;
+  
+    const mealDate = selectedDate.split('T')[0];
+    const mealDocRef = doc(db, 'meals', `${mealDate}_${meal}_${currentUser.uid}`);
+  
+    try {
+      // Fetch existing meal data
+      const mealDocSnap = await getDoc(mealDocRef);
+      let mealData = { foods: [], date: mealDate, uid: currentUser.uid, mealType: meal, timestamp: firebase.firestore.Timestamp.now() };
+  
+      if (mealDocSnap.exists()) {
+        mealData = mealDocSnap.data();
+        if (!mealData.timestamp || !mealData.timestamp.seconds) {
+          mealData.timestamp = firebase.firestore.Timestamp.now();
+        }
+      }
+  
+      // Check if the item already exists in the meal
+      const existingFood = mealData.foods.find(f => f.id === item.id);
+  
+      if (existingFood) {
+        // Item exists, update its quantity
+        const updatedFoods = mealData.foods.map(food =>
+          food.id === item.id
+            ? { ...food, quantity: food.quantity + 1, usageCount: (food.usageCount || 0) + 1 }
+            : food
+        );
+  
+        await updateDoc(mealDocRef, { foods: updatedFoods, timestamp: mealData.timestamp });
+      } else {
+        // Item does not exist, add it
+        const newFood = { ...item, quantity: 1, usageCount: 1 };
+        const updatedFoods = [...mealData.foods, newFood];
+  
+        await setDoc(mealDocRef, { ...mealData, foods: updatedFoods, timestamp: mealData.timestamp });
+      }
+  
+      // Optionally, update your global state or context
+      console.log(`Meal ${meal} updated successfully.`);
+    } catch (error) {
+      console.error('Error updating meal:', error);
     }
   };
 
@@ -311,6 +390,7 @@ export const FoodProvider = ({ children }) => {
       fetchWeeklyCalorieData,
       loading,
       updateMealInDatabase,
+      handlePlusPress,
       updateFoods,
       addMultipleFoods,
       selectedDate,   // Expose selectedDate

@@ -1,14 +1,67 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Animated } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { getFoodImage, categoryImageMap } from '../../services/foodImageService';
 
-const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage, onSwipeableOpen, onPress, isFoodDeletable }) => {
+const FoodItem = ({
+  item,
+  meal,
+  foodName,
+  foodCalories,
+  foodNutrient,
+  onSwipeableOpen,
+  onPress,
+  isFoodDeletable,
+  onPlusPress,
+  showPlusButton = false,
+}) => {
   const imageSource = item.image || getFoodImage(item.Nume_Produs, 'default', categoryImageMap);
   const calories = Math.round(item.Calorii);
 
+  // State to toggle between plus and checkmark
+  const [isChecked, setIsChecked] = useState(false);
+
+  // Animated values for the plus button
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
   const truncateText = (text, maxLength) => text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+
+  const handlePlusPress = (item) => {
+    // Define animation for scaling, rotating, and fading
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.5,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(),
+      Animated.timing(opacityAnim, {
+        toValue: isChecked ? 1 : 0.7,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(),
+      Animated.timing(rotateAnim, {
+        toValue: isChecked ? 0 : 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(),
+    ]);
+
+    // Toggle the checked state after animation
+    setIsChecked(!isChecked);
+
+    // Call the onPlusPress function
+    onPlusPress(item)
+  };
 
   const renderRightActions = (progress, dragX) => {
     if (!isFoodDeletable) return null;
@@ -51,16 +104,35 @@ const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage,
       <TouchableOpacity onPress={() => {
         console.log('Pressed item:', item); // Debugging line
         onPress(item);
-      }}>
+      }} style={styles.touchableContainer}>
         <View style={styles.foodItem}>
-          <Image source={imageSource} style={foodImage} resizeMode="contain" />
+          <Image source={imageSource} style={styles.foodImage} resizeMode="contain" />
           <View style={styles.foodDetails}>
             <Text style={foodName} numberOfLines={1} ellipsizeMode="tail">
               {truncateText(item.Nume_Produs, 20)}
             </Text>
             <Text style={foodNutrient}>{item.quantity} {item.unit}</Text>
           </View>
-          <Text style={foodCalories}>{calories} kcal</Text>
+          <View style={styles.caloriesContainer}>
+            <Text style={foodCalories}>{calories} kcal</Text>
+            {showPlusButton && (
+              <TouchableOpacity onPress={() => handlePlusPress(item)} style={styles.plusButton}>
+                <Animated.View style={{
+                  transform: [
+                    { scale: scaleAnim },
+                    { rotate: rotateAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '360deg']
+                      }) 
+                    }
+                  ],
+                  opacity: opacityAnim,
+                }}>
+                  <Ionicons name={isChecked ? "checkmark-circle-outline" : "add-circle-outline"} size={25} color={isChecked ? "#4CAF50" : "#FFA726"} />
+                </Animated.View>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
     </Swipeable>
@@ -68,14 +140,20 @@ const FoodItem = ({ item, meal, foodName, foodCalories, foodNutrient, foodImage,
 };
 
 const styles = StyleSheet.create({
+  touchableContainer: {
+    paddingVertical: 2,
+  },
   foodItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
+    marginTop: 5,
   },
   foodDetails: {
     flex: 1,
     justifyContent: 'center',
+    paddingLeft: 10,
   },
   deleteButtonContainer: {
     justifyContent: 'center',
@@ -90,9 +168,16 @@ const styles = StyleSheet.create({
     width: 80,
   },
   foodImage: {
-    width: 45,
-    height: 45,
+    width: 35,
+    height: 35,
     borderRadius: 5,
+  },
+  caloriesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  plusButton: {
+    marginLeft: 8,
   },
 });
 
