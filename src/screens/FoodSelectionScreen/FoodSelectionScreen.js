@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert, Animated, Easing } from 'react-native';
 import { debounce } from 'lodash';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import styles from './FoodSelectionScreenStyle';
-import { fetchFrequentFoods, fetchProducts, fetchRecentMeals, fetchUsuallyUsedFoods } from '../../handlers/NutritionHandler';
+import { fetchFavoriteFoods, fetchFrequentFoods, fetchProducts, fetchRecentMeals } from '../../handlers/NutritionHandler';
 import Fuse from 'fuse.js';
-import { getFoodImage, categoryImageMap } from '../../services/foodImageService';
 import { useFoodContext } from '../../context/FoodContext';
 import FoodItem from '../../components/NutritionItem/FoodItem';
 import MealItem from '../../components/NutritionItem/MealItem';
@@ -16,7 +14,7 @@ import FoodSearchItem from '../../components/NutritionItem/FoodSearchItem';
 const FoodSelectionScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { meal, selectedDate } = route.params;
+  const { meal, selectedDate, selectedFood } = route.params;
   
   const { handleAddMeal } = useFoodContext();
 
@@ -24,12 +22,109 @@ const FoodSelectionScreen = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [categoryFoods, setCategoryFoods] = useState([]);
   const [recentMeals, setRecentMeals] = useState([]);
+  const [favoriteFoods, setFavoriteFoods] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedFoods, setSelectedFoods] = useState([]);
   const [message, setMessage] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('frequent');
   const [isSearching, setIsSearching] = useState(false);
+  const [isFabExpanded, setIsFabExpanded] = useState(false);
+  const animation = useRef(new Animated.Value(0)).current; // Use useRef to keep it consistent
 
+  const scaleValue = useRef(new Animated.Value(1)).current; // FAB scale
+  const rotationValue = useRef(new Animated.Value(0)).current; // FAB rotation
+  const optionAnimations = useRef([]).current; // Array to store individual option animations
+
+  // Initialize individual animations for each option
+  useEffect(() => {
+    optionAnimations.push(
+      new Animated.Value(0), // Opacity and translate for first option
+      new Animated.Value(0), // For the second option
+      new Animated.Value(0), // For the third option
+      new Animated.Value(0)  // For the fourth option
+    );
+  }, []);
+
+  const handleFabPress = () => {
+    // If searching, reset FAB state without toggling options
+    if (isSearching) {
+      setSearchQuery(''); // Clear search query when pressing FAB
+      setSearchResults([]); // Clear search results
+      setIsFabExpanded(false); // Collapse FAB options
+      return;
+    }
+
+    setIsFabExpanded(!isFabExpanded);
+    Animated.parallel([
+      Animated.timing(animation, {
+        toValue: isFabExpanded ? 0 : 1,
+        duration: 500,
+        easing: Easing.elastic(1),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleValue, {
+        toValue: isFabExpanded ? 1 : 1.1,
+        duration: 300,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(rotationValue, {
+        toValue: isFabExpanded ? 0 : 1,
+        duration: 300,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      if (!isFabExpanded) {
+        animateOptions();
+      }
+    });
+  };
+
+  const animateOptions = () => {
+    Animated.stagger(100, // Delay of 100ms between each option
+      optionAnimations.map((anim, index) => 
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 300,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        })
+      )
+    ).start();
+  };
+
+  const animatedRotation = rotationValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '45deg'], // FAB rotates by 45 degrees
+  });
+
+  const animatedSlideIn = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [80, 0], // Slide in from below
+  });
+
+  const animatedOpacity = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1], // Fade in the container
+  });
+
+  // Option-specific animations (translate and opacity for each option)
+  const optionTransforms = optionAnimations.map(anim => ({
+    opacity: anim,
+    transform: [{
+      translateY: anim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [30, 0], // Slide up from 30px
+      }),
+    }],
+  }));
+
+  const handleOptionPress = (option) => {
+    // Handle navigation or action based on the option pressed
+    console.log(option);
+    setIsFabExpanded(false); // Close options after selection
+  };
     // Memoized fuse instance to optimize search performance
   const fuse = useMemo(() => new Fuse(categoryFoods, {
     includeScore: true,
@@ -40,9 +135,24 @@ const FoodSelectionScreen = () => {
   }), [categoryFoods]);
 
   useEffect(() => {
+    if (selectedFood) {
+      setSelectedFoods((prevSelectedFoods) => {
+        // Check if the selected food is already in the list
+        if (prevSelectedFoods.some(food => food.id === selectedFood.id)) {
+          return prevSelectedFoods;
+        }
+        // Add the new selected food to the state
+        return [...prevSelectedFoods, selectedFood];
+      });
+    }
+  }, [selectedFood]);  
+
+  useEffect(() => {
     console.log('selected: ', selectedFoods)
 }, [selectedFoods]);
   
+  console.log(isFabExpanded)
+
   const fetchFoodsBySearch = useCallback(async (query) => {
     if (!query) return;
 
@@ -84,12 +194,17 @@ const FoodSelectionScreen = () => {
         setMessage(fetchedFoods.length > 0 ? '' : 'No foods found.');
       } else if (selectedCategory === 'recent') {
         const fetchedMeals = await fetchRecentMeals(meal);
-        console.log('meals',fetchedMeals)
         setRecentMeals(fetchedMeals);
         setMessage(fetchedMeals.length > 0 ? '' : 'No meals found.');
+      } else if (selectedCategory === 'favorite') {
+        const fetchedFavorites = await fetchFavoriteFoods(meal);
+        console.log("fetched", fetchedFavorites)
+        setFavoriteFoods(fetchedFavorites);
+        setMessage(fetchedFavorites.length > 0 ? '' : 'No favorite foods found.');
       } else {
         setCategoryFoods([]);
         setRecentMeals([]);
+        setFavoriteFoods([]);
         setMessage('Invalid category selected.');
       }
     } catch (err) {
@@ -129,8 +244,9 @@ const FoodSelectionScreen = () => {
     setSelectedCategory(category);
     setSearchQuery(''); // Clear the search query when changing categories
     setIsSearching(false); // Ensure we're not in search mode
+    setIsFabExpanded(false); // Collapse the FAB options when changing categories
     fetchFoodsByCategory(); // Fetch category foods when changing categories
-  };
+};
 
   const handleNavigateToFoodDetail = (food) => {
     navigation.navigate('FoodDetail', { food, meal, selectedDate: selectedDate });
@@ -159,7 +275,7 @@ const FoodSelectionScreen = () => {
       await handleAddMeal(meal, selectedFoods, selectedDate);
       navigation.navigate('Nutrition', { refresh: true });
     } catch (error) {
-      console.error("zError details:", error);
+      console.error("Error details:", error);
       Alert.alert("Error", "Failed to save the meal data. Please try again.");
     }
   };
@@ -179,7 +295,7 @@ const FoodSelectionScreen = () => {
     />
   );
 
-  const renderFrequentFoodItem = ({ item }) => (
+  const  renderFrequentFoodItem = ({ item }) => (
     <FoodItem
       item={item}
       onPress={handleNavigateToFoodDetail}
@@ -194,6 +310,19 @@ const FoodSelectionScreen = () => {
 
   const renderMealItem = ({ item }) => (
     <MealItem meal={item} />
+  );
+
+  const renderFavoriteFoodItem = ({ item }) => (
+    <FoodItem
+      item={item}
+      onPress={handleNavigateToFoodDetail}
+      onPlusPress={handlePlusPress}
+      foodName={styles.foodName}
+      foodCalories={styles.foodCalories}
+      foodNutrient={styles.foodNutrient}
+      foodImage={styles.foodImage}
+      showPlusButton={true}
+    />
   );
 
   return (
@@ -245,7 +374,7 @@ const FoodSelectionScreen = () => {
             onPress={() => handleCategoryChange('favorite')}
           >
             <MaterialCommunityIcons 
-              name="muffin"
+              name="star"
               size={24} 
               color={selectedCategory === 'favorite' ? '#FFA726' : '#FFFFFF'} 
             />
@@ -296,6 +425,19 @@ const FoodSelectionScreen = () => {
         </View>
       )}
 
+      {!isSearching && selectedCategory === 'favorite' && (
+        <View style={styles.foodListContainer}>
+          <FlatList
+            data={favoriteFoods}
+            renderItem={renderFavoriteFoodItem}
+            keyExtractor={item => item.id ? item.id.toString() : `${item.Nume_Produs}-${item.Categorie}-${Math.random()}`}
+            ListEmptyComponent={() => (
+              <Text style={styles.emptyText}>No favorite foods found.</Text>
+            )}
+          />
+        </View>
+      )}
+
       {isSearching && (
         <View style={styles.foodListContainer}>
           <FlatList
@@ -327,7 +469,70 @@ const FoodSelectionScreen = () => {
           </TouchableOpacity>
         </View>
       )}
-    </View>
+
+    {/* The Floating Action Button (FAB) */}
+    <TouchableOpacity 
+      style={styles.fab} 
+      onPress={handleFabPress}
+    >
+      <MaterialCommunityIcons name="note-edit" size={30} color="#fff" />
+    </TouchableOpacity>
+
+    {/* The container that holds the expanded options */}
+    {isFabExpanded && (
+        <Animated.View 
+          style={[
+            styles.optionsContainer, 
+            { 
+              opacity: animatedOpacity,
+              transform: [{ translateY: animatedSlideIn }]  // Slide in the container
+            }
+          ]}
+        >
+          <View style={styles.optionsInnerContainer}>
+            {/* Option 1 */}
+            <Animated.View style={optionTransforms[0]}>
+              <TouchableOpacity 
+                style={styles.option} 
+                onPress={() => handleOptionPress('Add New Food without barcode')}
+              >
+                <Text style={styles.optionText}>Add New Food without barcode</Text>
+              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Option 2 */}
+            <Animated.View style={optionTransforms[1]}>
+              <TouchableOpacity 
+                style={styles.option} 
+                onPress={() => handleOptionPress('Add New Food with barcode')}
+              >
+                <Text style={styles.optionText}>Add New Food with barcode</Text>
+              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Option 3 */}
+            <Animated.View style={optionTransforms[2]}>
+              <TouchableOpacity 
+                style={styles.option} 
+                onPress={() => handleOptionPress('Add New Meals')}
+              >
+                <Text style={styles.optionText}>Add New Meals</Text>
+              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Option 4 */}
+            <Animated.View style={optionTransforms[3]}>
+              <TouchableOpacity 
+                style={styles.option} 
+                onPress={() => handleOptionPress('Add Calories')}
+              >
+                <Text style={styles.optionText}>Add Calories</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </Animated.View>
+    )}
+  </View>
   );
 };
 

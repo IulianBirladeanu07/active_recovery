@@ -165,3 +165,41 @@ export const fetchUsuallyUsedFoods = async () => {
     throw error;
   }
 };
+
+export const fetchFavoriteFoods = async (limitCount = 10) => {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+    const uid = user.uid;
+    console.log("hellos")
+    // Query to fetch meals with favorite foods
+    const mealQuery = query(
+      collection(db, 'meals'),
+      where('uid', '==', uid),
+    );
+
+    const querySnapshot = await getDocs(mealQuery);
+    const favoriteFoods = [];
+
+    // Aggregate favorite foods from each meal document
+    querySnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const foods = data.foods || [];
+      foods.forEach(food => {
+        // Check if the food is marked as favorite
+        if (food.isFavorite) {
+          console.log(food.isFavorite)
+          favoriteFoods.push({ ...food, mealId: doc.id }); // Include mealId for context
+        }
+      });
+    });
+    console.log(favoriteFoods)
+    return favoriteFoods;
+  } catch (error) {
+    console.error("Error fetching favorite foods:", error.message);
+    throw error;
+  }
+};
+

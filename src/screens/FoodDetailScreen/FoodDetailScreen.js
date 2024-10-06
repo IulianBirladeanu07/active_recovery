@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Ensure you have this or a similar icon library installed
 import styles from './FoodDetailScreenStyle'; // Ensure this file exists and styles are correctly defined
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useFoodContext } from '../../context/FoodContext';
@@ -15,6 +16,7 @@ const FoodDetailScreen = () => {
   const [unit, setUnit] = useState('grams');
   const [showMore, setShowMore] = useState(false);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(food?.isFavorite || false); // Initialize from the food object
 
   // Determine if we're handling a single food or multiple foods
   const isMultipleFoods = Array.isArray(meal?.foods);
@@ -110,6 +112,7 @@ const FoodDetailScreen = () => {
       Grasimi_Saturate: calculateNutrientValue(totalNutrients.Grasimi_Saturate),
       quantity,
       unit,
+      isFavorite,
     };
   
     try {
@@ -117,7 +120,8 @@ const FoodDetailScreen = () => {
         await addMultipleFoods(meal.mealType, foods.map(foodItem => ({
           ...foodItem,
           quantity,
-          unit,
+          unit,      
+          isFavorite,
           ...normalizeNutrientValues(foodItem),
           Calorii: calculateNutrientValue(normalizeNutrientValues(foodItem).Calorii),
           Carbohidrati: calculateNutrientValue(normalizeNutrientValues(foodItem).Carbohidrati),
@@ -133,12 +137,11 @@ const FoodDetailScreen = () => {
       } else {
         if (update) {
           // Update existing food
+          console.log("mgm?")
           await updateMealInDatabase(meal, currentFoodId, updatedFoodDetails);
           // Navigate back to NutritionScreen after updating
           navigation.navigate('Nutrition', { refresh: true, meal });
-        } else {
-          // Add new single food with existing foodId or generate new if not available
-          await updateMealInDatabase(meal, currentFoodId, updatedFoodDetails); // Assuming this method also handles adding new foods
+        } else {          
           // Navigate back to FoodSelectionScreen after adding single food
           navigation.navigate('FoodSelection', { selectedFood: updatedFoodDetails, meal, selectedDate });
         }
@@ -147,6 +150,11 @@ const FoodDetailScreen = () => {
       Alert.alert("Update Failed", "There was an error updating the food item.");
       console.error('Update failed:', error);
     }
+  };
+ 
+  const toggleFavorite = async () => {
+    const newFavoriteStatus = !isFavorite;
+    setIsFavorite(newFavoriteStatus);
   };
 
   // Combine Food Images
@@ -182,7 +190,14 @@ const FoodDetailScreen = () => {
   return (
     <View style={styles.container}>
       {renderFoodImages()}
-      <Text style={styles.foodName}>{isMultipleFoods ? 'Combined Foods' : (food.Nume_Produs || 'Unknown')}</Text>
+      <Text style={styles.foodName}>{isMultipleFoods ? 'Combined Foods' : (food.Nume_Produs || 'Unknown')}</Text>      
+      <TouchableOpacity onPress={ toggleFavorite}>
+        <MaterialCommunityIcons
+          name={isFavorite ? 'heart' : 'heart-outline'}
+          size={30}
+          color={isFavorite ? 'red' : 'white'}
+        />
+      </TouchableOpacity>
       <Text style={styles.foodNutrient}>Calories: {calculateNutrientValue(totalNutrients.Calorii)} kcal</Text>
       <Text style={styles.foodNutrient}>Protein: {calculateNutrientValue(totalNutrients.Proteine)} g</Text>
       <Text style={styles.foodNutrient}>Carbs: {calculateNutrientValue(totalNutrients.Carbohidrati)} g</Text>

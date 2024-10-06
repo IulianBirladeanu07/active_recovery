@@ -6,11 +6,11 @@ const { width, height } = Dimensions.get('window');
 // Centralized color palette for reusability
 const colors = {
   background: '#02111B',
-  borderColor: '#CCCCCC',
+  borderColor: '#02111B',
   primaryText: '#FFFFFF',
   accent: '#FFA726',
   shadow: '#000',
-  unselectedBackground: '#1E2A33',
+  unselectedBackground: '#02111B',
   selectedBackground: '#03323C',
   inputBackground: '#FFFFFF',
   foodItemBackground: '#02202B',
@@ -84,15 +84,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.borderColor,
     backgroundColor: colors.unselectedBackground,
-    ...shadowStyle, // Apply centralized shadow
+    ...shadowStyle,
+    transform: [{ scale: 1 }], // Default scale
+    transition: 'transform 0.2s ease', // Smooth transition
   },
-  categoryButtonText: {
-    color: colors.primaryText,
-    fontSize: RFValue(14),
-    fontWeight: 'bold',
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
+  // Selected style
   selectedCategoryButton: {
     borderColor: colors.accent,
     backgroundColor: colors.selectedBackground,
@@ -100,7 +96,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 8,
     elevation: 6,
-    transform: [{ scale: 1.05 }],
+    transform: [{ scale: 1.05 }], // Slightly larger when selected
+  },
+  // New hover effect (if using a library like React Native Reanimated)
+  categoryButtonHover: {
+    transform: [{ scale: 1.1 }], // Scale up on hover
+  },
+  categoryButtonText: {
+    color: colors.primaryText,
+    fontSize: RFValue(14),
+    fontWeight: 'bold',
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
   selectedCategoryButtonText: {
     color: colors.accent,
@@ -148,6 +155,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     color: colors.primaryText,
     marginBottom: 5,
+    justifyContent: 'space-between'
   },
   foodNutrient: {
     fontSize: RFValue(12),
@@ -242,6 +250,75 @@ const styles = StyleSheet.create({
     color: colors.primaryText,
     fontSize: RFValue(16),
     fontWeight: 'bold',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: colors.accent,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    zIndex: 10, // Ensure FAB is on top
+  },
+  
+  // Options container when FAB expands
+  expandedContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.background,
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    zIndex: 9,  // Below the FAB but above the rest of the screen
+    ...shadowStyle,
+  },
+  
+  // Floating options container, for the hidden options when FAB is clicked
+  fabOptionsContainer: {
+    position: 'absolute',
+    bottom: 100,  // Positioned above the FAB
+    right: 20,
+    backgroundColor: colors.foodItemBackground,
+    borderRadius: 10,
+    padding: 10,
+    zIndex: 9,  // Below the FAB but above other elements
+    ...shadowStyle,
+  },
+  
+  optionButton: {
+    backgroundColor: colors.selectedBackground,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadowStyle,
+  },
+  
+  optionButtonText: {
+    color: colors.primaryText,
+    fontSize: RFValue(16),
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  
+  // Options for individual actions in expanded mode
+  option: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderColor,
+  },
+  optionText: {
+    fontSize: RFValue(16),
+    color: colors.primaryText,
   },
 });
 

@@ -118,4 +118,7 @@ export default StyleSheet.create({
     color: '#ff5a5f',
     marginTop: 10,
   },  
+  favoriteIcon: {
+    marginLeft: 1,
+  },
 });
