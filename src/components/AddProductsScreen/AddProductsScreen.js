@@ -171,15 +171,21 @@ const AddProductsScreen = () => {
     </>
   );
 
-  const renderShowMoreToggle = () => (
-    <TouchableOpacity onPress={() => setShowMore(!showMore)}>
-      <Text style={styles.showMoreText}>{showMore ? 'Show Less' : 'Show More'}</Text>
-    </TouchableOpacity>
-  );
+  const renderShowMoreToggle = () => {
+    // Only show toggle if the type is not "calories"
+    if (type === 'calories') {
+      return null; // Do not render the toggle button
+    }
+  
+    return (
+      <TouchableOpacity onPress={() => setShowMore(!showMore)}>
+        <Text style={styles.showMoreText}>{showMore ? 'Show Less' : 'Show More'}</Text>
+      </TouchableOpacity>
+    );
+  };
 
   const renderFieldsByType = () => {
     const fields = [];
-  
     switch (type) {
       case 'calories':
         fields.push(

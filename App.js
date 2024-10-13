@@ -26,6 +26,7 @@ import SplashScreen from './src/components/SplashScreen/SplashScreen';
 import ChangePasswordScreen from './src/components/ChangePassword/ChangePasswordScreen';
 import StepByStepProfileSetup from './src/components/ProfileSetup/ProfileSetup';
 import ForgotPasswordScreen from './src/components/ForgotPassword/ForgotPassword';
+import AddProductsScreen from './src/components/AddProductsScreen/AddProductsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -38,6 +39,7 @@ const AuthenticatedScreens = () => (
     <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="AddProducts" component={AddProductsScreen} options={{ headerShown: false }} />    
     <Stack.Screen name="WorkoutHistory" component={WorkoutHistory} options={{ headerShown: false }} />
     <Stack.Screen name="WorkoutDetails" component={WorkoutDetails} options={{ headerShown: false }} />
     <Stack.Screen name="Measurements" component={MeasurementScreen} options={{ headerShown: false }} />
