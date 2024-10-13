@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { db, doc, setDoc, deleteDoc, getDoc, updateDoc, collection, query, where, orderBy, getDocs } from '../services/firebase';
+import {addDoc, db, doc, setDoc, deleteDoc, getDoc, updateDoc, collection, query, where, orderBy, getDocs } from '../services/firebase';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 
@@ -377,8 +377,37 @@ export const FoodProvider = ({ children }) => {
     } catch (error) {
       console.error('Error adding multiple foods:', error);
     }
+  };  
+  
+  const addCustomFood = async (productData) => {
+    try {
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        throw new Error('User not authenticated.');
+      }
+      const uid = user.uid;
+  
+      // Generate a sanitized version of Nume_Produs for the document ID
+      const sanitizedProductName = productData.Nume_Produs.replace(/[^a-zA-Z0-9]/g, '_'); // Replace spaces and special chars with underscores
+  
+      // Create a custom document ID based on the user ID and sanitized product name
+      const customId = `${uid}_${sanitizedProductName}`;
+  
+      // Create a new document in the 'CustomProducts' collection with a custom ID
+      await setDoc(doc(db, 'CustomProducts', customId), {
+        ...productData,
+        uid,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+  
+      console.log('Product added with ID:', customId);
+      return customId; // Return the custom ID
+    } catch (error) {
+      console.error("Error adding product to Firestore:", error.message);
+      throw error;
+    }
   };
-
+  
   return (
     <FoodContext.Provider value={{
       breakfastFoods,
@@ -394,7 +423,8 @@ export const FoodProvider = ({ children }) => {
       updateFoods,
       addMultipleFoods,
       selectedDate,   // Expose selectedDate
-      setSelectedDate // Expose function to update selectedDate
+      setSelectedDate,
+      addCustomFood // Expose function to update selectedDate
     }}>
       {children}
     </FoodContext.Provider>

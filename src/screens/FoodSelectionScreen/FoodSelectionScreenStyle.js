@@ -23,9 +23,9 @@ const colors = {
 const shadowStyle = {
   shadowColor: colors.shadow,
   shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.3,
+  shadowOpacity: 1,
   shadowRadius: 6,
-  elevation: 4,
+  elevation: 8,
 };
 
 const styles = StyleSheet.create({
@@ -44,9 +44,10 @@ const styles = StyleSheet.create({
     borderColor: colors.borderColor,
     borderRadius: 10,
     backgroundColor: colors.inputBackground,
-    marginTop: 50,
+    marginTop: 10,
     paddingHorizontal: 15,
     height: RFValue(50),
+    marginBottom: 5,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -70,62 +71,46 @@ const styles = StyleSheet.create({
   },
   categoryContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-    marginTop: 15,
+    justifyContent: 'space-between', 
+    backgroundColor: colors.unselectedBackground,
+    borderWidth: 1,
+    borderColor: '#02111B',
+    borderRadius: 10,
+    marginTop: 20,
+    ...shadowStyle,
   },
   categoryButton: {
     flex: 1,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    marginHorizontal: 5,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.borderColor,
-    backgroundColor: colors.unselectedBackground,
-    ...shadowStyle,
-    transform: [{ scale: 1 }], // Default scale
-    transition: 'transform 0.2s ease', // Smooth transition
-  },
-  // Selected style
-  selectedCategoryButton: {
-    borderColor: colors.accent,
-    backgroundColor: colors.selectedBackground,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 6,
-    transform: [{ scale: 1.05 }], // Slightly larger when selected
-  },
-  // New hover effect (if using a library like React Native Reanimated)
-  categoryButtonHover: {
-    transform: [{ scale: 1.1 }], // Scale up on hover
-  },
-  categoryButtonText: {
-    color: colors.primaryText,
-    fontSize: RFValue(14),
-    fontWeight: 'bold',
-    textAlign: 'center',
-    letterSpacing: 0.5,
+    transition: 'background-color 0.2s ease, transform 0.2s ease',
+    activeOpacity: 0.8,  // Visual feedback on press
   },
   selectedCategoryButtonText: {
     color: colors.accent,
-    fontSize: RFValue(14),
+    fontSize: RFValue(18),
     fontWeight: 'bold',
-    textAlign: 'center',
-    paddingBottom: 5,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.accent,
   },
   foodListContainer: {
     flex: 1,
-    paddingHorizontal: 10,
     backgroundColor: colors.foodListBackground,
     borderRadius: 10,
     marginVertical: 10,
-    marginBottom: 20,
     paddingBottom: 30,
+  },
+  underline: {
+    height: 3,
+    backgroundColor: '#FFA726',
+    width: '100%',
+    marginBottom: 10,
+  },
+  headerText: {
+    fontSize: RFValue(22),
+    color: colors.primaryText,
+    fontWeight: 'bold',
+    textAlign: 'left',
+    marginTop: 40,
   },
   foodItem: {
     flexDirection: 'row',
@@ -308,14 +293,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  
-  // Options for individual actions in expanded mode
-  option: {
+  categoryText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginBottom: 10,
+    fontSize: 18,
+  },
+    option: {
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderColor,
   },
+  headerContainer: {
+    backgroundColor: "#02111B",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8, // Rounded corners
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.5,
+    elevation: 5,
+  },  
   optionText: {
     fontSize: RFValue(16),
     color: colors.primaryText,

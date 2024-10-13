@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         backgroundColor: '#02202B',
-        marginVertical: 10,
+        marginVertical: 5,
         position: 'relative',
         elevation: 3, // Add elevation for better shadow effect
     },
@@ -125,9 +125,7 @@ const styles = StyleSheet.create({
     foodItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        paddingVertical: 4,
     },
     foodName: {
         fontSize: RFValue(14),
