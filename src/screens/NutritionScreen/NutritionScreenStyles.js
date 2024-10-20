@@ -44,7 +44,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     marginTop: -80,
-    paddingHorizontal: 0,
   },
   innerProgressItem: {
     alignItems: 'center',

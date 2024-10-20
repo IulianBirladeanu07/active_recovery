@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    padding: 10,
+    padding: 15,
   },
   overlayContainer: {
     marginBottom: 15,
@@ -98,6 +98,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginVertical: 10,
     paddingBottom: 30,
+    padding: 5,
   },
   underline: {
     height: 3,

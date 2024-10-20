@@ -77,14 +77,6 @@ const NutritionScreen = () => {
   
   const { targetCalories, targetProtein, targetFats, targetCarbs } = userSettings;
 
-  const remainingCalories = useMemo(() => targetCalories - dailyNutrition.calories, [targetCalories, dailyNutrition.calories]);
-  const remainingCarbs = useMemo(() => targetCarbs - dailyNutrition.carbs, [targetCarbs, dailyNutrition.carbs]);
-  const remainingProtein = useMemo(() => targetProtein - dailyNutrition.protein, [targetProtein, dailyNutrition.protein]);
-  const remainingFats = useMemo(() => targetFats - dailyNutrition.fat, [targetFats, dailyNutrition.fat]);
-
-  console.log(remainingProtein)
-
-
   const handleFoodSelect = (item) => {
     const foodDetails = {
       ...item,
@@ -196,23 +188,23 @@ const NutritionScreen = () => {
             </View>
 
             <View style={styles.barContainer}>
-            <ProgressBar
+      <ProgressBar
         value={dailyNutrition.carbs}
         maxValue={targetCarbs}
         customText="Carb"
-        color="#4caf50" // Carb color
+        customColor="#4caf50" // Carb color
       />
       <ProgressBar
         value={dailyNutrition.protein}
         maxValue={targetProtein}
         customText="Protein"
-        color="#9c27b0" // Protein color
+        customColor="#9c27b0" // Protein color
       />
       <ProgressBar
         value={dailyNutrition.fat}
         maxValue={targetFats}
         customText="Fat"
-        color="#2196f3" // Fat color
+        customColor="#2196f3" // Fat color
       />
             </View>
           </View>

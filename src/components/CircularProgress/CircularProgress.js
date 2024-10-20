@@ -13,6 +13,7 @@ const CircularProgress = ({
   color = "#FF7043",
   trailColor = "#ffffff",
   duration = 1400,
+  measure = "KCAL", // Default measure
 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * Math.PI * 2;
@@ -23,7 +24,7 @@ const CircularProgress = ({
 
   // Calculate the display value and text
   const displayValue = absoluteValue.toFixed(0);
-  const displayText = isOverconsumed ? "KCAL OVER" : "KCAL LEFT";
+  const displayText = isOverconsumed ? `${measure} OVER` : `${measure} LEFT`;
 
   // Calculate the percentage of progress or overconsumption
   const consumedPercentage = isOverconsumed

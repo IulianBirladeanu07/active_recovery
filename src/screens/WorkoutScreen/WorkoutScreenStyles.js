@@ -1,117 +1,126 @@
 import { StyleSheet, Dimensions } from 'react-native';
-import { RFPercentage, RFValue } from 'react-native-responsive-fontsize';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 15,
-    backgroundColor: '#02111B',
+    flex: 1,
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#02111B', // Dark background
   },
   headerContainer: {
     marginBottom: 20,
     alignItems: 'center',
   },
   headerText: {
-    fontSize: RFValue(24),
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#FFFFFF', // White text
   },
-  progressBarContainer: {
-    marginBottom: RFValue(10),
+  statsContainer: {
+    backgroundColor: '#02202B',
+    padding: 20,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  circularProgressContainer: {
+    alignItems: 'center',
+    marginVertical: 5,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: -50
+  },
+  innerProgressItem: {
     alignItems: 'center',
   },
-  progressBarValue: {
-    fontSize: RFValue(16),
-    color: '#FFFFFF',
+  innerProgressText: {
+    color: '#FFFFFF', // White text
+    fontSize: 13,
+    marginTop: 5,
   },
-  lastWorkoutContainer: {
-    backgroundColor: '#02202B',
-    borderRadius: 10,
-    padding: RFValue(10),
-    marginTop: RFValue(20),
-    height: RFValue(165), // Set height to match maxHeight
-    overflow: 'hidden', // Ensure content is clipped to the container bounds
+  barContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around', // Spread the progress bars evenly
+    width: '100%',
+    marginTop: 12,
+  },
+  card: {
+    backgroundColor: '#02202B', // Card background color
+    padding: 15,
+    borderRadius: 15,
+    width: '100%',
+    marginBottom: 20,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF', // White text
+    marginBottom: 10,
   },
   lastWorkoutScroll: {
-    flex: 1,
+    maxHeight: 80, 
   },
   lastWorkoutContent: {
-    flexGrow: 1, // Ensure content is scrollable
-    paddingBottom: RFValue(10),
-  },
-  lastWorkoutText: {
-    fontSize: RFValue(16),
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: RFValue(5),
+    paddingVertical: 2,
   },
   exerciseContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: RFValue(5),
-  },
-  circularProgressContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 20,
-    marginBottom: 20,
+    paddingVertical: 5,
   },
   exerciseName: {
-    fontSize: RFValue(14),
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#FFFFFF', // White text
+    fontSize: 12,
   },
   bestSetContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   bestSetText: {
-    fontSize: RFValue(14),
-    color: '#FFFFFF'
+    color: '#FFFFFF', // White text
+    fontSize: 12,
+  },
+  noWorkoutsContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
   },
   noWorkoutsText: {
-    fontSize: RFValue(18),
-    color: '#A0AEC0',
+    color: '#FFFFFF', // White text
   },
   summaryContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 0,
-    marginTop: RFValue(10),
-    paddingTop: RFValue(30),
+    justifyContent: 'space-around', // Spread quick action buttons evenly
+    width: '100%',
+    marginTop: 10,
   },
   summaryCard: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF', // Orange for quick action card
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 5,
     alignItems: 'center',
-    backgroundColor: '#005050',
-    marginHorizontal: 5,
-    marginBottom: 10,
+    width: '30%', // Adjust width as needed
   },
   summaryCardText: {
-    fontSize: RFValue(14),
-    color: '#FFFFFF',
-    marginTop: RFValue(5),
-    textAlign: 'center',
+    color: '#000000', // White text
+    fontSize: 16,
   },
   startButton: {
-    backgroundColor: '#29335c',
-    borderRadius: 10,
-    padding: RFValue(15),
+    backgroundColor: '#FFA726', // Orange for start button
+    borderRadius: 30,
+    padding: 15,
     alignItems: 'center',
-    marginTop: RFValue(75),
-    marginBottom: -15,
+    marginTop: 20,
+    width: width * 0.8,
   },
   startButtonText: {
-    fontSize: RFValue(18),
+    color: '#FFFFFF', // White text for start button
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#fdf5ec',
   },
 });
 

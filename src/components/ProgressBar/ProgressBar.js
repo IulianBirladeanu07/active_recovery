@@ -1,40 +1,31 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const ProgressBar = ({ value, maxValue, customText }) => {
-  const isOverconsumed = value > maxValue;
-  const absoluteValue = isOverconsumed ? value - maxValue : maxValue - value;
-  const consumedPercentage = isOverconsumed
-    ? 100 // Fill the bar completely if overconsumed
-    : Math.min((value / maxValue) * 100, 100); // Calculate percentage based on the value
-
-  const fillWidth = `${consumedPercentage}%`;
-  const barColor = isOverconsumed ? '#FF7043' : getColor(customText.toLowerCase());
-  const displayText = isOverconsumed ? 'g over' : 'g left';
+const ProgressBar = ({
+  value,
+  maxValue,
+  customText,
+  customColor = '#3498db',
+  showLabel = true,
+  unit = 'g', // Unit for measurement
+}) => {
+  const consumedPercentage = Math.min((value / maxValue) * 100, 100); // Calculate percentage based on the value
+  const fillWidth = `${consumedPercentage}%`; // Fill width of the bar based on the percentage
 
   return (
     <View style={styles.container}>
       <Text style={styles.customText}>{customText}</Text>
       <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBarFill, { width: fillWidth, backgroundColor: barColor }]} />
+        <View style={[styles.progressBarFill, { width: fillWidth, backgroundColor: customColor }]} />
       </View>
-      <Text style={styles.label}>{`${absoluteValue.toFixed(0)} ${displayText}`}</Text>
+      {showLabel && (
+        <Text style={styles.label}>
+          {`${value.toFixed(0)} / ${maxValue.toFixed(0)} ${unit}`} {/* Display actualValue/goalValue format */}
+        </Text>
+      )}
     </View>
   );
 };
-
-function getColor(type) {
-  switch (type) {
-    case 'carb':
-      return '#4caf50';
-    case 'protein':
-      return '#9c27b0';
-    case 'fat':
-      return '#2196f3';
-    default:
-      return '#3498db';
-  }
-}
 
 const styles = StyleSheet.create({
   container: {
